@@ -15,7 +15,7 @@ public class ClassStudentServiceImpl implements ClassStudentService {
     private ClassStudentMapper classStudentMapper;
 
     @Override
-    public ClassStudent findByClassAndStudent(Long classId, Long studentId) {
+    public ClassStudent findByClassAndStudent(Long classId, String studentId) {
         return classStudentMapper.findByClassAndStudent(classId, studentId);
     }
 
@@ -25,7 +25,7 @@ public class ClassStudentServiceImpl implements ClassStudentService {
     }
 
     @Override
-    public List<ClassStudent> findByStudentId(Long studentId) {
+    public List<ClassStudent> findByStudentId(String studentId) {
         return classStudentMapper.findByStudentId(studentId);
     }
 
@@ -38,7 +38,7 @@ public class ClassStudentServiceImpl implements ClassStudentService {
 
     @Override
     @Transactional
-    public void removeStudentFromClass(Long classId, Long studentId) {
+    public void removeStudentFromClass(Long classId, String studentId) {
         classStudentMapper.delete(classId, studentId);
     }
 } 

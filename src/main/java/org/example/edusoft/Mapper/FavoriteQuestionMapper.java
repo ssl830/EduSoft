@@ -7,10 +7,10 @@ import java.util.List;
 @Mapper
 public interface FavoriteQuestionMapper {
     @Select("SELECT * FROM FavoriteQuestion WHERE student_id = #{studentId} AND question_id = #{questionId}")
-    FavoriteQuestion findByStudentAndQuestion(Long studentId, Long questionId);
+    FavoriteQuestion findByStudentAndQuestion(String studentId, Long questionId);
 
     @Select("SELECT * FROM FavoriteQuestion WHERE student_id = #{studentId}")
-    List<FavoriteQuestion> findByStudentId(Long studentId);
+    List<FavoriteQuestion> findByStudentId(String studentId);
 
     @Select("SELECT * FROM FavoriteQuestion WHERE question_id = #{questionId}")
     List<FavoriteQuestion> findByQuestionId(Long questionId);
@@ -19,5 +19,5 @@ public interface FavoriteQuestionMapper {
     int insert(FavoriteQuestion favoriteQuestion);
 
     @Delete("DELETE FROM FavoriteQuestion WHERE student_id = #{studentId} AND question_id = #{questionId}")
-    int delete(Long studentId, Long questionId);
+    int delete(String studentId, Long questionId);
 } 

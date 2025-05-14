@@ -4,9 +4,9 @@ import org.example.edusoft.entity.ClassStudent;
 import java.util.List;
 
 public interface ClassStudentService {
-    ClassStudent findByClassAndStudent(Long classId, Long studentId);
+    ClassStudent findByClassAndStudent(Long classId, String studentId);
     List<ClassStudent> findByClassId(Long classId);
-    List<ClassStudent> findByStudentId(Long studentId);
+    List<ClassStudent> findByStudentId(String studentId);
     ClassStudent addStudentToClass(ClassStudent classStudent);
-    void removeStudentFromClass(Long classId, Long studentId);
+    void removeStudentFromClass(Long classId, String studentId);
 } 

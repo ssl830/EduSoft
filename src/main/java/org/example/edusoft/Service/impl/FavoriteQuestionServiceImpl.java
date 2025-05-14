@@ -15,12 +15,12 @@ public class FavoriteQuestionServiceImpl implements FavoriteQuestionService {
     private FavoriteQuestionMapper favoriteQuestionMapper;
 
     @Override
-    public FavoriteQuestion findByStudentAndQuestion(Long studentId, Long questionId) {
+    public FavoriteQuestion findByStudentAndQuestion(String studentId, Long questionId) {
         return favoriteQuestionMapper.findByStudentAndQuestion(studentId, questionId);
     }
 
     @Override
-    public List<FavoriteQuestion> findByStudentId(Long studentId) {
+    public List<FavoriteQuestion> findByStudentId(String studentId) {
         return favoriteQuestionMapper.findByStudentId(studentId);
     }
 
@@ -38,7 +38,7 @@ public class FavoriteQuestionServiceImpl implements FavoriteQuestionService {
 
     @Override
     @Transactional
-    public void removeFavorite(Long studentId, Long questionId) {
+    public void removeFavorite(String studentId, Long questionId) {
         favoriteQuestionMapper.delete(studentId, questionId);
     }
 } 

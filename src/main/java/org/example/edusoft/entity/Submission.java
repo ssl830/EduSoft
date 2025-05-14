@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 public class Submission {
     private Long id;
     private Long practiceId;
-    private Long studentId;
+    private String studentId;
     private LocalDateTime submittedAt;
     private Integer score;
     private String feedback;

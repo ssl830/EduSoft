@@ -13,10 +13,10 @@ public interface SubmissionMapper {
     List<Submission> findByPracticeId(Long practiceId);
 
     @Select("SELECT * FROM Submission WHERE student_id = #{studentId}")
-    List<Submission> findByStudentId(Long studentId);
+    List<Submission> findByStudentId(String studentId);
 
     @Select("SELECT * FROM Submission WHERE practice_id = #{practiceId} AND student_id = #{studentId}")
-    List<Submission> findByPracticeAndStudent(Long practiceId, Long studentId);
+    List<Submission> findByPracticeAndStudent(Long practiceId, String studentId);
 
     @Insert("INSERT INTO Submission (practice_id, student_id, score, feedback) " +
             "VALUES (#{practiceId}, #{studentId}, #{score}, #{feedback})")

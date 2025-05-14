@@ -67,8 +67,17 @@ public class CourseServiceImpl implements CourseService {
      * 根据教师ID查询其创建的所有课程
      */
     @Override
-    public List<Course> getTeacherCourses(Long teacherId) {
+    public List<Course> getTeacherCourses(String teacherId) {
         return courseMapper.findByTeacherId(teacherId);
+    }
+
+    /**
+     * 根据用户ID和角色获取课程列表
+     * 根据用户角色（教师/学生/助教）返回相应的课程列表
+     */
+    @Override
+    public List<Course> getUserCourses(String userId, String role) {
+        return courseMapper.findByUserIdAndRole(userId, role);
     }
 
     /**

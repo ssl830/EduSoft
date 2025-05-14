@@ -10,13 +10,13 @@ public interface ProgressMapper {
     Progress findById(Long id);
 
     @Select("SELECT * FROM Progress WHERE student_id = #{studentId}")
-    List<Progress> findByStudentId(Long studentId);
+    List<Progress> findByStudentId(String studentId);
 
     @Select("SELECT * FROM Progress WHERE course_id = #{courseId}")
     List<Progress> findByCourseId(Long courseId);
 
     @Select("SELECT * FROM Progress WHERE student_id = #{studentId} AND course_id = #{courseId}")
-    List<Progress> findByStudentAndCourse(Long studentId, Long courseId);
+    List<Progress> findByStudentAndCourse(String studentId, Long courseId);
 
     @Insert("INSERT INTO Progress (student_id, course_id, section_id, completed, completed_at) " +
             "VALUES (#{studentId}, #{courseId}, #{sectionId}, #{completed}, #{completedAt})")

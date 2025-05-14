@@ -25,12 +25,12 @@ public class SubmissionServiceImpl implements SubmissionService {
     }
 
     @Override
-    public List<Submission> findByStudentId(Long studentId) {
+    public List<Submission> findByStudentId(String studentId) {
         return submissionMapper.findByStudentId(studentId);
     }
 
     @Override
-    public List<Submission> findByPracticeAndStudent(Long practiceId, Long studentId) {
+    public List<Submission> findByPracticeAndStudent(Long practiceId, String studentId) {
         return submissionMapper.findByPracticeAndStudent(practiceId, studentId);
     }
 

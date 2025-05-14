@@ -4,6 +4,6 @@ import lombok.Data;
 
 @Data
 public class FavoriteQuestion {
-    private Long studentId;
+    private String studentId;
     private Long questionId;
 } 

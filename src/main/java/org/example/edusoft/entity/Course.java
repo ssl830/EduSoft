@@ -7,7 +7,7 @@ import java.util.List;
 @Data
 public class Course {
     private Long id;
-    private Long teacherId;
+    private String teacherId;
     private String name;
     private String code;
     private String outline;

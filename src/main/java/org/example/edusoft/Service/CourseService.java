@@ -37,7 +37,15 @@ public interface CourseService {
      * @param teacherId 教师ID
      * @return 教师的所有课程列表
      */
-    List<Course> getTeacherCourses(Long teacherId);
+    List<Course> getTeacherCourses(String teacherId);
+
+    /**
+     * 根据用户ID和角色获取课程列表
+     * @param userId 用户ID
+     * @param role 用户角色（teacher/student/ta）
+     * @return 课程列表
+     */
+    List<Course> getUserCourses(String userId, String role);
 
     /**
      * 添加课程章节

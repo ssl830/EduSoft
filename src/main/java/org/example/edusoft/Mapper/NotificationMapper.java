@@ -10,10 +10,10 @@ public interface NotificationMapper {
     Notification findById(Long id);
 
     @Select("SELECT * FROM Notification WHERE user_id = #{userId}")
-    List<Notification> findByUserId(Long userId);
+    List<Notification> findByUserId(String userId);
 
     @Select("SELECT * FROM Notification WHERE user_id = #{userId} AND read_flag = #{readFlag}")
-    List<Notification> findByUserIdAndReadFlag(Long userId, Boolean readFlag);
+    List<Notification> findByUserIdAndReadFlag(String userId, Boolean readFlag);
 
     @Insert("INSERT INTO Notification (user_id, title, message) VALUES (#{userId}, #{title}, #{message})")
     @Options(useGeneratedKeys = true, keyProperty = "id")

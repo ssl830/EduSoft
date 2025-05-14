@@ -20,7 +20,7 @@ public class ProgressServiceImpl implements ProgressService {
     }
 
     @Override
-    public List<Progress> findByStudentId(Long studentId) {
+    public List<Progress> findByStudentId(String studentId) {
         return progressMapper.findByStudentId(studentId);
     }
 
@@ -30,7 +30,7 @@ public class ProgressServiceImpl implements ProgressService {
     }
 
     @Override
-    public List<Progress> findByStudentAndCourse(Long studentId, Long courseId) {
+    public List<Progress> findByStudentAndCourse(String studentId, Long courseId) {
         return progressMapper.findByStudentAndCourse(studentId, courseId);
     }
 

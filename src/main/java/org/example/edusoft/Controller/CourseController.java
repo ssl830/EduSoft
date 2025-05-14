@@ -55,13 +55,16 @@ public class CourseController {
     }
 
     /**
-     * 获取教师的所有课程
-     * @param teacherId 教师ID
-     * @return 教师的所有课程列表
+     * 获取用户的课程列表
+     * @param userId 用户ID
+     * @param role 用户角色（teacher/student/ta）
+     * @return 用户的课程列表
      */
-    @GetMapping("/teacher/{teacherId}")
-    public ResponseEntity<List<Course>> getTeacherCourses(@PathVariable Long teacherId) {
-        return ResponseEntity.ok(courseService.getTeacherCourses(teacherId));
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<Course>> getUserCourses(
+            @PathVariable String userId,
+            @RequestParam String role) {
+        return ResponseEntity.ok(courseService.getUserCourses(userId, role));
     }
 
     /**
