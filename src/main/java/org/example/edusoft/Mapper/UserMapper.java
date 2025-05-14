@@ -42,5 +42,24 @@ public interface UserMapper {
     @Select("select * from join_request  where user_id=#{id}")
     List<JoinRequest> getJoinRequests(int id);
 
+    @Select("SELECT * FROM User WHERE id = #{id}")
+    User findById(Long id);
 
+    @Select("SELECT * FROM User WHERE username = #{username}")
+    User findByUsername(String username);
+
+    @Select("SELECT * FROM User WHERE role = #{role}")
+    List<User> findByRole(User.UserRole role);
+
+    @Insert("INSERT INTO User (username, password_hash, role, name, email) " +
+            "VALUES (#{username}, #{passwordHash}, #{role}, #{name}, #{email})")
+    @Options(useGeneratedKeys = true, keyProperty = "id")
+    int insert(User user);
+
+    @Update("UPDATE User SET password_hash = #{passwordHash}, name = #{name}, " +
+            "email = #{email}, role = #{role} WHERE id = #{id}")
+    int update(User user);
+
+    @Delete("DELETE FROM User WHERE id = #{id}")
+    int deleteById(Long id);
 }

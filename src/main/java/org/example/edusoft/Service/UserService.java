@@ -2,6 +2,8 @@ package com.bugvictims.demo11.Service;
 
 import com.bugvictims.demo11.Pojo.*;
 import com.github.pagehelper.PageInfo;
+import org.example.edusoft.entity.User;
+import java.util.List;
 
 public interface UserService {
     //寻找用户名是否已被占用
@@ -36,4 +38,10 @@ public interface UserService {
 
     //发送邮件
     void sendEmail(ToEmail email, Integer fromId, String from);
+
+    User findById(Long id);
+    List<User> findByRole(User.UserRole role);
+    User createUser(User user);
+    User updateUser(User user);
+    void deleteUser(Long id);
 }

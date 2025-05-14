@@ -17,16 +17,16 @@ public class Resource {
     private LocalDateTime createdAt;
 
     public enum ResourceType {
-        ppt,
-        pdf,
-        video,
-        code,
-        other
+        PPT,
+        PDF,
+        VIDEO,
+        CODE,
+        OTHER
     }
 
     public enum Visibility {
-        public,
-        private,
-        class_only
+        PUBLIC,
+        PRIVATE,
+        CLASS_ONLY
     }
 } 

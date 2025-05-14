@@ -15,15 +15,18 @@ public interface CourseMapper {
     @Select("SELECT * FROM Course WHERE code = #{code}")
     Course findByCode(String code);
 
-    @Insert("INSERT INTO Course (teacher_id, name, code, outline, objective, assessment) " +
-            "VALUES (#{teacherId}, #{name}, #{code}, #{outline}, #{objective}, #{assessment})")
+    @Insert("INSERT INTO Course (name, code, teacher_id, outline, objective, assessment, created_at) " +
+            "VALUES (#{name}, #{code}, #{teacherId}, #{outline}, #{objective}, #{assessment}, #{createdAt})")
     @Options(useGeneratedKeys = true, keyProperty = "id")
     int insert(Course course);
 
-    @Update("UPDATE Course SET name = #{name}, outline = #{outline}, " +
+    @Update("UPDATE Course SET name = #{name}, code = #{code}, outline = #{outline}, " +
             "objective = #{objective}, assessment = #{assessment} WHERE id = #{id}")
     int update(Course course);
 
     @Delete("DELETE FROM Course WHERE id = #{id}")
     int deleteById(Long id);
+
+    @Delete("DELETE FROM Course")
+    int deleteAll();
 } 

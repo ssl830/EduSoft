@@ -1,4 +1,4 @@
-package org.example.edusoft.Mapper;
+package org.example.edusoft.mapper;
 
 import org.apache.ibatis.annotations.*;
 import org.example.edusoft.entity.Resource;
@@ -30,4 +30,7 @@ public interface ResourceMapper {
 
     @Delete("DELETE FROM Resource WHERE id = #{id}")
     int deleteById(Long id);
+
+    @Delete("DELETE FROM Resource")
+    int deleteAll();
 } 
