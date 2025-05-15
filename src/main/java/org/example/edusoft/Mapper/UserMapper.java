@@ -1,4 +1,4 @@
-package com.bugvictims.demo11.Mapper;
+package org.example.edusoft.Mapper;
 import com.bugvictims.demo11.Pojo.*;
 import org.apache.ibatis.annotations.*;
 

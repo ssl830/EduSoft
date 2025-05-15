@@ -226,3 +226,26 @@ INSERT INTO FavoriteQuestion (student_id, question_id) VALUES
 -- 通知
 INSERT INTO Notification (user_id, title, message) VALUES
 (2, '练习反馈已出', '第一章练习已批改，请查看得分');
+
+
+-- 十、文件信息表
+CREATE TABLE file_info (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    file_type ENUM('AUDIO_VIDEO', 'IMAGE', 'TEXT', 'PDF', 'OTHER') NOT NULL,
+    file_size BIGINT NOT NULL,
+    file_name VARCHAR(255) NOT NULL,
+    course_id BIGINT NOT NULL,
+    section_id BIGINT,
+    class_id BIGINT,
+    file_version INT NOT NULL DEFAULT 1,
+    uploader_id BIGINT NOT NULL,
+    visibility ENUM('PUBLIC', 'PRIVATE', 'CLASS_ONLY') NOT NULL DEFAULT 'CLASS_ONLY',
+    file_location ENUM('COURSE_FILE', 'SECTION_FILE', 'PRACTICE_FILE', 'OTHER') NOT NULL,
+    upload_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (course_id) REFERENCES Course(id),
+    FOREIGN KEY (section_id) REFERENCES CourseSection(id),
+    FOREIGN KEY (class_id) REFERENCES Class(id),
+    FOREIGN KEY (uploader_id) REFERENCES User(id)
+);
+

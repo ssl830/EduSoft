@@ -1,4 +1,4 @@
-package org.example.edusoft.mapper;
+package org.example.edusoft.Mapper;
 
 import org.apache.ibatis.annotations.*;
 import org.example.edusoft.entity.ResourceVersion;

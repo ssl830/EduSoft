@@ -1,0 +1,151 @@
+<!-- 实现具体的sql语句 -->
+
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.example.edusoft.file.mapper.FileMapper">
+
+    <resultMap id="FileinfoResultMap" type="org.example.edusoft.file.entity.Fileinfo">
+        <id property="id" column="id"/>
+        <result property="fileType" column="file_type"/>
+        <result property="fileSize" column="file_size"/>
+        <result property="fileName" column="file_name"/>
+        <result property="courseId" column="course_id"/>
+        <result property="sectionId" column="section_id"/>
+        <result property="classId" column="class_id"/>
+        <result property="fileVersion" column="file_version"/>
+        <result property="uploaderId" column="uploader_id"/>
+        <result property="visibility" column="visibility"/>
+        <result property="fileLocation" column="file_location"/>
+        <result property="uploadTime" column="upload_time"/>
+    </resultMap>
+
+    <select id="selectAll" resultMap="FileinfoResultMap">
+        SELECT * FROM file_info
+    </select>
+
+    <insert id="insert">
+        INSERT INTO file_info (
+            name, file_type, file_size, file_name,
+            course_id, section_id, class_id, version,
+            uploader_id, visibility, location, upload_time
+        ) VALUES (
+            #{name}, #{fileType}, #{fileSize}, #{fileName},
+            #{courseId}, #{sectionId}, #{classId}, #{version},
+            #{uploaderId}, #{visibility}, #{location}, NOW()
+        )
+    </insert>
+
+    <update id="update">
+        UPDATE file_info SET
+            file_type = #{fileType},
+            file_size = #{fileSize},
+            file_name = #{fileName},
+            course_id = #{courseId},
+            section_id = #{sectionId},
+            class_id = #{classId},
+            version = #{version},
+            uploader_id = #{uploaderId},
+            visibility = #{visibility},
+            location = #{location}
+        WHERE id = #{id}
+    </update>
+
+    <delet id="deleteById">
+        DELETE FROM file_info WHERE id = #{id}
+    </delete> 
+
+    <!-- 动态多条件筛选 -->
+    <select id="selectByConditions" resultMap="FileinfoResultMap">
+        SELECT * FROM file_info
+        <where>
+            <!-- 所属课程 -->
+            <if test="courseId != null">
+                AND course_id = #{courseId}
+            </if>
+
+            <!-- 可见班级 -->
+            <if test="classId != null">
+                AND class_id = #{classId}
+            </if>
+
+            <!-- 文件类型 -->
+            <if test="fileType != null and fileType != ''">
+                AND file_type = #{fileType}
+            </if>
+
+            <!-- 上传者 ID -->
+            <if test="uploaderId != null">
+                AND uploader_id = #{uploaderId}
+            </if>
+
+            <!-- 可见性 -->
+            <if test="visibility != null and visibility != ''">
+                AND visibility = #{visibility}
+            </if>
+
+            <!-- 文件归属（COURSE_FILE, SECTION_FILE, PRACTICE_FILE, OTHER） -->
+            <if test="fileLocation != null and fileLocation != ''">
+                AND file_location = #{fileLocation}
+            </if>
+
+            <!-- 文件名模糊搜索 -->
+            <if test="fileName != null and fileName != ''">
+                AND file_name LIKE CONCAT('%', #{fileName}, '%')
+            </if>
+
+            <!-- 文件大小 -->
+            <if test="fileSize != null">
+                AND file_size = #{fileSize}
+            </if>
+
+            <!-- 上传时间 -->
+            <if test="uploadTime != null">
+                AND upload_time = #{uploadTime}
+            </if>
+
+            <!-- 版本号 -->
+            <if test="fileVersion != null">
+                AND version = #{fileVersion}
+            </if>
+
+            <!-- 章节 ID -->
+            <if test="sectionId != null">
+                AND section_id = #{sectionId}
+            </if>
+
+            <!-- 主键 ID -->
+            <if test="id != null">
+                AND id = #{id}
+            </if>
+        </where>
+
+        <!-- 排序逻辑 -->
+        <choose>
+            <!-- 按文件名排序 -->
+            <when test="sortBy == 'name' and order == 'asc'">
+                ORDER BY file_name ASC
+            </when>
+            <when test="sortBy == 'name' and order == 'desc'">
+                ORDER BY file_name DESC
+            </when>
+
+            <!-- 按上传时间排序 -->
+            <when test="sortBy == 'uploadTime' and order == 'asc'">
+                ORDER BY upload_time ASC
+            </when>
+            <when test="sortBy == 'uploadTime' and order == 'desc'">
+                ORDER BY upload_time DESC
+            </when>
+
+            <!-- 默认按上传时间降序 -->
+            <otherwise>
+                ORDER BY upload_time DESC
+            </otherwise>
+        </choose>
+    </select>
+
+</mapper>
+
