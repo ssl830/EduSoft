@@ -6,6 +6,7 @@ USE CoursePlatform;
 -- 二、用户表
 CREATE TABLE User (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id VARCHAR(15) NOT NULL UNIQUE,
     username VARCHAR(50) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
     role ENUM('student', 'teacher', 'ta') NOT NULL,
@@ -48,44 +49,27 @@ CREATE TABLE Class (
 CREATE TABLE ClassStudent (
     class_id BIGINT,
     student_id BIGINT,
-    course_id BIGINT,
     joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (class_id, student_id),
     FOREIGN KEY (class_id) REFERENCES Class(id),
     FOREIGN KEY (student_id) REFERENCES User(id)
 );
 
--- 五、教学资源及版本
-CREATE TABLE Resource (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    course_id BIGINT NOT NULL,
-    section_id BIGINT,
-    uploader_id BIGINT NOT NULL,
-    title VARCHAR(200) NOT NULL,
-    type ENUM('PPT', 'PDF', 'VIDEO', 'CODE', 'OTHER') NOT NULL,
-    file_url TEXT NOT NULL,
-    visibility ENUM('PUBLIC', 'PRIVATE', 'CLASS_ONLY') DEFAULT 'PUBLIC',
-    version INT DEFAULT 1,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (course_id) REFERENCES Course(id),
-    FOREIGN KEY (section_id) REFERENCES CourseSection(id),
-    FOREIGN KEY (uploader_id) REFERENCES User(id)
+CREATE TABLE CourseClass (
+    course_id BIGINT,
+    class_id BIGINT,
+    joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (class_id, course_id),
+    FOREIGN KEY (class_id) REFERENCES Class(id),
+    FOREIGN KEY (course_id) REFERENCES Course(id)
 );
 
-CREATE TABLE ResourceVersion (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    resource_id BIGINT NOT NULL,
-    version INT NOT NULL,
-    file_url TEXT NOT NULL,
-    uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (resource_id) REFERENCES Resource(id)
-);
 
 -- 六、题库与练习
 CREATE TABLE Question (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     creator_id BIGINT NOT NULL,
-    type ENUM('choice', 'program') NOT NULL,
+    type ENUM('singlechoice', 'program', 'fillblank') NOT NULL,
     content TEXT NOT NULL,
     options JSON,
     answer TEXT,
