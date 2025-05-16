@@ -1,5 +1,7 @@
 package org.example.edusoft.common.storage;
 
+import java.io.OutputStream;
+
 import org.example.edusoft.common.domain.FileBo;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.web.multipart.MultipartFile;
@@ -49,7 +51,7 @@ public interface IFileStorage {
      * @param response
      */
     void download(String objectName, HttpServletResponse response);
-
+    void download(String url, OutputStream outputStream);
 
     /**
      * 获取文件访问地址

@@ -19,6 +19,18 @@ public class FileInfo implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    private Long id;
+    private String name;
+    private Boolean isDir;         // 是否为文件夹
+    private Long parentId;         // 父节点ID
+    private Long courseId;
+    private Long classId;
+    private Long uploaderId;
+    private String visibility;
+    private String path;           // 可选：物化路径
+    private Date createdAt;
+    private Date updatedAt;
+    /* 
     private Long id;            // 自增ID
     private String fileType;    // 文件类型（AUDIO_VIDEO, IMAGE, TEXT, PDF, OTHER）
     private Long fileSize;      // 文件大小（字节）
@@ -31,7 +43,7 @@ public class FileInfo implements Serializable {
     private String visibility;  // 可见性（PUBLIC, PRIVATE, CLASS_ONLY）
     private String fileLocation;    // 在课程中的位置（COURSE_FILE, SECTION_FILE, PRACTICE_FILE, OTHER）
     private Date uploadTime;    // 上传时间
- 
+ */
     // 以下字段不在数据库中，仅用于前端展示或业务逻辑
     @Transient
     private String url;         // 文件路径（非数据库字段）
@@ -39,10 +51,6 @@ public class FileInfo implements Serializable {
     private String suffix;      // 文件后缀名（非数据库字段）
     @Transient
     private Boolean isImg;      // 是否图片（非数据库字段）
-    @Transient
-    private Boolean isDir;      // 是否文件夹（非数据库字段）
-    @Transient
-    private Long parentId;      // 父ID（非数据库字段）
     @Transient
     private String source;      // 来源（非数据库字段）
     @Transient

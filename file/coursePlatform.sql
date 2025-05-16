@@ -48,6 +48,7 @@ CREATE TABLE Class (
 CREATE TABLE ClassStudent (
     class_id BIGINT,
     student_id BIGINT,
+    course_id BIGINT,
     joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (class_id, student_id),
     FOREIGN KEY (class_id) REFERENCES Class(id),
@@ -249,3 +250,20 @@ CREATE TABLE file_info (
     FOREIGN KEY (uploader_id) REFERENCES User(id)
 );
 
+CREATE TABLE file_node (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    file_name VARCHAR(255) NOT NULL,             -- 节点名称
+    is_dir BOOLEAN NOT NULL DEFAULT FALSE,  -- 是否为文件夹
+    parent_id BIGINT NULL,                  -- 父节点ID（根节点为NULL）
+    course_id BIGINT NOT NULL,              -- 所属课程
+    class_id BIGINT NULL,                   -- 所属班级（非必须，用于权限控制）
+    uploader_id BIGINT NOT NULL,            -- 上传者
+    visibility ENUM('PUBLIC', 'PRIVATE', 'CLASS_ONLY') NOT NULL DEFAULT 'CLASS_ONLY',
+    file_path VARCHAR(1024),                     -- 物化路径（可选）
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (parent_id) REFERENCES file_node(id),
+    FOREIGN KEY (course_id) REFERENCES Course(id),
+    FOREIGN KEY (uploader_id) REFERENCES User(id)
+);

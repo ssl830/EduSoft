@@ -7,144 +7,99 @@
 
 <mapper namespace="org.example.edusoft.file.mapper.FileMapper">
 
-    <resultMap id="FileinfoResultMap" type="org.example.edusoft.file.entity.Fileinfo">
+     <!-- 结果映射 -->
+    <resultMap id="FileNodeResultMap" type="org.example.edusoft.entity.file.FileInfo">
         <id property="id" column="id"/>
-        <result property="fileType" column="file_type"/>
-        <result property="fileSize" column="file_size"/>
-        <result property="fileName" column="file_name"/>
+        <result property="name" column="file_name"/>
+        <result property="isDir" column="is_dir"/>
+        <result property="parentId" column="parent_id"/>
         <result property="courseId" column="course_id"/>
-        <result property="sectionId" column="section_id"/>
         <result property="classId" column="class_id"/>
-        <result property="fileVersion" column="file_version"/>
         <result property="uploaderId" column="uploader_id"/>
         <result property="visibility" column="visibility"/>
-        <result property="fileLocation" column="file_location"/>
-        <result property="uploadTime" column="upload_time"/>
+        <result property="path" column="file_path"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
     </resultMap>
-
-    <select id="selectAll" resultMap="FileinfoResultMap">
-        SELECT * FROM file_info
+    <!-- 查询所有节点 -->
+    <select id="selectAll" resultMap="FileNodeResultMap">
+        SELECT * FROM file_node
     </select>
 
-    <insert id="insert">
-        INSERT INTO file_info (
-            name, file_type, file_size, file_name,
-            course_id, section_id, class_id, version,
-            uploader_id, visibility, location, upload_time
+    <!-- 插入一个新节点 -->
+    <insert id="insertNode">
+        INSERT INTO file_node (
+            name, is_dir, parent_id, course_id, class_id,
+            uploader_id, visibility, path
         ) VALUES (
-            #{name}, #{fileType}, #{fileSize}, #{fileName},
-            #{courseId}, #{sectionId}, #{classId}, #{version},
-            #{uploaderId}, #{visibility}, #{location}, NOW()
+            #{name}, #{isDir}, #{parentId}, #{courseId}, #{classId},
+            #{uploaderId}, #{visibility}, #{path}
         )
     </insert>
 
-    <update id="update">
-        UPDATE file_info SET
-            file_type = #{fileType},
-            file_size = #{fileSize},
-            file_name = #{fileName},
+    <!-- 更新节点信息 -->
+    <update id="updateNode">
+        UPDATE file_node SET
+            name = #{name},
+            is_dir = #{isDir},
+            parent_id = #{parentId},
             course_id = #{courseId},
-            section_id = #{sectionId},
             class_id = #{classId},
-            version = #{version},
             uploader_id = #{uploaderId},
             visibility = #{visibility},
-            location = #{location}
+            path = #{path}
         WHERE id = #{id}
     </update>
 
-    <delet id="deleteById">
-        DELETE FROM file_info WHERE id = #{id}
-    </delete> 
+    <!-- 根据 ID 删除节点 -->
+    <delete id="deleteNodeById">
+        DELETE FROM file_node WHERE id = #{id}
+    </delete>
 
-    <!-- 动态多条件筛选 -->
-    <select id="selectByConditions" resultMap="FileinfoResultMap">
-        SELECT * FROM file_info
-        <where>
-            <!-- 所属课程 -->
-            <if test="courseId != null">
-                AND course_id = #{courseId}
-            </if>
+    <!-- 获取某个父节点下的所有子节点 -->
+    <select id="getChildren" resultMap="FileNodeResultMap">
+        SELECT *
+        FROM file_node
+        WHERE parent_id = #{parentId}
+    </select>
 
-            <!-- 可见班级 -->
-            <if test="classId != null">
-                AND class_id = #{classId}
-            </if>
+    <!-- 获取某个用户所在的所有班级对应的根文件夹 -->
+    <select id="getRootFoldersByUserId" resultMap="FileNodeResultMap">
+        SELECT fn.*
+        FROM ClassStudent cs
+        JOIN file_node fn ON cs.class_id = fn.class_id AND fn.parent_id IS NULL
+        WHERE cs.student_id = #{userId}
+    </select>
 
-            <!-- 文件类型 -->
-            <if test="fileType != null and fileType != ''">
-                AND file_type = #{fileType}
-            </if>
+    <!-- 获取某个课程+班级对应的根文件夹 -->
+    <select id="getRootFolderByCourseAndClass" resultMap="FileNodeResultMap">
+        SELECT *
+        FROM file_node
+        WHERE course_id = #{courseId}
+          AND class_id = #{classId}
+          AND parent_id IS NULL
+    </select>
 
-            <!-- 上传者 ID -->
-            <if test="uploaderId != null">
-                AND uploader_id = #{uploaderId}
-            </if>
+    <!-- 获取某个节点及其所有子节点（递归获取整个树） -->
+    <select id="getAllNodesUnder" resultMap="FileNodeResultMap">
+        WITH RECURSIVE node_tree AS (
+            SELECT * FROM file_node WHERE id = #{folderId}
+            UNION ALL
+            SELECT f.* FROM file_node f
+            INNER JOIN node_tree t ON f.parent_id = t.id
+        )
+        SELECT * FROM node_tree
+    </select>
 
-            <!-- 可见性 -->
-            <if test="visibility != null and visibility != ''">
-                AND visibility = #{visibility}
-            </if>
+    <!-- 判断是否存在同名文件 -->
+    <select id="existsByNameAndParent" resultType="int">
+        SELECT COUNT(*) FROM file_node
+        WHERE parent_id = #{parentId} AND name = #{name}
+    </select>
 
-            <!-- 文件归属（COURSE_FILE, SECTION_FILE, PRACTICE_FILE, OTHER） -->
-            <if test="fileLocation != null and fileLocation != ''">
-                AND file_location = #{fileLocation}
-            </if>
-
-            <!-- 文件名模糊搜索 -->
-            <if test="fileName != null and fileName != ''">
-                AND file_name LIKE CONCAT('%', #{fileName}, '%')
-            </if>
-
-            <!-- 文件大小 -->
-            <if test="fileSize != null">
-                AND file_size = #{fileSize}
-            </if>
-
-            <!-- 上传时间 -->
-            <if test="uploadTime != null">
-                AND upload_time = #{uploadTime}
-            </if>
-
-            <!-- 版本号 -->
-            <if test="fileVersion != null">
-                AND version = #{fileVersion}
-            </if>
-
-            <!-- 章节 ID -->
-            <if test="sectionId != null">
-                AND section_id = #{sectionId}
-            </if>
-
-            <!-- 主键 ID -->
-            <if test="id != null">
-                AND id = #{id}
-            </if>
-        </where>
-
-        <!-- 排序逻辑 -->
-        <choose>
-            <!-- 按文件名排序 -->
-            <when test="sortBy == 'name' and order == 'asc'">
-                ORDER BY file_name ASC
-            </when>
-            <when test="sortBy == 'name' and order == 'desc'">
-                ORDER BY file_name DESC
-            </when>
-
-            <!-- 按上传时间排序 -->
-            <when test="sortBy == 'uploadTime' and order == 'asc'">
-                ORDER BY upload_time ASC
-            </when>
-            <when test="sortBy == 'uploadTime' and order == 'desc'">
-                ORDER BY upload_time DESC
-            </when>
-
-            <!-- 默认按上传时间降序 -->
-            <otherwise>
-                ORDER BY upload_time DESC
-            </otherwise>
-        </choose>
+    <!-- 查询是否是目录 -->
+    <select id="isDir" resultType="boolean">
+        SELECT is_dir FROM file_node WHERE id = #{id}
     </select>
 
 </mapper>

@@ -19,102 +19,33 @@ import java.util.Map;
  * @Date: 2024/6/7 11:09
  */
 public interface FileService {
+    /**
+     * 获取用户所有可见的文件（按班级划分）
+     */
+    List<FileInfo> getAllFilesByUserId(Long userId);
 
     /**
-     * 获取文件列表
-     *
-     * @param info
-     * @return
+     * 获取用户在某个课程下的文件
      */
-    List<FileInfo> getList(FileInfo info);
+    List<FileInfo> getFilesByUserAndCourse(Long userId, Long courseId);
 
     /**
-     * 获取文件树结构列表
-     *
-     * @param info
-     * @return
+     * 获取某个文件夹下的内容
      */
-    List<Dtree> getTreeList(FileInfo info);
+    List<FileInfo> getChildrenFiles(Long folderId);
 
     /**
-     * 获取目录树结构列表
-     *
-     * @param info
-     * @return
+     * 下载文件或文件夹（如果是文件夹则打包成 ZIP）
      */
-    List<Dtree> getDirTreeList(FileInfo info);
+    void downloadFileOrFolder(Long fileId, HttpServletResponse response);
 
     /**
      * 上传文件
-     *
-     * @param files
-     * @param dirIds
-     * @return
      */
-    Result upload(MultipartFile[] files, String dirIds);
+    Result<?> upload(MultipartFile file, Long parentId, Long courseId, Long classId, String visibility);
 
     /**
-     * 分片上传大文件
-     *
-     * @param files
-     * @return
+     * 创建文件夹
      */
-    Result uploadSharding(MultipartFile[] files, String dirIds, HttpSession session);
-
-    /**
-     * 删除文件
-     *
-     * @param url
-     * @return
-     */
-    boolean delete(String url);
-
-    /**
-     * 下载文件
-     *
-     * @param url
-     * @return
-     */
-    void download(String url, HttpServletResponse response);
-
-    /**
-     * 新增文件夹
-     *
-     * @param fileInfo
-     * @return
-     */
-    boolean addFolder(FileInfo fileInfo);
-
-    /**
-     * 重命名
-     *
-     * @param dto
-     * @return
-     */
-    boolean updateByName(UpdateFileNameDTO dto);
-
-    /**
-     * 根据id集合批量删除
-     *
-     * @param id
-     * @return
-     */
-    boolean deleteByIds(Long id);
-
-    /**
-     * 移动文件
-     *
-     * @param ids
-     * @param parentId
-     * @return
-     */
-    boolean move(String ids, Long parentId);
-
-    /**
-     * 根据id拼接父目录
-     *
-     * @param id
-     * @return
-     */
-    Map<String, Object> getDirs(Long id);
+    public boolean createFolder(String name, Long parentId, Long courseId, Long classId, Long uploaderId);
 }
