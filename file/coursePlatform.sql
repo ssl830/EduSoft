@@ -9,7 +9,7 @@ CREATE TABLE User (
     user_id VARCHAR(15) NOT NULL UNIQUE,
     username VARCHAR(50) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
-    role ENUM('student', 'teacher', 'ta') NOT NULL,
+    role ENUM('student', 'teacher', 'tutor') NOT NULL,
     name VARCHAR(100),
     email VARCHAR(100),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -21,7 +21,7 @@ CREATE TABLE Course (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     teacher_id BIGINT NOT NULL,
     name VARCHAR(100) NOT NULL,
-    code VARCHAR(20) UNIQUE NOT NULL,
+    code VARCHAR(20) UNIQUE NOT NULL,   --  课程暗号
     outline TEXT,
     objective TEXT,
     assessment TEXT,
@@ -46,13 +46,13 @@ CREATE TABLE Class (
     FOREIGN KEY (course_id) REFERENCES Course(id)
 );
 
-CREATE TABLE ClassStudent (
+CREATE TABLE ClassUser (
     class_id BIGINT,
-    student_id BIGINT,
+    user_id BIGINT,
     joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (class_id, student_id),
+    PRIMARY KEY (class_id, user_id),
     FOREIGN KEY (class_id) REFERENCES Class(id),
-    FOREIGN KEY (student_id) REFERENCES User(id)
+    FOREIGN KEY (user_id) REFERENCES user(id)
 );
 
 CREATE TABLE CourseClass (
@@ -153,64 +153,6 @@ CREATE TABLE Notification (
     FOREIGN KEY (user_id) REFERENCES User(id)
 );
 
--- 九、插入测试数据
--- 用户
-INSERT INTO User (username, password_hash, role, name, email) VALUES
-('teacher01', 'hashed_pwd_123', 'teacher', '张老师', 'zhang@example.com'),
-('student01', 'hashed_pwd_456', 'student', '李学生', 'li@example.com');
-
--- 课程
-INSERT INTO Course (teacher_id, name, code, outline, objective, assessment) VALUES
-(1, '软件工程基础', 'SE101', '介绍软件开发流程', '掌握软件工程基础知识', '作业+项目+考试');
-
--- 章节
-INSERT INTO CourseSection (course_id, title, sort_order) VALUES
-(1, '第一章：软件工程导论', 1),
-(1, '第二章：需求分析', 2);
-
--- 班级
-INSERT INTO Class (course_id, name, class_code) VALUES
-(1, '软工A班', 'CLASS123');
-
--- 学生加入班级
-INSERT INTO ClassStudent (class_id, student_id) VALUES
-(1, 2);
-
--- 教学资源
-INSERT INTO Resource (course_id, section_id, uploader_id, title, type, file_url, visibility) VALUES
-(1, 1, 1, '第一章课件', 'PPT', '/uploads/ch1.pptx', 'CLASS_ONLY');
-
--- 题目
-INSERT INTO Question (creator_id, type, content, options, answer) VALUES
-(1, 'choice', '软件工程的第一步是什么？', '["需求分析","编码","测试","部署"]', '需求分析');
-
--- 练习任务
-INSERT INTO Practice (course_id, title, start_time, end_time, allow_multiple_submission, created_by) VALUES
-(1, '第一章练习', NOW(), DATE_ADD(NOW(), INTERVAL 7 DAY), TRUE, 1);
-
--- 添加题目到练习
-INSERT INTO PracticeQuestion (practice_id, question_id, score) VALUES
-(1, 1, 5);
-
--- 学生提交
-INSERT INTO Submission (practice_id, student_id, score, feedback) VALUES
-(1, 2, 5, '回答正确');
-
--- 学生作答
-INSERT INTO Answer (submission_id, question_id, answer_text, correct, score) VALUES
-(1, 1, '需求分析', TRUE, 5);
-
--- 学习进度
-INSERT INTO Progress (student_id, course_id, section_id, completed, completed_at) VALUES
-(2, 1, 1, TRUE, NOW());
-
--- 收藏题目
-INSERT INTO FavoriteQuestion (student_id, question_id) VALUES
-(2, 1);
-
--- 通知
-INSERT INTO Notification (user_id, title, message) VALUES
-(2, '练习反馈已出', '第一章练习已批改，请查看得分');
 
 
 -- 十、文件信息表
@@ -251,3 +193,58 @@ CREATE TABLE file_node (
     FOREIGN KEY (course_id) REFERENCES Course(id),
     FOREIGN KEY (uploader_id) REFERENCES User(id)
 );
+
+INSERT INTO User (user_id, username, password_hash, role, name, email) 
+VALUES ('U001', 'teacher_zhang', 'hash123456', 'teacher', '张老师', 'zhang@example.com'),
+       ('U002', 'student_li', 'hash789012', 'student', '李同学', 'li@example.com');
+       
+
+INSERT INTO Course (teacher_id, name, code, outline, objective, assessment)
+VALUES (1, '软件工程基础', 'SE101', '介绍软件开发流程', '掌握基础知识', '作业+项目+考试');
+
+
+INSERT INTO CourseSection (course_id, title, sort_order)
+VALUES (1, '第一章：软件工程导论', 1),
+       (1, '第二章：需求分析', 2);
+       
+       
+INSERT INTO Class (course_id, name, class_code)
+VALUES (1, '软工A班', 'CLASS_A_101');
+
+INSERT INTO ClassUser (class_id, user_id)
+VALUES (1, 2);  -- 学生加入班级
+
+
+INSERT INTO Question (creator_id, type, content, options, answer)
+VALUES (1, 'singlechoice', '软件工程的第一步是什么？', '["需求分析","编码","测试","部署"]', '需求分析');
+
+
+INSERT INTO Practice (course_id, title, start_time, end_time, allow_multiple_submission, created_by)
+VALUES (1, '第一章练习', NOW(), DATE_ADD(NOW(), INTERVAL 7 DAY), TRUE, 1);
+
+INSERT INTO PracticeQuestion (practice_id, question_id, score)
+VALUES (1, 1, 5);  -- 第一题占5分
+
+INSERT INTO Submission (practice_id, student_id, score, feedback)
+VALUES (1, 2, 5, '回答正确');
+
+INSERT INTO Answer (submission_id, question_id, answer_text, correct, score)
+VALUES (1, 1, '需求分析', TRUE, 5);
+
+INSERT INTO Progress (student_id, course_id, section_id, completed, completed_at)
+VALUES (2, 1, 1, TRUE, NOW());
+
+INSERT INTO FavoriteQuestion (student_id, question_id)
+VALUES (2, 1);
+
+
+INSERT INTO Notification (user_id, title, message)
+VALUES (2, '练习反馈已出', '第一章练习已批改，请查看得分');
+
+
+INSERT INTO file_info (file_type, file_size, file_name, course_id, section_id, class_id, uploader_id, visibility, file_location, upload_time)
+VALUES ('PDF', 102400, 'ch1.pdf', 1, 1, 1, 1, 'CLASS_ONLY', 'COURSE_FILE', NOW());
+
+
+INSERT INTO file_node (file_name, is_dir, parent_id, course_id, class_id, uploader_id, visibility, file_path)
+VALUES ('资料文件夹', TRUE, NULL, 1, 1, 1, 'CLASS_ONLY', '/1/');
