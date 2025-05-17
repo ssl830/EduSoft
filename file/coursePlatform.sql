@@ -154,28 +154,7 @@ CREATE TABLE Notification (
 );
 
 
-
--- 十、文件信息表
-CREATE TABLE file_info (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    file_type ENUM('AUDIO_VIDEO', 'IMAGE', 'TEXT', 'PDF', 'OTHER') NOT NULL,
-    file_size BIGINT NOT NULL,
-    file_name VARCHAR(255) NOT NULL,
-    course_id BIGINT NOT NULL,
-    section_id BIGINT,
-    class_id BIGINT,
-    file_version INT NOT NULL DEFAULT 1,
-    uploader_id BIGINT NOT NULL,
-    visibility ENUM('PUBLIC', 'PRIVATE', 'CLASS_ONLY') NOT NULL DEFAULT 'CLASS_ONLY',
-    file_location ENUM('COURSE_FILE', 'SECTION_FILE', 'PRACTICE_FILE', 'OTHER') NOT NULL,
-    upload_time DATETIME DEFAULT CURRENT_TIMESTAMP,
-    
-    FOREIGN KEY (course_id) REFERENCES Course(id),
-    FOREIGN KEY (section_id) REFERENCES CourseSection(id),
-    FOREIGN KEY (class_id) REFERENCES Class(id),
-    FOREIGN KEY (uploader_id) REFERENCES User(id)
-);
-
+-- 九、文件管理
 CREATE TABLE file_node (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     file_name VARCHAR(255) NOT NULL,             -- 节点名称
@@ -184,6 +163,10 @@ CREATE TABLE file_node (
     course_id BIGINT NOT NULL,              -- 所属课程
     class_id BIGINT NULL,                   -- 所属班级（非必须，用于权限控制）
     uploader_id BIGINT NOT NULL,            -- 上传者
+    file_type ENUM('AUDIO_VIDEO', 'IMAGE', 'TEXT', 'PDF', 'OTHER') NOT NULL,
+    section_id BIGINT,     -- 所属章节，章节文件夹和所有的课程班级根文件夹中的文件的section_id都为0或null
+    file_version INT NOT NULL DEFAULT 1,
+    file_size BIGINT NOT NULL,
     visibility ENUM('PUBLIC', 'PRIVATE', 'CLASS_ONLY') NOT NULL DEFAULT 'CLASS_ONLY',
     file_path VARCHAR(1024),                     -- 物化路径（可选）
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -191,6 +174,7 @@ CREATE TABLE file_node (
 
     FOREIGN KEY (parent_id) REFERENCES file_node(id),
     FOREIGN KEY (course_id) REFERENCES Course(id),
+    FOREIGN KEY (class_id) REFERENCES Class(id),
     FOREIGN KEY (uploader_id) REFERENCES User(id)
 );
 
@@ -242,9 +226,3 @@ INSERT INTO Notification (user_id, title, message)
 VALUES (2, '练习反馈已出', '第一章练习已批改，请查看得分');
 
 
-INSERT INTO file_info (file_type, file_size, file_name, course_id, section_id, class_id, uploader_id, visibility, file_location, upload_time)
-VALUES ('PDF', 102400, 'ch1.pdf', 1, 1, 1, 1, 'CLASS_ONLY', 'COURSE_FILE', NOW());
-
-
-INSERT INTO file_node (file_name, is_dir, parent_id, course_id, class_id, uploader_id, visibility, file_path)
-VALUES ('资料文件夹', TRUE, NULL, 1, 1, 1, 'CLASS_ONLY', '/1/');

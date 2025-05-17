@@ -1,4 +1,4 @@
-package org.example.edusoft.Utils;
+package org.example.edusoft.utils;
 
 import org.example.edusoft.common.constant.CommonConstant;
 import jakarta.servlet.ServletOutputStream;

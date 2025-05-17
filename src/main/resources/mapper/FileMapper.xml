@@ -16,11 +16,30 @@
         <result property="courseId" column="course_id"/>
         <result property="classId" column="class_id"/>
         <result property="uploaderId" column="uploader_id"/>
+        <result property="fileType" column="file_type"/>
+        <result property="sectionId" column="section_id"/>
+        <result property="version" column="file_version"/>
+        <result property="fileSize" column="file_size"/>
         <result property="visibility" column="visibility"/>
         <result property="path" column="file_path"/>
         <result property="createdAt" column="created_at"/>
         <result property="updatedAt" column="updated_at"/>
     </resultMap>
+
+    <!-- 在FileMapper.xml中添加ClassUser结果映射 -->
+    <resultMap id="ClassUserResultMap" type="org.example.edusoft.entity.ClassUser">
+        <id property="classId" column="class_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="joinedAt" column="joined_at"/>
+    </resultMap>
+
+    <!-- 映射 CourseClass -->
+    <resultMap id="CourseClassResultMap" type="org.example.edusoft.entity.courseclass.CourseClass">
+        <id property="courseId" column="course_id"/>
+        <result property="classId" column="class_id"/>
+        <result property="joinedAt" column="joined_at"/>
+    </resultMap>
+
     <!-- 查询所有节点 -->
     <select id="selectAll" resultMap="FileNodeResultMap">
         SELECT * FROM file_node
@@ -72,12 +91,22 @@
     </select>
 
     <!-- 获取某个课程+班级对应的根文件夹 -->
-    <select id="getRootFolderByCourseAndClass" resultMap="FileNodeResultMap">
+    <select id="getRootFolderByClassId" resultMap="FileNodeResultMap">
         SELECT *
         FROM file_node
         WHERE course_id = #{courseId}
           AND class_id = #{classId}
           AND parent_id IS NULL
+    </select>
+
+    <!-- 获取某个用户在某门课程下的班级ID -->
+    <!-- 返回的基本数据类型long，没有复杂的对象结构需要映射，不需要指定reaultMap-->
+    <select id="getClassIdByUserandCourse" resultType="long">
+        SELECT cu.class_id
+        FROM ClassUser cu
+        JOIN CourseClass cc ON cu.class_id = cc.class_id
+        WHERE cu.user_id = #{userId}
+        AND cc.course_id = #{courseId}
     </select>
 
     <!-- 获取某个节点及其所有子节点（递归获取整个树） -->

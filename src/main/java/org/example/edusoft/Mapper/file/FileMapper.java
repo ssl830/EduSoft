@@ -1,4 +1,4 @@
-package org.example.edusoft.Mapper.file;
+package org.example.edusoft.mapper.file;
 
 import java.util.List;
 import java.util.Date;
@@ -24,10 +24,9 @@ public interface FileMapper {
     List<FileInfo> getRootFoldersByUserId(@Param("userId") Long userId);
 
     /**
-     * 获取某个课程+班级对应的根文件夹
+     * 获取某个班级对应的根文件夹
      */
-    FileInfo getRootFolderByCourseAndClass(
-        @Param("courseId") Long courseId,
+    FileInfo getRootFolderByClassId(
         @Param("classId") Long classId
     );
 
@@ -57,6 +56,10 @@ public interface FileMapper {
     boolean existsByNameAndParent(@Param("name") String name, @Param("parentId") Long parentId);
     boolean isDir(Long id);
 
+    Long getClassIdByUserandCourse(
+        @Param("userId") Long userId,
+        @Param("courseId") Long courseId
+    );
 
     /* 
     List<FileInfo> selectAll();

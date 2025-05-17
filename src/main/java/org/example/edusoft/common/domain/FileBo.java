@@ -2,7 +2,8 @@ package org.example.edusoft.common.domain;
 
 import org.example.edusoft.common.constant.CommonConstant;
 import org.example.edusoft.exception.BusinessException;
-import org.example.edusoft.Utils.FileUtil;
+import org.example.edusoft.utils.FileUtil;
+
 import lombok.Data;
 import org.springframework.web.multipart.MultipartFile;
 

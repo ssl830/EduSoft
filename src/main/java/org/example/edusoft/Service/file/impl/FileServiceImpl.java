@@ -1,16 +1,16 @@
-package org.example.edusoft.Service.file.impl;
+package org.example.edusoft.service.file.impl;
 
 import cn.dev33.satoken.stp.StpUtil;
 import org.example.edusoft.common.constant.CommonConstant;
 import org.example.edusoft.common.domain.FileBo;
 import org.example.edusoft.common.domain.Result;
 import org.example.edusoft.exception.BusinessException;
+import org.example.edusoft.mapper.file.FileMapper;
+import org.example.edusoft.service.file.FileService;
 import org.example.edusoft.common.storage.IFileStorage;
 import org.example.edusoft.common.storage.IFileStorageProvider;
 import org.example.edusoft.entity.file.FileInfo;
 import org.example.edusoft.common.dto.UpdateFileNameDTO;
-import org.example.edusoft.Mapper.file.FileMapper;
-import org.example.edusoft.Service.file.FileService;
 import org.example.edusoft.common.domain.Dtree;
 import org.apache.ibatis.annotations.Param;
 // import org.apache.tomcat.jni.FileInfo;
@@ -61,8 +61,9 @@ public class FileServiceImpl implements FileService {
 
     // 2. 获取用户在某课程下的文件
     @Override
-    public List<FileInfo> getFilesByUserAndCourse(Long userId, Long courseId) {
-        FileInfo root = fileMapper.getRootFolderByCourseAndClass(courseId, userId);
+    public List<FileInfo> getFilesByUserandCourse(Long userId, Long courseId) {
+        Long classId = fileMapper.getClassIdByUserandCourse(userId, courseId);
+        FileInfo root = fileMapper.getRootFolderByClassId(classId);
         if (root == null) return Collections.emptyList();
         return fileMapper.getAllNodesUnder(root.getId());
     }
@@ -122,6 +123,50 @@ public class FileServiceImpl implements FileService {
             // 可记录日志
             throw new RuntimeException("文件下载失败", e);
         }
+    }
+
+    @Override
+    public Result<?> uploadFile(Long courseId, Long sectionId, Long uploaderId, MultipartFile file, String visibility) {
+        // Step 1: 获取用户所在课程的班级 ID
+        Long userId = uploaderId; // 假设 uploaderId 等同于 userId
+        Long classId = fileMapper.getClassIdByUserandCourse(userId, courseId);
+        if (classId == null) {
+            return Result.error("未找到对应班级");
+        }
+
+        // Step 2: 获取该班级的根文件夹
+        FileInfo rootFolder = fileMapper.getRootFolderByClassId(classId);
+        if (rootFolder == null) {
+            return Result.error("未找到班级根文件夹");
+        }
+
+        // Step 3: 查找对应 section 的文件夹
+        FileInfo sectionFolder = findSectionFolder(rootFolder.getId(), sectionId);
+        if (sectionFolder == null) {
+            return Result.error("未找到对应章节文件夹");
+        }
+
+        // Step 4: 调用已有 upload 方法上传文件到该文件夹
+        return upload(
+            file,
+            sectionFolder.getId(), // parent_id
+            courseId,
+            classId,
+            visibility
+        );
+    }
+
+    /**
+     * 递归查找指定文件夹下是否有对应 sectionId 的子文件夹
+     */
+    public FileInfo findSectionFolder(Long parentId, Long sectionId) {
+        List<FileInfo> children = fileMapper.getChildren(parentId);
+        for (FileInfo child : children) {
+            if (child.getIsDir() && Objects.equals(child.getName(), sectionId)) {
+                return child;
+            }
+        }
+        return null;
     }
 
     // 5. 上传文件
