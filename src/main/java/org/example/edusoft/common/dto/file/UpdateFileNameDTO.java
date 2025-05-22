@@ -1,4 +1,4 @@
-package org.example.edusoft.common.dto;
+package org.example.edusoft.common.dto.file;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

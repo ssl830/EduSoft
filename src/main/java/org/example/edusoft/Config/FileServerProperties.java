@@ -8,8 +8,10 @@ import java.util.Map;
 @Component
 @ConfigurationProperties(prefix = "fs.files-server")
 public class FileServerProperties {
-
-    private String type;
+    /**
+     * 当前使用的文件存储类型，例如：local、aliyunOss等。
+     */
+    private String type; 
     private Map<String, Object> local;
     private Map<String, String> qiniu;
     private Map<String, String> aliyunOss;

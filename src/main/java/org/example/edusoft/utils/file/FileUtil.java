@@ -1,4 +1,4 @@
-package org.example.edusoft.utils;
+package org.example.edusoft.utils.file;
 
 import org.example.edusoft.common.constant.CommonConstant;
 import jakarta.servlet.ServletOutputStream;
@@ -141,6 +141,20 @@ public class FileUtil {
      */
     public static String getFileSuffix(String fileName) {
         return fileName.substring(fileName.lastIndexOf(CommonConstant.SUFFIX_SPLIT) + 1).toLowerCase();
+    }
+
+    public static String getFileBaseName(String fileName) {
+        if (fileName == null || fileName.isEmpty()) {
+            return fileName;
+        }
+
+        int lastParenIndex = fileName.lastIndexOf('(');
+
+        if (lastParenIndex == -1) {
+            return fileName; // 没有括号，直接返回原名
+        }
+
+        return fileName.substring(0, lastParenIndex);
     }
 
     public static void downLoad(String url, String path, HttpServletResponse response) {

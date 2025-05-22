@@ -1,14 +1,12 @@
-<!-- 实现具体的sql语句 -->
-
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="org.example.edusoft.file.mapper.FileMapper">
+<mapper namespace="org.example.edusoft.mapper.file.FileMapper">
 
-     <!-- 结果映射 -->
-    <resultMap id="FileNodeResultMap" type="org.example.edusoft.entity.file.FileInfo">
+     <!-- 结果映射 --> 
+    <resultMap id="FileNodeResultMap" type="FileInfo">
         <id property="id" column="id"/>
         <result property="name" column="file_name"/>
         <result property="isDir" column="is_dir"/>
@@ -17,24 +15,28 @@
         <result property="classId" column="class_id"/>
         <result property="uploaderId" column="uploader_id"/>
         <result property="fileType" column="file_type"/>
+        <result property="sectiondirId" column="sectiondir_id"/>
         <result property="sectionId" column="section_id"/>
-        <result property="version" column="file_version"/>
+        <result property="lastVersionId" column="last_file_version"/>
+        <result property="isCurrentVersion" column="is_current_version"/>
         <result property="fileSize" column="file_size"/>
         <result property="visibility" column="visibility"/>
-        <result property="path" column="file_path"/>
+        <result property="url" column="file_url"/>
         <result property="createdAt" column="created_at"/>
         <result property="updatedAt" column="updated_at"/>
+        <result property="version" column="file_version"/>
+        <result property="objectName" column="object_name"/>
     </resultMap>
 
     <!-- 在FileMapper.xml中添加ClassUser结果映射 -->
-    <resultMap id="ClassUserResultMap" type="org.example.edusoft.entity.ClassUser">
+    <resultMap id="ClassUserResultMap" type="ClassUser">
         <id property="classId" column="class_id"/>
         <result property="userId" column="user_id"/>
         <result property="joinedAt" column="joined_at"/>
     </resultMap>
 
     <!-- 映射 CourseClass -->
-    <resultMap id="CourseClassResultMap" type="org.example.edusoft.entity.courseclass.CourseClass">
+    <resultMap id="CourseClassResultMap" type="CourseClass">
         <id property="courseId" column="course_id"/>
         <result property="classId" column="class_id"/>
         <result property="joinedAt" column="joined_at"/>
@@ -48,25 +50,41 @@
     <!-- 插入一个新节点 -->
     <insert id="insertNode">
         INSERT INTO file_node (
-            name, is_dir, parent_id, course_id, class_id,
-            uploader_id, visibility, path
+            file_name, is_dir, parent_id, course_id, class_id,
+            uploader_id, sectiondir_id, file_type, section_id, 
+            last_file_version, is_current_version, file_size, 
+            visibility, created_at, updated_at, file_url, file_version,
+            object_name
         ) VALUES (
             #{name}, #{isDir}, #{parentId}, #{courseId}, #{classId},
-            #{uploaderId}, #{visibility}, #{path}
+            #{uploaderId}, #{sectiondirId}, #{fileType}, #{sectionId}, 
+            #{lastVersionId}, #{isCurrentVersion}, #{fileSize},
+            #{visibility}, #{createdAt}, #{updatedAt}, #{url}, #{version},
+            #{objectName}
         )
     </insert>
 
     <!-- 更新节点信息 -->
     <update id="updateNode">
         UPDATE file_node SET
-            name = #{name},
+            file_name = #{name},
             is_dir = #{isDir},
             parent_id = #{parentId},
             course_id = #{courseId},
             class_id = #{classId},
             uploader_id = #{uploaderId},
+            sectiondir_id = #{sectiondirId},
+            file_type = #{fileType},
+            section_id = #{sectionId},
+            last_file_version = #{lastVersionId},
+            is_current_version = #{isCurrentVersion},
+            file_size = #{fileSize},
             visibility = #{visibility},
-            path = #{path}
+            created_at = #{createdAt},
+            updated_at = #{updatedAt},
+            file_url = #{url},
+            file_version = #{version},
+            object_name = #{objectName}
         WHERE id = #{id}
     </update>
 
@@ -85,18 +103,32 @@
     <!-- 获取某个用户所在的所有班级对应的根文件夹 -->
     <select id="getRootFoldersByUserId" resultMap="FileNodeResultMap">
         SELECT fn.*
-        FROM ClassStudent cs
+        FROM classuser cs
         JOIN file_node fn ON cs.class_id = fn.class_id AND fn.parent_id IS NULL
-        WHERE cs.student_id = #{userId}
+        WHERE cs.user_id = #{userId}
     </select>
 
     <!-- 获取某个课程+班级对应的根文件夹 -->
     <select id="getRootFolderByClassId" resultMap="FileNodeResultMap">
         SELECT *
         FROM file_node
-        WHERE course_id = #{courseId}
-          AND class_id = #{classId}
+        WHERE class_id = #{classId}
           AND parent_id IS NULL
+    </select>
+
+    <!-- 获取指定基础文件名的所有版本 -->
+    <select id="getVersionsByBaseName" resultMap="FileNodeResultMap">
+        SELECT *
+        FROM file_node
+        WHERE parent_id = #{parentId}
+        and (
+            file_name = #{baseName}
+            OR file_name REGEXP CONCAT(
+                '^',
+                REGEXP_REPLACE(#{baseName}, '([\\$\\^\\*\\+\\?\\(\\)\\[\\]\\{\\}\\|\\\\\\.])', '\\\\$1'),
+                '\\([0-9]+\\)$'
+        )
+)
     </select>
 
     <!-- 获取某个用户在某门课程下的班级ID -->
@@ -107,6 +139,33 @@
         JOIN CourseClass cc ON cu.class_id = cc.class_id
         WHERE cu.user_id = #{userId}
         AND cc.course_id = #{courseId}
+    </select>
+
+    <select id="getAllClassIdsByCourseId" resultType="long">
+        SELECT cc.class_id
+        FROM CourseClass cc
+        WHERE cc.course_id = #{courseId}
+    </select>
+
+    <select id="getChildrenWithFilter" resultMap="FileNodeResultMap">
+        SELECT *
+        FROM file_node
+        WHERE parent_id = #{parentId}
+        <if test="title != null and title != ''">
+            AND (
+                file_name = #{baseName}
+                OR file_name REGEXP CONCAT(
+                    '^',
+                    REGEXP_REPLACE(#{baseName}, '([\\$\\^\\*\\+\\?\\(\\)\\[\\]\\{\\}\\|\\\\\\.])', '\\\\$1'),
+                    '\\([0-9]+\\)$'
+            )
+        </if>
+        <if test="type != null and type != ''">
+            AND file_type = UPPER(#{type})
+        </if>
+        <if test="chapter != null and chapter != -1">
+            AND section_id = #{chapter} and is_dir = false
+        </if>
     </select>
 
     <!-- 获取某个节点及其所有子节点（递归获取整个树） -->
@@ -120,10 +179,37 @@
         SELECT * FROM node_tree
     </select>
 
-    <!-- 判断是否存在同名文件 -->
-    <select id="existsByNameAndParent" resultType="int">
+
+    <!-- 获取指定名称、父ID下最大编号小于当前版本的文件 -->
+    <select id="getLastVersionId" resultType="long">
+        SELECT id
+        FROM file_node
+        WHERE parent_id = #{parentId}
+            -- 只匹配形如 basename(数字) 的文件名
+            AND file_name REGEXP CONCAT('^', #{baseName}, '\\\\([0-9]+\\\\)$')
+            -- 并且提取数字后，比当前名称中的数字小
+            AND CAST(REGEXP_SUBSTR(file_name, '[0-9]+') AS UNSIGNED)
+                &lt; CAST(REGEXP_SUBSTR(#{currentName}, '[0-9]+') AS UNSIGNED)
+        ORDER BY
+            -- 按提取到的数字降序取最大
+            CAST(REGEXP_SUBSTR(file_name, '[0-9]+') AS UNSIGNED) DESC
+        LIMIT 1
+    </select>
+
+
+    <!-- 判断文件夹内是否存在同名文件 -->
+    <select id="existsByNameAndParent" resultType="boolean">
         SELECT COUNT(*) FROM file_node
-        WHERE parent_id = #{parentId} AND name = #{name}
+        WHERE parent_id = #{parentId} AND file_name = #{name}
+    </select>
+
+    <!-- 判断OSS库中全局是否存在同名文件，忽略目录重名 -->
+    <select id="existsByNameGlobally" resultType="boolean">
+        SELECT EXISTS(
+            SELECT 1 
+            FROM file_info 
+            WHERE file_name = #{name} AND is_dir = false
+        )
     </select>
 
     <!-- 查询是否是目录 -->

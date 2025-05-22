@@ -3,6 +3,8 @@ package org.example.edusoft.common.storage;
 import java.io.OutputStream;
 
 import org.example.edusoft.common.domain.FileBo;
+import org.example.edusoft.entity.file.FileType;
+
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -35,7 +37,7 @@ public interface IFileStorage {
      * @param file
      * @return 文件基本信息
      */
-    FileBo upload(MultipartFile file);
+    FileBo upload(MultipartFile file, String uniqueName, FileType type);
 
     /**
      * 删除文件
@@ -58,6 +60,6 @@ public interface IFileStorage {
      *
      * @param objectName 对象名称
      * @return
-     */
+     */ 
     String getUrl(String objectName);
 }

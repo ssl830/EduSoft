@@ -9,8 +9,9 @@ import org.example.edusoft.config.FileServerProperties;
 import org.mybatis.spring.annotation.MapperScan;
 
 @SpringBootApplication
-@MapperScan("org.example.edusoft.file.mapper")  // 告诉 Spring 和 MyBatis 去指定包路径下扫描所有的 Mapper 接口，并将它们注册为 Spring 容器中的 Bean
-@EnableConfigurationProperties({FileServerProperties.class})
+@MapperScan("org.example.edusoft.file.mapper")
+@EnableConfigurationProperties({FileServerProperties.class, org.example.edusoft.common.properties.FsServerProperties.class})
+@MapperScan("org.example.edusoft.mapper")
 public class EduSoftApplication {
 
     public static void main(String[] args) {
