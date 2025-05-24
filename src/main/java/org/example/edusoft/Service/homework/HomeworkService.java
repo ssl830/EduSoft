@@ -1,0 +1,79 @@
+package org.example.edusoft.service.homework;
+
+import org.example.edusoft.entity.homework.Homework;
+import org.example.edusoft.entity.homework.HomeworkSubmission;
+import org.springframework.web.multipart.MultipartFile;
+import jakarta.servlet.http.HttpServletResponse;
+import java.util.List;
+
+/**
+ * 作业服务接口
+ */
+public interface HomeworkService {
+    /**
+     * 创建作业
+     * @param homework 作业信息
+     * @param attachmentFile 附件文件
+     * @return 作业ID
+     */
+    Long createHomework(Homework homework, MultipartFile attachmentFile);
+
+    /**
+     * 获取作业详情
+     * @param id 作业ID
+     * @return 作业信息
+     */
+    Homework getHomework(Long id);
+
+    /**
+     * 获取班级作业列表
+     * @param classId 班级ID
+     * @return 作业列表
+     */
+    List<Homework> getHomeworkList(Long classId);
+
+    /**
+     * 提交作业
+     * @param homeworkId 作业ID
+     * @param studentId 学生ID
+     * @param submissionType 提交类型
+     * @param file 提交的文件
+     * @return 提交记录ID
+     */
+    Long submitHomework(Long homeworkId, Long studentId, String submissionType, MultipartFile file);
+
+    /**
+     * 获取作业提交列表
+     * @param homeworkId 作业ID
+     * @return 提交记录列表
+     */
+    List<HomeworkSubmission> getSubmissionList(Long homeworkId);
+
+    /**
+     * 获取学生的提交记录
+     * @param homeworkId 作业ID
+     * @param studentId 学生ID
+     * @return 提交记录
+     */
+    HomeworkSubmission getStudentSubmission(Long homeworkId, Long studentId);
+
+    /**
+     * 下载作业附件
+     * @param homeworkId 作业ID
+     * @param response HTTP响应对象
+     */
+    void downloadHomeworkFile(Long homeworkId, HttpServletResponse response);
+
+    /**
+     * 下载提交的作业文件
+     * @param submissionId 提交记录ID
+     * @param response HTTP响应对象
+     */
+    void downloadSubmissionFile(Long submissionId, HttpServletResponse response);
+
+    /**
+     * 删除作业
+     * @param homeworkId 作业ID
+     */
+    void deleteHomework(Long homeworkId);
+} 

@@ -32,7 +32,7 @@ public class IStorageFactory implements IFileStorageProvider {
             //case local -> new LocalStorage(serverProperties.getLocal());
             //case minio -> new MinioStorage(serverProperties.getMinio());
 //            case qiniu -> new QiniuStorage(serverProperties.getQiniu());
-            case aliyunOSS -> new AliyunOssStorage(serverProperties.getAliyunOss());
+            case aliyunOSS -> new AliyunOssStorage(serverProperties);
             default -> throw new BusinessException("不支持的存储平台");
         };
     }

@@ -1,0 +1,61 @@
+### 1. 创建作业
+POST http://localhost:8080/api/homework/create
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="homework"
+Content-Type: application/json
+
+{
+    "title": "第二次作业",
+    "description": "请完成课后练习1-3题",
+    "classId": 1,
+    "createdBy": 1,
+    "deadline": "2025-06-01T23:59:59"
+}
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="homework1.pdf"
+Content-Type: application/pdf
+
+< ./files/homework1.pdf
+--WebAppBoundary--
+
+### 2. 获取作业详情
+GET http://localhost:8080/api/homework/2
+
+### 3. 获取班级作业列表
+GET http://localhost:8080/api/homework/list?classId=1
+
+### 4. 提交作业
+POST http://localhost:8080/api/homework/submit/2
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="studentId"
+
+2
+--WebAppBoundary
+Content-Disposition: form-data; name="submissionType"
+
+PDF
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="submission1.pdf"
+Content-Type: application/pdf
+
+< ./files/submission1.pdf
+--WebAppBoundary--
+
+### 5. 获取作业提交列表
+GET http://localhost:8080/api/homework/submissions/2
+
+### 6. 获取学生的提交记录
+GET http://localhost:8080/api/homework/submission?homeworkId=2&studentId=2
+
+### 7. 下载作业附件
+GET http://localhost:8080/api/homework/file/2
+
+### 8. 下载提交的作业文件
+GET http://localhost:8080/api/homework/submission/file/1
+
+### 9. 删除作业
+DELETE http://localhost:8080/api/homework/1 

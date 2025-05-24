@@ -188,6 +188,8 @@ CREATE TABLE file_node (
     FOREIGN KEY (uploader_id) REFERENCES User(id)
 );
 
+CREATE INDEX idx_parent_id ON file_node (parent_id);  -- 创建索引
+
 -- 十、导入记录
 CREATE TABLE import_record (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
@@ -204,7 +206,67 @@ CREATE TABLE import_record (
     FOREIGN KEY (operator_id) REFERENCES User(id)
 );
 
-CREATE INDEX idx_parent_id ON file_node (parent_id);  -- 创建索引
+-- 十一、作业
+-- Create Homework table
+CREATE TABLE IF NOT EXISTS homework (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    class_id BIGINT NOT NULL,
+    created_by BIGINT NOT NULL,
+    attachment_url VARCHAR(255),
+    object_name VARCHAR(255),
+    deadline DATETIME NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Create HomeworkSubmission table
+CREATE TABLE IF NOT EXISTShomework_submission (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    homework_id BIGINT NOT NULL,
+    student_id BIGINT NOT NULL,
+    submission_type VARCHAR(50) NOT NULL,
+    file_url VARCHAR(255),
+    object_name VARCHAR(255),
+    submitted_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (homework_id) REFERENCES homework(id)
+); 
+
+-- 十二、教学资源
+-- Create teaching resource table
+CREATE TABLE IF NOT EXISTS teaching_resource (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,           -- 资源标题
+    description TEXT,                      -- 资源描述
+    course_id BIGINT NOT NULL,             -- 所属课程ID
+    chapter_id BIGINT NOT NULL,            -- 所属章节ID
+    chapter_name VARCHAR(255) NOT NULL,     -- 章节名称
+    resource_type VARCHAR(50) NOT NULL,    -- 资源类型（VIDEO/DOCUMENT等）
+    file_url VARCHAR(255) NOT NULL,        -- 文件URL
+    object_name VARCHAR(255) NOT NULL,     -- 对象存储中的文件名
+    duration INTEGER,                      -- 视频时长（秒）
+    created_by BIGINT NOT NULL,            -- 创建者ID
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Create learning progress table
+CREATE TABLE IF NOT EXISTS learning_progress (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    resource_id BIGINT NOT NULL,           -- 教学资源ID
+    student_id BIGINT NOT NULL,            -- 学生ID
+    progress INTEGER NOT NULL,             -- 学习进度（秒）
+    last_position INTEGER NOT NULL,        -- 最后观看位置（秒）
+    watch_count INTEGER DEFAULT 0,         -- 观看次数
+    last_watch_time DATETIME,              -- 最后观看时间
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_resource_student (resource_id, student_id),  -- 资源和学生的唯一约束
+    FOREIGN KEY (resource_id) REFERENCES teaching_resource(id) ON DELETE CASCADE
+); 
+
+
 
 -- 1. 用户表 User
 INSERT INTO User (user_id, username, password_hash, role, email) VALUES

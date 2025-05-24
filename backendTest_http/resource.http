@@ -1,0 +1,119 @@
+### 1. 上传教学资源
+POST http://localhost:8080/api/resources/upload
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="file"; filename="test.mp4"
+Content-Type: video/mp4
+
+< ./test.mp4
+--boundary
+Content-Disposition: form-data; name="courseId"
+
+1
+--boundary
+Content-Disposition: form-data; name="chapterId"
+
+1
+--boundary
+Content-Disposition: form-data; name="chapterName"
+
+第一章：Java基础
+--boundary
+Content-Disposition: form-data; name="title"
+
+Java变量与数据类型
+--boundary
+Content-Disposition: form-data; name="description"
+
+本视频详细讲解Java中的变量定义和基本数据类型
+--boundary
+Content-Disposition: form-data; name="createdBy"
+
+1
+--boundary--
+
+### 2. 获取教学资源详情
+GET http://localhost:8080/api/resources/1
+Content-Type: application/json
+
+### 3. 获取课程的所有教学资源（按章节分组）
+GET http://localhost:8080/api/resources/list/1
+Content-Type: application/json
+
+### 4. 获取章节的教学资源
+GET http://localhost:8080/api/resources/chapter/1/1
+Content-Type: application/json
+
+### 5. 删除教学资源
+DELETE http://localhost:8080/api/resources/1?operatorId=1
+Content-Type: application/json
+
+### 6. 更新学习进度
+POST http://localhost:8080/api/resources/progress
+Content-Type: application/json
+
+{
+    "resourceId": 2,
+    "studentId": 1,
+    "progress": 300,
+    "position": 295
+}
+
+### 7. 获取学习进度
+GET http://localhost:8080/api/resources/progress/2/1
+Content-Type: application/json
+
+### 8. 获取资源访问URL
+GET http://localhost:8080/api/resources/url/2
+Content-Type: application/json
+
+### 9. 批量上传教学资源（示例：多个文件）
+POST http://localhost:8080/api/resources/upload
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="file"; filename="chapter1.mp4"
+Content-Type: video/mp4
+
+< ./chapter1.mp4
+--boundary
+Content-Disposition: form-data; name="courseId"
+
+1
+--boundary
+Content-Disposition: form-data; name="chapterId"
+
+1
+--boundary
+Content-Disposition: form-data; name="chapterName"
+
+第一章：Java基础
+--boundary
+Content-Disposition: form-data; name="title"
+
+Java基础入门
+--boundary
+Content-Disposition: form-data; name="description"
+
+Java编程基础课程第一章内容
+--boundary
+Content-Disposition: form-data; name="createdBy"
+
+1
+--boundary--
+
+### 10. 错误处理测试：获取不存在的资源
+GET http://localhost:8080/api/resources/999
+Content-Type: application/json
+
+### 11. 错误处理测试：更新不存在的学习进度
+POST http://localhost:8080/api/resources/progress
+Content-Type: application/json
+
+{
+    "resourceId": 999,
+    "studentId": 999,
+    "progress": 100,
+    "position": 95
+} 

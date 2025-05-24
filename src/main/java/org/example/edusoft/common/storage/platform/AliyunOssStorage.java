@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.OutputStream;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
@@ -29,14 +30,19 @@ import org.springframework.web.multipart.MultipartFile;
  * @Date: 2025/5/17 10:32
  */
 @Slf4j
+@Component
 public class AliyunOssStorage implements IFileStorage {
 
     private final OSS client;
     private final String endPoint;
     private final String bucket;
 
-    public AliyunOssStorage(FsServerProperties.AliyunOssProperties config) {
+    public AliyunOssStorage(FsServerProperties fsServerProperties) {
         try {
+            FsServerProperties.AliyunOssProperties config = fsServerProperties.getAliyunOss();
+            if (config == null) {
+                throw new StorageConfigException("阿里云OSS配置未找到");
+            }
             String accessKey = config.getAccessKey();
             String secretKey = config.getSecretKey();
             String endPoint = config.getEndpoint();
@@ -117,9 +123,12 @@ public class AliyunOssStorage implements IFileStorage {
         }
         try {
             client.deleteObject(bucket, objectName);
+            log.info("[AliyunOSS] file delete success, object:{}", objectName);
         } catch (Exception e) {
             log.error("[AliyunOSS] file delete failed: {}", e.getMessage());
             throw new BusinessException("文件删除失败");
+        } finally {
+            client.shutdown();
         }
     } 
 
