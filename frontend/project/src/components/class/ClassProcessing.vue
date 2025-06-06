@@ -4,16 +4,17 @@ import { defineProps } from 'vue'
 import ExerciseApi from '../../api/exercise'
 import {useAuthStore} from "../../stores/auth.ts";
 import router from "../../router";
+import type { Practice } from '@/types/exercise'
 
 const props = defineProps<{
     classId: string;
     isTeacher: boolean;
 }>()
 
-const practices = ref<any[]>([])
+const practices = ref<Practice[]>([])
 const pendingCorrections = ref<any[]>([]) // 新增：待批改列表
 const loading = ref(true)
-const error = ref('')
+const error = ref<string | null>(null)
 const currentView = ref('exercises') // 新增：视图切换（练习/批改）
 
 // Filters
@@ -49,34 +50,21 @@ const fetchPractices = async () => {
     error.value = ''
 
     try {
-        if(isStudent.value){ // 学生视图
-            // 调用新的API端点
-            const response = await ExerciseApi.getPracticeList(props.classId)
-            // 更新数据结构处理
-            practices.value = response.data.practices
-        }else{ // 老师视图
-            // 调用新的API端点
-            const response = await ExerciseApi.getPracticeTeachList(props.classId)
-            // 更新数据结构处理
-            practices.value = response.data.practices
+        const response = await ExerciseApi.getPracticeList(props.classId)
+        console.log('获取练习列表响应:', response)
+
+        if (response.code === 200 && response.data) {
+            practices.value = Array.isArray(response.data) ? response.data : []
+            console.log('练习列表数据:', practices.value)
+        } else {
+            error.value = response.message || '获取练习列表失败'
+            console.error('获取练习列表失败:', response)
+            practices.value = []
         }
-
-        // // 提取唯一练习名称
-        // const practiceSet = new Map()
-        // practices.value.forEach((ex: any) => {
-        //     if (ex.id && ex.name) {
-        //         practiceSet.set(ex.id, ex.name)
-        //     }
-        // })
-        // practicesName.value = Array.from(practiceSet, ([id, name]) => ({id, name}))
-        //
-        // // 提取学生姓名
-        // const namesSet = new Set(practices.value.map((r: any) => r.name).filter(Boolean))
-        // names.value = Array.from(namesSet)
-
     } catch (err) {
         error.value = '获取练习列表失败，请稍后再试'
-        console.error(err)
+        console.error('获取练习列表错误:', err)
+        practices.value = []
     } finally {
         loading.value = false
     }
@@ -138,7 +126,7 @@ const checkPractice = (submissionId: number) => {
 
 // 查看练习
 const getPracticeReport = async (practiceId: number, submissionId: number) => {
-    // TODO: 或者跳转到“学习记录”
+    // TODO: 或者跳转到"学习记录"
     router.push({
         name: 'ExerciseFeedback',
         params: { practiceId, submissionId }
@@ -166,6 +154,54 @@ watch([selectedChapter, selectedType, selectedExer], () => {
     fetchData()
 })
 
+// 格式化日期
+const formatDate = (dateString: string) => {
+    if (!dateString) return '-'
+    const date = new Date(dateString)
+    return date.toLocaleString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+    })
+}
+
+// 获取状态文本
+const getStatusText = (practice: any) => {
+    const now = new Date()
+    const start = new Date(practice.startTime)
+    const end = new Date(practice.endTime)
+
+    if (now < start) {
+        return '未开始'
+    } else if (now > end) {
+        return '已结束'
+    } else {
+        return '进行中'
+    }
+}
+
+// 获取状态样式类
+const getStatusClass = (practice: any) => {
+    const now = new Date()
+    const start = new Date(practice.startTime)
+    const end = new Date(practice.endTime)
+
+    if (now < start) {
+        return 'status-pending'
+    } else if (now > end) {
+        return 'status-ended'
+    } else {
+        return 'status-ongoing'
+    }
+}
+
+// 添加跳转函数
+const goToLearningRecords = () => {
+    window.location.href = '/learning-records'
+}
+
 onMounted(() => {
     fetchData()
 })
@@ -174,102 +210,17 @@ onMounted(() => {
 <template>
     <div class="resource-list-container">
         <div class="resource-header">
-            <h2>{{ isStudent ? '我的练习' : '练习管理' }}</h2>
-            <div>
-                <!-- 新建练习按钮，仅老师可见 -->
-                <button
-                    v-if="!isStudent"
-                    class="btn-primary"
-                    style="margin-right: 1rem"
-                    @click="goToCreateExercise"
-                >
-                    新建练习
-                </button>
-                <button
-                    v-if="!isStudent"
-                    class="btn-secondary"
-                    @click="switchView('exercises')"
-                    :class="{ active: currentView === 'exercises' }"
-                >
-                    练习列表
-                </button>
-                <button
-                    v-if="!isStudent"
-                    class="btn-secondary"
-                    style="margin-left: 1rem"
-                    @click="switchView('corrections')"
-                    :class="{ active: currentView === 'corrections' }"
-                >
-                    待批改
-                </button>
-                <button
-                    v-if="isStudent"
-                    class="btn-primary"
-                    @click="exportReport"
-                >
-                    {{ '导出报告' }}
-                </button>
-            </div>
-        </div>
-
-        <!-- 筛选区域 -->
-        <div class="resource-filters" v-if="currentView === 'exercises'">
-            <div class="filter-section">
-                <label for="typeFilter">按练习筛选:</label>
-                <select
-                    id="typeFilter"
-                    v-model="selectedExer"
-                >
-                    <option value=-1>所有练习</option>
-                    <option
-                        v-for="practice in practicesName"
-                        :key="practice.id"
-                        :value="practice.id"
-                    >
-                        {{ practice.name }}
-                    </option>
-                </select>
-            </div>
-
-        </div>
-
-        <!-- 待批改列表视图 -->
-        <div v-if="!isStudent && currentView === 'corrections'">
-            <div v-if="loading" class="loading-container">加载中...</div>
-            <div v-else-if="error" class="error-message">{{ error }}</div>
-            <div v-else-if="pendingCorrections.length === 0" class="empty-state">
-                暂无待批改练习
-            </div>
-            <div v-else class="resource-table-wrapper">
-                <table class="resource-table">
-                    <thead>
-                    <tr>
-                        <th>练习名称</th>
-                        <th>学生姓名</th>
-                        <th>操作</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr v-for="item in pendingCorrections" :key="item.submissionId">
-                        <td>{{ item.practiceName }}</td>
-                        <td>{{ item.studentName }}</td>
-                        <td class="actions">
-                            <button
-                                class="btn-action history"
-                                @click="checkPractice(item.submissionId)"
-                                title="批改"
-                            >
-                                批改
-                            </button>
-                        </td>
-                    </tr>
-                    </tbody>
-                </table>
-            </div>
+            <h2>班级练习</h2>
+            <button
+                class="btn-primary"
+                @click="goToLearningRecords"
+            >
+                去做练习
+            </button>
         </div>
 
         <!-- 练习列表视图 -->
-        <div v-else>
+        <div>
             <div v-if="loading" class="loading-container">加载中...</div>
             <div v-else-if="error" class="error-message">{{ error }}</div>
             <div v-else-if="practices.length === 0" class="empty-state">
@@ -279,70 +230,23 @@ onMounted(() => {
                 <table class="resource-table">
                     <thead>
                     <tr>
-                        <th>练习名称</th>
-                        <th>开始时间</th>
-                        <th>截止时间</th>
-                        <th>操作</th>
+                        <th style="width: 25%">练习名称</th>
+                        <th style="width: 20%">开始时间</th>
+                        <th style="width: 20%">截止时间</th>
+                        <th style="width: 15%">提交次数</th>
+                        <th style="width: 20%">状态</th>
                     </tr>
                     </thead>
                     <tbody>
-                    <tr v-for="practice in practices" :key="practice.practiceid">
-                        <td>{{ practice.name }}</td>
-                        <td>{{ practice.start_time || '-' }}</td>
-                        <td>{{ practice.end_time || '-' }}</td>
-                        <td class="actions">
-                            <!-- 练习按钮  -->
-                            <button
-                                v-if="isStudent"
-                                class="btn-action preview"
-                                @click="doPractice(practice.practiceid)"
-                                title="练习"
-                                :disabled="isOverdue(practice.end_time) ||
-                            (practice.isSubmitted && !practice.allowMultiple)"
-                            >
-                                练习
-                            </button>
-
-                            <!-- 查看按钮  TODO 学生查看练习报告？-->
-                            <button
-                                v-if="isStudent"
-                                class="btn-action download"
-                                @click="getPracticeReport(practice.id, practice.submitId)"
-                                title="查看"
-                                :disabled="!practice.isSubmitted"
-                            >
-                                查看
-                            </button>
-<!-- TODO 老师查看练习都有什么题-->
-                            <button
-                                v-if="isTeacher"
-                                class="btn-action download"
-                                @click="getPracticeReport(practice.id, practice.submitId)"
-                                title="查看"
-                                :disabled="!practice.isSubmitted"
-                            >
-                                查看
-                            </button>
-
-                            <!-- 批改按钮 (老师) -->
-<!--                            <button-->
-<!--                                v-if="isTeacher && practice.type === 'unScored'"-->
-<!--                                class="btn-action history"-->
-<!--                                @click="checkPractice(practice.submitId)"-->
-<!--                                title="批改"-->
-<!--                            >-->
-<!--                                批改-->
-<!--                            </button>-->
-
-                            <!-- 导出按钮 -->
-<!--                            <button-->
-<!--                                class="btn-action renew"-->
-<!--                                @click="downloadPracticeReport(practice.id)"-->
-<!--                                title="导出"-->
-<!--                                :disabled="!practice.isSubmitted"-->
-<!--                            >-->
-<!--                                导出-->
-<!--                            </button>-->
+                    <tr v-for="practice in practices" :key="practice.id">
+                        <td>{{ practice.title }}</td>
+                        <td>{{ formatDate(practice.startTime) }}</td>
+                        <td>{{ formatDate(practice.endTime) }}</td>
+                        <td>{{ practice.allowMultipleSubmission ? '多次' : '一次' }}</td>
+                        <td>
+                            <span :class="['status-badge', getStatusClass(practice)]">
+                                {{ getStatusText(practice) }}
+                            </span>
                         </td>
                     </tr>
                     </tbody>
@@ -665,10 +569,16 @@ input[type="radio"] {
 .btn-primary {
     background-color: #2c6ecf;
     color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s;
 }
 
 .btn-primary:hover {
-    background-color: #215bb4;
+    background-color: #1e5bbf;
 }
 
 .btn-secondary {
@@ -679,6 +589,29 @@ input[type="radio"] {
 
 .btn-secondary:hover {
     background-color: #e0e0e0;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.status-pending {
+    background-color: #e3f2fd;
+    color: #1976d2;
+}
+
+.status-ongoing {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+}
+
+.status-ended {
+    background-color: #f5f5f5;
+    color: #757575;
 }
 
 @media (max-width: 768px) {

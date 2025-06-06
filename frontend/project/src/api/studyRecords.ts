@@ -3,6 +3,83 @@ import axios from './axios'
 // 练习报告导出格式
 export type ExportFormat = 'excel' | 'pdf'
 
+// 学习记录接口
+export interface StudyRecord {
+  id: number;
+  studentId: number;
+  courseId: number;
+  sectionId: number;
+  completed: boolean;
+  completedAt: string;
+  courseName: string;
+  sectionTitle: string;
+}
+
+// 练习记录中的题目接口
+export interface PracticeQuestion {
+  id: number;
+  sectionId: number;
+  courseId: number;
+  content: string;
+  type: string;
+  options: string;
+  studentAnswer: string;
+  correctAnswer: string;
+  isCorrect: boolean;
+  analysis: string;
+  score: number;
+}
+
+// 练习记录接口
+export interface PracticeRecord {
+  id: number;
+  practiceId: number;
+  studentId: number;
+  submittedAt: string;
+  score: number;
+  feedback: string;
+  questions: PracticeQuestion[];
+  practiceTitle: string;
+  courseName: string;
+  className: string;
+}
+
+// 练习提交报告接口 - 后端实际返回结构
+export interface SubmissionReport {
+  submissionInfo: {
+    id: number;
+    practiceId: number;
+    studentId: number;
+    submittedAt: string;
+    score: number;
+    feedback: string;
+    practiceTitle: string;
+    courseName: string;
+    className: string;
+  };
+  questions: Array<{
+    id: number;
+    sectionId: number;
+    courseId: number;
+    content: string;
+    type: string;
+    options: string;
+    studentAnswer: string;
+    correctAnswer: string;
+    isCorrect: boolean;
+    analysis: string;
+    score: number;
+  }>;
+  rank: number;
+  totalStudents: number;
+  percentile: number;
+  scoreDistribution: Array<{
+    score_range: string;
+    count: number;
+    percentage: number;
+  }>;
+}
+
 // 练习报告接口
 export interface ExerciseReport {
   exerciseId: string;
@@ -31,7 +108,27 @@ export interface ExerciseReport {
 
 // API 实现
 const StudyRecordsApi = {
-  // 获取学生的学习记录列表（包含筛选和分页）
+  // 获取所有学习记录
+  getAllStudyRecords() {
+    return axios.get('/api/record/study');
+  },
+
+  // 获取指定课程的学习记录
+  getStudyRecordsByCourse(courseId: string) {
+    return axios.get(`/api/record/study/course/${courseId}`);
+  },
+
+  // 获取所有练习记录
+  getAllPracticeRecords() {
+    return axios.get('/api/record/practice');
+  },
+
+  // 获取指定课程的练习记录
+  getPracticeRecordsByCourse(courseId: string) {
+    return axios.get(`/api/record/practice/course/${courseId}`);
+  },
+
+  // 获取学生的学习记录列表（包含筛选和分页）- 保留兼容性
   getStudentStudyRecords(params: {
     exerciseName?: string;
     status?: string;
@@ -52,6 +149,47 @@ const StudyRecordsApi = {
       responseType: 'blob',
       headers: {
         Accept: format === 'excel' ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : 'application/pdf'
+      }
+    });
+  },  // 导出练习提交报告（通过submissionId）
+  exportSubmissionReport(submissionId: string) {
+    return axios.get(`/api/record/submission/${submissionId}/export-report`, {
+      responseType: 'blob',
+      headers: {
+        Accept: 'application/pdf'
+      }
+    });
+  },
+
+  // 获取练习提交详情报告（通过submissionId）
+  getSubmissionReport(submissionId: string) {
+    return axios.get(`/api/record/submission/${submissionId}/report`);
+  },
+  // 导出指定课程的学习记录（Excel 格式）
+  exportStudyRecordsByCourse(courseId: string, params: {
+    format?: ExportFormat;
+    startDate?: string;
+    endDate?: string;
+  } = {}) {
+    return axios.get(`/api/record/study/course/${courseId}/export`, {
+      params: {
+        format: params.format || 'excel',
+        startDate: params.startDate,
+        endDate: params.endDate
+      },
+      responseType: 'blob',
+      headers: {
+        Accept: params.format === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      }
+    });
+  },
+
+  // 直接导出课程学习记录（Excel 格式）- 简化调用
+  exportCourseStudyRecords(courseId: string) {
+    return axios.get(`/api/record/study/course/${courseId}/export`, {
+      responseType: 'blob',
+      headers: {
+        Accept: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
       }
     });
   },
@@ -125,7 +263,6 @@ const StudyRecordsApi = {
       }
     });
   },
-
   // 教师/助教导出整体学习记录（Excel 格式）
   exportTeacherStudyRecords(params: {
     classId?: string;
@@ -137,6 +274,26 @@ const StudyRecordsApi = {
   } = {}) {
     return axios.get('/api/record/teacher/export', {
       params,
+      responseType: 'blob',
+      headers: {
+        Accept: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      }
+    });
+  },
+
+  // 导出所有练习记录（Excel 格式）
+  exportAllPracticeRecords() {
+    return axios.get('/api/record/practice/export', {
+      responseType: 'blob',
+      headers: {
+        Accept: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      }
+    });
+  },
+
+  // 导出指定课程的练习记录（Excel 格式）
+  exportPracticeRecordsByCourse(courseId: string) {
+    return axios.get(`/api/record/practice/course/${courseId}/export`, {
       responseType: 'blob',
       headers: {
         Accept: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'

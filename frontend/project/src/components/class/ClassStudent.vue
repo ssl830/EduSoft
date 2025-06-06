@@ -44,11 +44,26 @@ const fetchStudents = async () => {
 
     try {
         const response = await ClassApi.getClassStudents(props.classId)
-        // console.log(selectedChapter.value)
-        students.value = response.data.students
+        console.log('获取学生列表响应:', response)
+
+        if (response.code === 200 && response.data) {
+            students.value = Array.isArray(response.data) ? response.data : []
+            console.log('学生列表数据:', students.value)
+            if (students.value.length > 0) {
+                const firstStudent = students.value[0]
+                console.log('第一个学生的完整数据结构:', JSON.stringify(firstStudent, null, 2))
+                console.log('第一个学生的ID:', firstStudent.student_id)
+                console.log('第一个学生的所有字段:', Object.keys(firstStudent))
+            }
+        } else {
+            error.value = response.message || '获取学生列表失败'
+            console.error('获取学生列表失败:', response)
+            students.value = []
+        }
     } catch (err) {
-        error.value = '获取资源列表失败，请稍后再试'
-        console.error(err)
+        error.value = '获取学生列表失败，请稍后再试'
+        console.error('获取学生列表错误:', err)
+        students.value = []
     } finally {
         loading.value = false
     }
@@ -256,6 +271,19 @@ const deleteStudent = async(studentId: string) => {
     }
 }
 
+// 添加日期格式化函数
+const formatDate = (dateString: string) => {
+    if (!dateString) return '-'
+    const date = new Date(dateString)
+    return date.toLocaleString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+    })
+}
+
 onMounted(() => {
     fetchStudents()
 })
@@ -282,11 +310,13 @@ onMounted(() => {
                 </button>
             </div>
         </div>
+
+        <!-- 手动导入表单 -->
         <div v-if="showUploadAloneForm" class="upload-form">
             <h3>新增学生</h3>
             <div v-if="uploadAloneError" class="error-message">{{ uploadAloneError }}</div>
             <div class="form-group">
-                <label>选项</label>
+                <label>学生信息</label>
                 <div
                     v-for="(student, index) in uploadAloneForm.students"
                     :key="index"
@@ -295,14 +325,14 @@ onMounted(() => {
                     <input
                         v-model="student.id"
                         type="text"
-                        :placeholder="`学号`"
+                        placeholder="学号"
                         class="option-input"
                         style="max-width: 600px; margin-right: 20px"
                     />
                     <input
                         v-model="student.name"
                         type="text"
-                        :placeholder="`姓名`"
+                        placeholder="姓名"
                         class="option-input"
                     />
                     <button
@@ -333,47 +363,39 @@ onMounted(() => {
                 </button>
             </div>
         </div>
-        <!-- 在上传表单部分添加解析状态显示 -->
+
+        <!-- 批量导入表单 -->
         <div v-if="showUploadFileForm" class="upload-form">
             <h3>批量导入学生名单</h3>
-
             <div v-if="uploadError" class="error-message">{{ uploadError }}</div>
             <div v-if="parsingError" class="error-message">{{ parsingError }}</div>
-
             <div class="form-group">
-                <label for="file">选择CSV文件</label>
+                <label>选择CSV文件</label>
                 <input
-                    id="file"
                     type="file"
+                    id="file"
                     accept=".csv"
                     @change="handleFileChange"
-                    required
+                    class="file-input"
                 />
-                <div class="file-hint">支持格式：CSV（需包含"name"和"id"列）</div>
             </div>
-
-            <!-- 添加解析状态 -->
-            <div v-if="isParsing" class="loading-container">正在解析文件...</div>
-
-            <!-- 显示解析结果预览 -->
-            <div v-if="uploadFileForm.parsedStudents?.length" class="preview-section">
-                <h4>即将导入 {{ uploadFileForm.parsedStudents.length }} 条学生记录</h4>
+            <div v-if="uploadFileForm.parsedStudents.length > 0" class="preview-section">
+                <h4>预览数据</h4>
                 <div class="preview-table">
-                    <div class="preview-row header">
-                        <div>姓名</div>
-                        <div>学号</div>
-                    </div>
-                    <div
-                        v-for="(student, index) in uploadFileForm.parsedStudents.slice(0,5)"
-                        :key="index"
-                        class="preview-row"
-                    >
-                        <div>{{ student.name }}</div>
-                        <div>{{ student.id }}</div>
-                    </div>
-                    <div v-if="uploadFileForm.parsedStudents.length > 5" class="preview-more">
-                        更多记录...（共 {{ uploadFileForm.parsedStudents.length }} 条）
-                    </div>
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>学号</th>
+                            <th>姓名</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr v-for="(student, index) in uploadFileForm.parsedStudents" :key="index">
+                            <td>{{ student.id }}</td>
+                            <td>{{ student.name }}</td>
+                        </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
             <div class="form-actions">
@@ -388,14 +410,14 @@ onMounted(() => {
                     type="button"
                     class="btn-primary"
                     @click="uploadFileStudents"
+                    :disabled="!uploadFileForm.file || uploadFileForm.parsedStudents.length === 0"
                 >
                     上传
                 </button>
             </div>
-
-            <!-- ...其余上传表单内容保持不变... -->
         </div>
-        <!-- Students List -->
+
+        <!-- 学生列表 -->
         <div v-if="loading" class="loading-container">加载中...</div>
         <div v-else-if="error" class="error-message">{{ error }}</div>
         <div v-else-if="students.length === 0" class="empty-state">
@@ -405,27 +427,16 @@ onMounted(() => {
             <table class="resource-table">
                 <thead>
                 <tr>
-                    <th style="width: 25%">姓名</th>
-                    <th style="width: 25%">学号</th>
-                    <th style="width: 25%">学习进度</th>
-                    <th style="width: 25%">操作</th>
+                    <th style="width: 33%">学号</th>
+                    <th style="width: 33%">姓名</th>
+                    <th style="width: 34%">加入时间</th>
                 </tr>
                 </thead>
                 <tbody>
-                <tr v-for="student in students" :key="student.user_id">
-                    <td>{{ student.student_name }}</td>
-                    <td>{{ student.student_id }}</td>
-                    <td>{{ student.finishedExercise }}/{{ student.sumExercise }}</td>
-                    <!--         aTODO: 时间-->
-                    <td class="actions">
-                        <button
-                            class="btn-action preview"
-                            @click="deleteStudent(student.student_id)"
-                            title="删除"
-                        >
-                            删除
-                        </button>
-                    </td>
+                <tr v-for="student in students" :key="student.userId">
+                    <td>{{ student.studentId }}</td>
+                    <td>{{ student.studentName }}</td>
+                    <td>{{ formatDate(student.joinedAt) }}</td>
                 </tr>
                 </tbody>
             </table>

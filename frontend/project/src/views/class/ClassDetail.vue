@@ -82,7 +82,7 @@ onMounted(async () => {
               :class="['tab-button', { active: activeTab === 'processing' }]"
               @click="activeTab = 'processing'"
           >
-            学习进度
+            练习记录
           </button>
         </div>
 

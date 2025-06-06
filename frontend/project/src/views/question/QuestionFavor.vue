@@ -19,12 +19,26 @@ const fetchQuestions = async () => {
 
     try {
         const response = await QuestionApi.getFavorQuestionList()
-        // console.log(selectedChapter.value)
-        questions.value = response.data.data
+        console.log('收藏题目列表响应:', response)
 
+        if (response.code === 200 && response.data) {
+            questions.value = Array.isArray(response.data) ? response.data : []
+            console.log('收藏题目列表数据:', questions.value)
+            if (questions.value.length > 0) {
+                const firstQuestion = questions.value[0]
+                console.log('第一个收藏题目的完整数据结构:', JSON.stringify(firstQuestion, null, 2))
+                console.log('第一个收藏题目的ID:', firstQuestion.id)
+                console.log('第一个收藏题目的所有字段:', Object.keys(firstQuestion))
+            }
+        } else {
+            error.value = response.message || '获取收藏题目列表失败'
+            console.error('获取收藏题目列表失败:', response)
+            questions.value = []
+        }
     } catch (err) {
-        error.value = '获取资源列表失败，请稍后再试'
-        console.error(err)
+        error.value = '获取收藏题目列表失败，请稍后再试'
+        console.error('获取收藏题目列表错误:', err)
+        questions.value = []
     } finally {
         loading.value = false
     }
@@ -45,10 +59,27 @@ const showQuestionDetail = (question: any) => {
     showDetailDialog.value = true
 }
 
-const enFavorQuestion = async (questionId: string) => {
-    const response = await ExerciseApi.enFavouriteQuestions(questionId);
-    console.log(response)
-    await fetchQuestions()
+const enFavorQuestion = async (question: any) => {
+    try {
+        if (!question.id) {
+            error.value = '题目ID不能为空'
+            console.error('取消收藏失败: 题目ID为空')
+            return
+        }
+        console.log('取消收藏，ID:', question.id)
+        const response = await ExerciseApi.enFavouriteQuestions(question.id)
+        console.log('取消收藏响应:', response)
+
+        if (response.code === 200) {
+            await fetchQuestions()
+        } else {
+            error.value = response.message || '取消收藏失败'
+            console.error('取消收藏失败:', response)
+        }
+    } catch (err) {
+        error.value = '取消收藏失败，请稍后再试'
+        console.error('取消收藏错误:', err)
+    }
 }
 
 // 新增答案格式化方法
@@ -76,7 +107,7 @@ onMounted(() => {
         <div v-if="loading" class="loading-container">加载中...</div>
         <div v-else-if="error" class="error-message">{{ error }}</div>
         <div v-else-if="questions.length === 0" class="empty-state">
-            暂无教学资料
+            暂无收藏题目
         </div>
         <div v-else class="resource-table-wrapper">
             <table class="resource-table">
@@ -85,6 +116,7 @@ onMounted(() => {
                     <th>题目内容</th>
                     <th>所属课程</th>
                     <th>所属章节</th>
+                    <th>所属练习</th>
                     <th>操作</th>
                 </tr>
                 </thead>
@@ -93,7 +125,7 @@ onMounted(() => {
                     <td>{{ question.content }}</td>
                     <td>{{ question.course_name }}</td>
                     <td>{{ question.section_title || '-' }}</td>
-                    <!--         aTODO: 时间-->
+                    <td>{{ question.practice_title || '-' }}</td>
                     <td class="actions">
                         <button
                             class="btn-action preview"
@@ -103,7 +135,7 @@ onMounted(() => {
                             查看
                         </button>
                         <button
-                            class="btn-action download"
+                            class="btn-action delete"
                             @click="enFavorQuestion(question)"
                             title="取消收藏"
                         >
@@ -156,10 +188,10 @@ onMounted(() => {
                                 <div v-for="(opt, index) in selectedQuestion.options"
                                      :key="index"
                                      class="option-item">
-<!--                                    <span class="option-key">{{ opt.key }}.</span>-->
+                                    <span class="option-key">{{ opt.key }}.</span>
                                     <span class="option-text">{{ opt.text }}</span>
-<!--                                    <span v-if="selectedQuestion.answer.includes(opt.key)"-->
-<!--                                          class="correct-badge">✓</span>-->
+                                    <span v-if="selectedQuestion.answer.includes(opt.key)"
+                                          class="correct-badge">✓</span>
                                 </div>
                             </div>
                         </div>
@@ -483,13 +515,13 @@ select:disabled {
     background-color: #bbdefb;
 }
 
-.btn-action.download {
-    background-color: #e8f5e9;
-    color: #2e7d32;
+.btn-action.delete {
+    background-color: #ffebee;
+    color: #c62828;
 }
 
-.btn-action.download:hover {
-    background-color: #c8e6c9;
+.btn-action.delete:hover {
+    background-color: #ffcdd2;
 }
 
 .empty-state {
