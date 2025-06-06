@@ -4,13 +4,14 @@ import { useRouter } from 'vue-router'
 import ExerciseApi from '../../api/exercise'
 import ClassApi from "../../api/class.ts";
 import {useAuthStore} from "../../stores/auth.ts";
+import { ElMessage } from 'element-plus';
+import CourseApi from '../../api/course.ts';
 
 const router = useRouter()
 const authStore = useAuthStore()
 
 interface Question {
   type: string;
-  range: string;
   content: string;
   options?: Array<{ key: string; text: string }>;
   explanation?: string;
@@ -20,11 +21,13 @@ interface Question {
 
 const exercise = reactive({
   title: '',
-  courseId: 0,
+    courseId: 0,
+  classId: 0,
+  practiceId: 0,
   startTime: '',
   endTime: '',
-  timeLimit: 0,
-  allowedAttempts: true,
+    createdBy: authStore.user?.id,
+    allowMultipleSubmission: true,
   questions: [] as Question[]
 })
 
@@ -34,15 +37,15 @@ const classes = ref([])
 const selectedQuestion = ref<Question | null>(null)
 const isEditingQuestion = ref(false)
 const currentStep = ref(1) // 1: Basic Info, 2: Questions
-const allowedAttempts = ref([
+const allowMultipleSubmission = ref([
     { id: true, name: '是' },
     { id: false, name: '否' }
 ])
+const tempSectionId = ref(0)
 // Temporary question data for editing
 // 修改tempQuestion的响应式对象
 const tempQuestion = reactive({
     type: 'single_choice',
-    range: '',
     content: '',
     options: [
         { key: 'A', text: '' },
@@ -64,13 +67,32 @@ const tempQuestion = reactive({
     answer: '' // 始终保持字符串类型
 });
 
+// 新增：章节相关状态
+const sections = ref<{ id: number; title: string }[]>([]);
+
+// 新增：获取课程章节
+const fetchSections = async (courseId: number) => {
+    if (!courseId) {
+        sections.value = [];
+        return;
+    }
+    try {
+        const res = await CourseApi.getCourseById(String(courseId));
+        // 假设返回结构为 res.data.data.sections
+        sections.value = res.data.data.sections || [];
+    } catch (err) {
+        sections.value = [];
+        console.error('获取章节失败', err);
+    }
+};
+
 const fetchClasses = async () => {
     if (authStore.isAuthenticated) {
         try {
             const response = await ClassApi.getUserClasses(authStore.user?.id)
             console.log(authStore.user?.id)
             console.log(response.data.classes)
-            classes.value = response.data.classes
+            classes.value = response.data.data
         } catch (err) {
             error.value = '获取班级列表失败，请稍后再试'
             console.error(err)
@@ -101,27 +123,50 @@ onMounted(() => {
 // }
 
 // Move to the next step in the exercise creation process
-const nextStep = () => {
-  if (currentStep.value === 1) {
-    // Validate first step
-    if((exercise.endTime <= exercise.startTime && exercise.endTime != '' && exercise.startTime != '') && (!exercise.title || !exercise.courseId)){
-        error.value = '截止时间应大于开始时间；请填写所有必填字段'
+const nextStep = async () => {
+    if (currentStep.value === 1) {
+        // Validate first step
+        if ((exercise.endTime <= exercise.startTime && exercise.endTime != '' && exercise.startTime != '') && (!exercise.title || !exercise.classId)) {
+            error.value = '截止时间应大于开始时间；请填写所有必填字段'
+            return;
+        } else if (exercise.endTime <= exercise.startTime && exercise.endTime != '' && exercise.startTime != '') {
+            error.value = '截止时间应大于开始时间'
+            return;
+        } else if (!exercise.title || !exercise.classId) { //  || exercise.classIds.length === 0 TODO:
+            error.value = '请填写所有必填字段'
+            return
+        }
+
+        loading.value = true;
+        try {
+            const response = await ExerciseApi.createExercise({
+                title: exercise.title,
+                classId: exercise.classId,
+                startTime: exercise.startTime,
+                endTime: exercise.endTime,
+                createdBy: authStore.user?.id,
+                allowMultipleSubmission: exercise.allowMultipleSubmission,
+            });
+
+            // 存储练习ID
+            exercise.practiceId = response.data.data.practiceId;
+            currentStep.value = 2;
+            error.value = '';
+            // console.log(response.data.data.practiceId)
+            // console.log(exercise.practiceId);
+            // 获取题库题目
+            await fetchRepoQuestions();
+        } catch (err) {
+            error.value = '创建练习失败，请稍后再试';
+            console.error(err);
+        } finally {
+            loading.value = false;
+        }
         return;
-    }else if(exercise.endTime <= exercise.startTime && exercise.endTime != '' && exercise.startTime != ''){
-        error.value = '截止时间应大于开始时间'
-        return;
-    }else if (!exercise.title || !exercise.courseId) { //  || exercise.classIds.length === 0 TODO:
-      error.value = '请填写所有必填字段'
-      return
     }
 
-    currentStep.value = 2
-    error.value = ''
-    return
-  }
-
-  // Submit the exercise (last step)
-  submitExercise()
+    // Submit the exercise (last step)
+    submitExercise()
 }
 
 // Go back to the previous step
@@ -131,26 +176,26 @@ const prevStep = () => {
 }
 
 // Add a new question or update an existing one
-const addOrUpdateQuestion = () => {
-  // Validate question data
-  if (!tempQuestion.content || tempQuestion.points < 0 || !tempQuestion.range) {
-    error.value = '请完成题目内容并设置分值及公开范围'
-    return
-  }
-
-  // Validate options for choice questions
-  if (['single_choice', 'multiple_choice'].includes(tempQuestion.type)) {
-    const hasEmptyOption = tempQuestion.options.some(opt => !opt.text)
-    if (hasEmptyOption) {
-      error.value = '请填写所有选项内容'
-      return
+const addOrUpdateQuestion = async () => {
+    // Validate question data
+    if (!tempQuestion.content || tempQuestion.points < 0) {
+        error.value = '请完成题目内容并设置分值'
+        return
     }
 
-    if (!tempQuestion.answer) {
-      error.value = '请设置正确答案'
-      return
+    // Validate options for choice questions
+    if (['single_choice', 'multiple_choice'].includes(tempQuestion.type)) {
+        const hasEmptyOption = tempQuestion.options.some(opt => !opt.text)
+        if (hasEmptyOption) {
+            error.value = '请填写所有选项内容'
+            return
+        }
+
+        if (!tempQuestion.answer) {
+            error.value = '请设置正确答案'
+            return
+        }
     }
-  }
 
     // 处理多选题答案格式
     if (tempQuestion.type === 'multiple_choice') {
@@ -160,37 +205,88 @@ const addOrUpdateQuestion = () => {
         }
     }
 
-  const questionCopy = JSON.parse(JSON.stringify(tempQuestion))
-
-  if (isEditingQuestion.value && selectedQuestion.value) {
-    // Update existing question
-    const index = exercise.questions.indexOf(selectedQuestion.value)
-    if (index !== -1) {
-      exercise.questions[index] = questionCopy
+    if(tempSectionId.value === 0) {
+        error.value = '请选择所属章节';
+        return;
     }
-  } else {
-    // Add new question
-    exercise.questions.push(questionCopy)
-  }
 
-  // Reset form and state
-  resetQuestionForm()
-  error.value = ''
+    // const questionCopy = JSON.parse(JSON.stringify(tempQuestion))
+    //
+    // if (isEditingQuestion.value && selectedQuestion.value) {
+    //     // Update existing question
+    //     const index = exercise.questions.indexOf(selectedQuestion.value)
+    //     if (index !== -1) {
+    //         exercise.questions[index] = questionCopy
+    //     }
+    // } else {
+    //     // Add new question
+    //     exercise.questions.push(questionCopy)
+    // }
+
+    // Reset form and state
+    try {
+        // 创建题目到题库
+        const questionData = {
+            type: tempQuestion.type,
+            content: tempQuestion.content,
+            options: tempQuestion.options,
+            answer: tempQuestion.type === 'multiple_choice'
+                ? tempQuestion.answerArray.join(',')
+                : tempQuestion.answer,
+            analysis: tempQuestion.explanation,
+            courseId: exercise.courseId, // 使用练习的课程ID
+            sectionId: tempSectionId.value, // 绑定的章节ID
+            creatorId: authStore.user?.id
+        };
+
+        await QuestionApi.createQuestion(questionData);
+        // const questionId = createResponse.data.data.questionId;
+
+        // // 将题目添加到当前练习
+        // await ExerciseApi.importQuestionsToPractice({
+        //     practiceId: exercise.practiceId,
+        //     questions: [questionId],
+        //     scores: [tempQuestion.points]
+        // });
+        //
+        // // 添加到本地列表
+        // const questionCopy = {
+        //     ...JSON.parse(JSON.stringify(tempQuestion)),
+        //     id: questionId
+        // };
+        //
+        // if (isEditingQuestion.value && selectedQuestion.value) {
+        //     const index = exercise.questions.indexOf(selectedQuestion.value);
+        //     if (index !== -1) {
+        //         exercise.questions[index] = questionCopy;
+        //     }
+        // } else {
+        //     exercise.questions.push(questionCopy);
+        // }
+        await fetchRepoQuestions();
+        error.value = '';
+        ElMessage.success('题目创建成功');
+    } catch (err) {
+        error.value = '题目创建失败，请稍后再试';
+        console.error(err);
+    }
+
+    resetQuestionForm();
 }
-
-// Edit an existing question
-// 修改编辑题目逻辑
-const editQuestion = (question: Question) => {
-    selectedQuestion.value = question;
-    isEditingQuestion.value = true;
-
-    // 处理答案格式转换
-    const copiedQuestion = JSON.parse(JSON.stringify(question));
-    if (question.type === 'multiple_choice') {
-        copiedQuestion.answerArray = question.answer?.split(',') || [];
-    }
-    Object.assign(tempQuestion, copiedQuestion);
-};
+//
+// // Edit an existing question
+// // 修改编辑题目逻辑
+// const editQuestion = (question: Question) => {
+//     selectedQuestion.value = question;
+//     isEditingQuestion.value = true;
+//
+//     // 处理答案格式转换
+//     const copiedQuestion = JSON.parse(JSON.stringify(question));
+//     if (question.type === 'multiple_choice') {
+//         copiedQuestion.answerArray = question.answer?.split(',') || [];
+//     }
+//     Object.assign(tempQuestion, copiedQuestion);
+// };
 
 // Remove a question
 const removeQuestion = (question: Question) => {
@@ -282,10 +378,8 @@ const fetchRepoQuestions = async () => {
         repoError.value = '请先选择课程';
         return;
     }
-
     repoLoading.value = true;
     repoError.value = '';
-
     try {
         const response = await QuestionApi.getQuestionList({
             courseId: exercise.courseId
@@ -301,7 +395,7 @@ const fetchRepoQuestions = async () => {
 
 // 新增：当进入题目添加步骤且课程已选择时，获取题库题目
 watch(() => currentStep.value, (newVal) => {
-    if (newVal === 2 && exercise.courseId) {
+    if (newVal === 2 && exercise.classId) {
         fetchRepoQuestions();
     }
 });
@@ -312,28 +406,41 @@ const showRepoQuestionDetail = (question: any) => {
     showRepoDetailDialog.value = true;
 };
 
+// 替换 selectedRepoScore 为 repoScores
+const repoScores = ref<Record<number, number>>({});
+
 // 新增：添加题目到练习
-const addRepoQuestion = (question: any) => {
-    // 检查是否已添加
-    const exists = exercise.questions.some(q => q.id === question.id);
-    if (exists) {
-        error.value = '该题目已添加';
+const addRepoQuestion = async (question: any) => {
+    const score = repoScores.value[question.id];
+    if (!score || score <= 0) {
+        error.value = '分值必须大于0';
         return;
     }
 
-    // 转换为练习题目格式
-    const newQuestion: Question = {
-        id: question.id, // 保留题库ID用于检查重复
-        type: question.type,
-        range: 'public', // 默认公开
-        content: question.name,
-        options: question.options,
-        explanation: '',
-        points: question.points,
-        answer: question.answer
-    };
+    try {
+        await ExerciseApi.importQuestionsToPractice({
+            practiceId: exercise.practiceId,
+            questions: [question.id],
+            scores: [score]
+        });
 
-    exercise.questions.push(newQuestion);
+        const newQuestion: Question = {
+            id: question.id,
+            type: question.type,
+            content: question.name,
+            options: question.options,
+            explanation: '',
+            points: score,
+            answer: question.answer
+        };
+
+        exercise.questions.push(newQuestion);
+        ElMessage.success('题目添加成功');
+        error.value = '';
+    } catch (err) {
+        error.value = '添加题目失败，请稍后再试';
+        console.error(err);
+    }
 };
 
 // 新增：格式化答案显示
@@ -344,6 +451,19 @@ const formatRepoAnswer = (question: any) => {
     return question.answer;
 };
 
+// 修改班级选择逻辑，选择班级时同步 courseId 和 classId，并拉取章节
+const handleClassChange = (classId: number) => {
+    const aclass = classes.value.find((c: any) => c.id === classId);
+    if (aclass) {
+        exercise.classId = aclass.id;
+        exercise.courseId = aclass.courseId;
+        fetchSections(aclass.courseId);
+    } else {
+        exercise.classId = 0;
+        exercise.courseId = 0;
+        sections.value = [];
+    }
+};
 </script>
 
 <template>
@@ -365,19 +485,35 @@ const formatRepoAnswer = (question: any) => {
         />
       </div>
 
-      <div class="form-group">
-        <label for="courseId">所属课程</label>
-        <select
-          id="courseId"
-          v-model="exercise.courseId"
-          @change="fetchClasses(exercise.courseId)"
-          required
-        >
-          <option value="" disabled>选择课程</option>
-          <option v-for="aclass in classes" :key="aclass.id" :value="aclass.id">
-            {{ aclass.course_name }} {{ aclass.class_name }}
-          </option>
-        </select>
+      <div class="form-row">
+          <div class="form-group form-group-half">
+            <label for="courseId">所属班级</label>
+            <select
+              id="courseId"
+              v-model="exercise.classId"
+              @change="handleClassChange(Number(exercise.classId))"
+              required
+            >
+              <option value="" disabled>选择课程</option>
+              <option v-for="aclass in classes" :key="aclass.id" :value="aclass.id">
+                {{ aclass.courseName }} {{ aclass.className }}
+              </option>
+            </select>
+          </div>
+          <div class="form-group form-group-half">
+              <label for="allowMultipleSubmission">是否允许多次提交</label>
+              <!--            TODO:选择是否（boolean）-->
+              <select
+                  id="allowMultipleSubmission"
+                  v-model="exercise.allowMultipleSubmission"
+                  required
+              >
+                  <option value="" disabled>请选择</option>
+                  <option v-for="type in allowMultipleSubmission" :key="type.id" :value="type.id">
+                      {{ type.name }}
+                  </option>
+              </select>
+          </div>
       </div>
 
       <div class="form-row">
@@ -400,32 +536,6 @@ const formatRepoAnswer = (question: any) => {
         </div>
       </div>
 
-      <div class="form-row">
-        <div class="form-group form-group-half">
-          <label for="timeLimit">答题时间限制（分钟，0表示不限时）</label>
-          <input
-            id="timeLimit"
-            v-model.number="exercise.timeLimit"
-            type="number"
-            min="0"
-          />
-        </div>
-
-        <div class="form-group form-group-half">
-          <label for="allowedAttempts">是否允许多次提交</label>
-<!--            TODO:选择是否（boolean）-->
-            <select
-                id="allowedAttempts"
-                v-model="exercise.allowedAttempts"
-                required
-            >
-                <option value="" disabled>请选择</option>
-                <option v-for="type in allowedAttempts" :key="type.id" :value="type.id">
-                    {{ type.name }}
-                </option>
-            </select>
-        </div>
-      </div>
     </div>
 
     <!-- Step 2: Question Management -->
@@ -462,12 +572,12 @@ const formatRepoAnswer = (question: any) => {
             </div>
 
             <div class="question-list-actions">
-              <button
-                class="btn-secondary btn-sm"
-                @click="editQuestion(question)"
-              >
-                编辑
-              </button>
+<!--              <button-->
+<!--                class="btn-secondary btn-sm"-->
+<!--                @click="editQuestion(question)"-->
+<!--              >-->
+<!--                编辑-->
+<!--              </button>-->
               <button
                 class="btn-danger btn-sm"
                 @click="removeQuestion(question)"
@@ -481,7 +591,18 @@ const formatRepoAnswer = (question: any) => {
 
       <!-- Question Form -->
       <div class="question-form-byhand-section">
-        <h2>{{ isEditingQuestion ? '编辑题目' : '手动添加题目' }}</h2>
+<!--          isEditingQuestion ? '编辑题目' : -->
+        <h2>{{ '手动添加题目' }}</h2>
+        <!-- 新增：选择章节 -->
+        <div class="form-group">
+          <label for="sectionId">所属章节</label>
+          <select id="sectionId" v-model="tempSectionId">
+            <option value="">请选择章节</option>
+            <option v-for="section in sections" :key="section.id" :value="section.id">
+              {{ section.title }}
+            </option>
+          </select>
+        </div>
 
         <div class="form-group">
           <label for="questionType">题目类型</label>
@@ -491,13 +612,6 @@ const formatRepoAnswer = (question: any) => {
             <option value="true_false">判断题</option>
             <option value="short_answer">简答题</option>
             <option value="fill_blank">填空题</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="range">公开范围</label>
-          <select id="range" v-model="tempQuestion.range">
-              <option value="public">公开</option>
-              <option value="self">私有</option>
           </select>
         </div>
 
@@ -623,7 +737,8 @@ const formatRepoAnswer = (question: any) => {
         </div>
       </div>
         <div class="question-form-fromrepo-section">
-            <h2>{{ isEditingQuestion ? '编辑题目' : '从题库中选择题目' }}</h2>
+<!--            isEditingQuestion ? '编辑题目' : -->
+            <h2>{{ '从题库中选择题目' }}</h2>
 
             <div v-if="repoError" class="error-message">{{ repoError }}</div>
 
@@ -636,31 +751,27 @@ const formatRepoAnswer = (question: any) => {
                     <thead>
                     <tr>
                         <th>题目内容</th>
-                        <th>所属课程</th>
                         <th>所属章节</th>
+                        <th>分值</th>
                         <th>操作</th>
                     </tr>
                     </thead>
                     <tbody>
                     <tr v-for="question in repoQuestions" :key="question.id">
                         <td>{{ question.name }}</td>
-                        <td>{{ question.course_name }}</td>
-                        <td>{{ question.section_name || '-' }}</td>
+                        <td>{{ question.sectionName || '-' }}</td>
+                        <td>
+                            <input
+                                v-model.number="repoScores[question.id]"
+                                type="number"
+                                min="1"
+                                placeholder="输入分值"
+                                class="score-input"
+                            />
+                        </td>
                         <td class="actions">
-                            <button
-                                class="btn-action preview"
-                                @click="showRepoQuestionDetail(question)"
-                                title="查看"
-                            >
-                                查看
-                            </button>
-                            <button
-                                class="btn-action add"
-                                @click="addRepoQuestion(question)"
-                                title="添加"
-                            >
-                                添加
-                            </button>
+                            <button class="btn-action preview" @click="showRepoQuestionDetail(question)">查看</button>
+                            <button class="btn-action add" @click="addRepoQuestion(question)">添加</button>
                         </td>
                     </tr>
                     </tbody>
@@ -734,30 +845,28 @@ const formatRepoAnswer = (question: any) => {
 
     <!-- Step Navigation Buttons -->
     <div class="step-navigation">
-      <button
-        v-if="currentStep > 1"
-        type="button"
-        class="btn-secondary"
-        @click="prevStep"
-        :disabled="loading"
-      >
-        返回上一步
-      </button>
-
-      <button
-        type="button"
-        class="btn-primary"
-        @click="nextStep"
-        :disabled="loading"
-      >
-        {{ currentStep < 2 ? '下一步' : '创建练习' }}
-        <span v-if="loading">...</span>
-      </button>
+        <button
+            type="button"
+            class="btn-primary"
+            @click="nextStep"
+            :disabled="loading"
+        >
+            {{ currentStep === 1 ? '创建练习' : '完成' }}
+            <span v-if="loading">...</span>
+        </button>
     </div>
   </div>
 </template>
 
 <style scoped>
+/* 新增：分值输入框样式 */
+.score-input {
+    width: 80px;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
 .exercise-create-container {
   max-width: 1000px;
   margin: 0 auto;

@@ -2,7 +2,7 @@ import axios from './axios'
 
 const ClassApi = {
   // Get all classes for current user
-  getUserClasses(id: string) {
+  getUserClasses(id: bigint) {
     return axios.get(`/api/classes/user/${id}`)
   },
 
@@ -17,38 +17,38 @@ const ClassApi = {
   },
 
   // Get class by ID
-  getClassById(classID: string) {
-    return axios.get(`/api/classes/${classID}`)
+  getClassById(id: bigint) {
+    return axios.get(`/api/classes/${id}`)
   },
 
   // Create new class (teacher only)
   createClass(data: {
-    courseId: string;
+    courseId: bigint;
     name: string;
     code?: string;
   }) {
     return axios.post('/api/classes', data)
   },
 
-  getHomeworkList(classID: string) {
-    return axios.get(`/api/homework/list?classId=${classID}`)
+  getHomeworkList(classId: bigint) {
+    return axios.get(`/api/homework/list?classId=${classId}`)
   },
 
-  deleteHomework(homeworkId: string) {
+  deleteHomework(homeworkId: bigint) {
     return axios.delete(`/api/homework/${homeworkId}`)
   },
 
-  fetchSubmissions(homeworkId: string) {
+  fetchSubmissions(homeworkId: bigint) {
     return axios.get(`/api/homework/submissions/${homeworkId}`)
   },
 
   // Download resource
-  downloadSubmissionFile(submissionId: string) {
+  downloadSubmissionFile(submissionId: bigint) {
     return axios.get(`/api/homework/submission/file/${submissionId}`)
   },
 
   // Upload resource
-  uploadSubmissionFile(homeworkId: string, formData: FormData) {
+  uploadSubmissionFile(homeworkId: bigint, formData: FormData) {
     return axios.post(`/api/homework/submit/${homeworkId}`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
@@ -64,7 +64,7 @@ const ClassApi = {
     })
   },
 
-  downloadHomeworkFile(homeworkId: string) {
+  downloadHomeworkFile(homeworkId: bigint) {
     return axios.get(`/api/homework/file/${homeworkId}`)
   },
 
@@ -96,9 +96,14 @@ const ClassApi = {
     return axios.get(`/classes/${classId}`)
   },
 
-  // Join class (student only)
-  joinClass(userId: string, classCode: string) {
-    return axios.post(`/api/classes/join/${userId}`, { classCode: classCode })
+  joinClass(studentId: string, classCode: string) {
+    // 使用 URLSearchParams 自动处理编码
+    const params = new URLSearchParams({
+      studentId,
+      classCode
+    });
+
+    return axios.post(`/api/classes/join?${params.toString()}`);
   },
 
   // Get students in a class (teacher/tutor only)
@@ -106,8 +111,8 @@ const ClassApi = {
     return axios.get(`/api/classes/${classId}/users`)
   },
 
-  deleteStudents(classId: string, userId: string){
-    return axios.delete(`/api/classes/${classId}/leave/${userId}`)
+  deleteStudents(classId: string, studentId: string){
+    return axios.delete(`/api/classes/${classId}/students/${studentId}`)
   },
 
   // Import students to a class (teacher only)

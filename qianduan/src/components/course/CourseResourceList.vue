@@ -147,9 +147,6 @@ const uploadResource = async () => {
   formData.append('title', uploadForm.value.title)
   formData.append('file', uploadForm.value.file)
 
-    if (uploadForm.value.courseId) {
-        formData.append('courseId', uploadForm.value.courseId.toString())
-    }
     if (uploadForm.value.sectionId) {
         formData.append('sectionId', uploadForm.value.sectionId.toString())
     }
@@ -494,15 +491,6 @@ onMounted(() => {
             {{ type }}
           </option>
         </select>
-      </div>
-
-      <div class="filter-section search">
-        <input
-          v-model="searchQuery"
-          type="text"
-          placeholder="搜索资料..."
-          class="search-input"
-        />
       </div>
     </div>
 

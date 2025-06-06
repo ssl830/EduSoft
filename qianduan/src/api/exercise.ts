@@ -1,5 +1,8 @@
 import axios from './axios'
 
+import {useAuthStore} from "../stores/auth.ts";
+const authStore = useAuthStore()
+
 const ExerciseApi = {
   // Get exercises for a course
   getClassExercises(classId: string, data: {
@@ -8,6 +11,19 @@ const ExerciseApi = {
     name: string,
   }) {
     return axios.get(`/classes/${classId}/exercises`, data)
+  },
+
+  // 从题库中导入题目
+  importQuestionsToPractice(data){
+    return axios.post('/api/practice/question/import', data)
+  },
+
+  // 获取待批改练习列表
+  getPendingJudgeList(data:{
+    practiceId: bigint,
+    classId: string,
+  }){
+    return axios.post('/api/judge/pendinglist', data)
   },
 
   // Get teacher's courses (for exercise creation)
@@ -23,29 +39,20 @@ const ExerciseApi = {
   // Create exercise (teacher/tutor only)
   createExercise(data: {
     title: string;
-    courseId: number;
+    classId: number;
     startTime?: string;
     endTime?: string;
-    timeLimit?: number;
-    allowedAttempts?: number;
-    questions: Array<{
-      type: string;
-      range: string;
-      content: string;
-      options?: Array<{ key: string; text: string; }>;
-      explanation?: string;
-      answer?: string | string[];
-      points: number;
-    }>;
+    createdBy?: bigint;
+    allowMultipleSubmission?: boolean;
   }) {
-    return axios.post(`/api/courses/exercise`, data)
+    return axios.post(`/api/practice/create`, data)
   },
 
-  takeExercise(classId: string) {
-    return axios.get(`/api/practice/${classId}`)
+  takeExercise(practiceId: string) {
+    return axios.get(`/api/practice/${practiceId}`)
   },
 
-  submitExercise(data: { studentId: any; practiceId: string; answers: any }) {
+  submitExercise(data: { practiceId: string; studentId: string; answers: any }) {
     return axios.post('/api/submission/submit', data)
   },
 
@@ -60,22 +67,39 @@ const ExerciseApi = {
     )
   },
 
+  // 获取学生所有练习
+  getPracticeList(classId: string) {
+    const params = new URLSearchParams({
+      classId
+    });
+    return axios.get(`/api/practice/list?${params.toString()}`)
+  },
+
+  getPracticeTeachList(classId: string) {
+    const params = new URLSearchParams({
+      classId
+    });
+    return axios.get(`/api/practice/list/teacher?${params.toString()}`)
+  },
+
   favouriteQuestions(questionId: string) {
-    return axios.post(`/api/practice/questions/${questionId}/favorite`
-      // headers: {
-      //   Authorization: `Bearer ${authStore.token}`
-      // }
+    return axios.post(`/api/practice/questions/${questionId}/favorite`,{
+        headers: {
+          "free-fs-token": authStore.token  // APIKey
+        }
+      }
     )
   },
   enFavouriteQuestions(questionId: string) {
-    return axios.delete(`/api/practice/questions/${questionId}/favorite`
-      // headers: {
-      //   Authorization: `Bearer ${authStore.token}`
-      // }
+    return axios.delete(`/api/practice/questions/${questionId}/favorite`,{
+        headers: {
+          "free-fs-token": authStore.token  // APIKey
+        }
+      }
     )
   },
   fetchPendingAnswers(data){
-    return axios.get('/api/judge/pending', data)
+    return axios.post('/api/judge/pending', data)
   },
   gradeAnswer(data) {
     return axios.post('/api/judge/judge', data)

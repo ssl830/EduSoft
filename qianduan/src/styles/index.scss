@@ -11,6 +11,17 @@
   --error: #f44336;
   --info: #2196f3;
   
+  /* Theme variables - Light theme by default */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f5f5f5;
+  --bg-tertiary: #fafafa;
+  --text-primary: #212121;
+  --text-secondary: #757575;
+  --text-tertiary: #9e9e9e;
+  --border-color: #e0e0e0;
+  --border-color-light: #eeeeee;
+  --shadow-color: rgba(0, 0, 0, 0.1);
+  
   /* Neutral tones */
   --neutral-50: #fafafa;
   --neutral-100: #f5f5f5;
@@ -67,8 +78,52 @@
   --z-fixed: 1200;
   --z-modal-backdrop: 1300;
   --z-modal: 1400;
-  --z-popover: 1500;
-  --z-tooltip: 1600;
+  --z-popover: 1500;  --z-tooltip: 1600;
+}
+
+/* Dark theme variables */
+.theme-dark {
+  --bg-primary: #121212;
+  --bg-secondary: #1e1e1e;
+  --bg-tertiary: #2d2d2d;
+  --text-primary: #ffffff;
+  --text-secondary: #b3b3b3;
+  --text-tertiary: #808080;
+  --border-color: #404040;
+  --border-color-light: #333333;
+  --shadow-color: rgba(0, 0, 0, 0.3);
+}
+
+/* Material Design 3 Light theme */
+.theme-md3-light {
+  --bg-primary: #fef7ff;
+  --bg-secondary: #f7f2fa;
+  --bg-tertiary: #f0ebf4;
+  --text-primary: #1d1b20;
+  --text-secondary: #49454f;
+  --text-tertiary: #79747e;
+  --border-color: #cac4d0;
+  --border-color-light: #e6e0e9;
+  --shadow-color: rgba(0, 0, 0, 0.1);
+  --primary: #6750a4;
+  --primary-light: #eaddff;
+  --primary-dark: #21005d;
+}
+
+/* Material Design 3 Dark theme */
+.theme-md3-dark {
+  --bg-primary: #141218;
+  --bg-secondary: #1d1b20;
+  --bg-tertiary: #2b2930;
+  --text-primary: #e6e0e9;
+  --text-secondary: #cac4d0;
+  --text-tertiary: #938f99;
+  --border-color: #49454f;
+  --border-color-light: #332d41;
+  --shadow-color: rgba(0, 0, 0, 0.4);
+  --primary: #d0bcff;
+  --primary-light: #6750a4;
+  --primary-dark: #eaddff;
 }
 
 /* Reset and global styles */
@@ -76,6 +131,15 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+}
+
+/* Reset CSS for consistent rendering */
+body, html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow-x: hidden;
 }
 
 html, body {
@@ -87,10 +151,11 @@ body {
   font-family: var(--font-family);
   font-size: var(--font-size-base);
   line-height: 1.5;
-  color: var(--neutral-900);
-  background-color: var(--neutral-100);
+  color: var(--text-primary);
+  /* background-color: var(--bg-primary); 注释掉，让vanta背景显示 */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color var(--transition-normal), color var(--transition-normal);
 }
 
 a {
@@ -105,7 +170,7 @@ a:hover {
 
 /* Typography */
 h1, h2, h3, h4, h5, h6 {
-  color: var(--neutral-900);
+  color: var(--text-primary);
   line-height: 1.2;
   margin-bottom: var(--spacing-4);
 }
@@ -147,18 +212,18 @@ p {
 }
 
 .btn-secondary {
-  background-color: var(--neutral-200);
-  color: var(--neutral-800);
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
   padding: var(--spacing-2) var(--spacing-4);
   border-radius: var(--radius-md);
-  border: 1px solid var(--neutral-300);
+  border: 1px solid var(--border-color);
   font-weight: 500;
   cursor: pointer;
   transition: background-color var(--transition-fast);
 }
 
 .btn-secondary:hover {
-  background-color: var(--neutral-300);
+  background-color: var(--bg-tertiary);
 }
 
 /* Form styles */
@@ -170,6 +235,7 @@ p {
   display: block;
   margin-bottom: var(--spacing-2);
   font-weight: 500;
+  color: var(--text-primary);
 }
 
 .form-group input,
@@ -177,10 +243,12 @@ p {
 .form-group textarea {
   width: 100%;
   padding: var(--spacing-3);
-  border: 1px solid var(--neutral-300);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   font-size: var(--font-size-base);
-  transition: border-color var(--transition-fast);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
 }
 
 .form-group input:focus,

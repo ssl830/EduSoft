@@ -12,13 +12,25 @@
                 <div v-for="(question, index) in practiceData.questions" :key="question.id" class="question-item">
                     <div class="question-header">
                         <h3>题目 {{ index + 1 }} {{ question.name }}</h3>
-                        <button
-                            @click="toggleFavorite(question)"
-                            class="favorite-btn"
-                            :class="{ 'favorited': question.isFavorited }"
-                        >
-                            ★
-                        </button>
+                        <div style="display: flex; gap: 8px;">
+                            <button
+                                @click="toggleFavorite(question)"
+                                class="favorite-btn"
+                                :class="{ 'favorited': question.isFavorited }"
+                            >
+                                ★
+                            </button>
+                            <!-- 新增：添加到错题集按钮 -->
+                            <button
+                                v-if="question.answer != studentAnswers[question.id]"
+                                class="btn-action preview"
+                                :class="{ 'added': question.isadded }"
+                                style="font-size: 1rem; padding: 0 10px;"
+                                @click="addToWrongSet(question)"
+                            >
+                                添加
+                            </button>
+                        </div>
                     </div>
 
                     <div class="question-content">
@@ -46,16 +58,25 @@
                     </div>
                 </div>
             </div>
+            <button
+                style="margin-top: 20px; margin-bottom: 20px;"
+                class="btn-primary"
+                @click="() => router.push('/')"
+            >
+                返回
+            </button>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
-import axios from 'axios'
+import {useRoute, useRouter} from 'vue-router'
+// import axios from 'axios'
 import { useAuthStore } from '../../stores/auth'
 import ExerciseApi from "../../api/exercise.ts";
+import QuestionApi from '../../api/question'
+const router = useRouter()
 
 export interface PracticeDetail {
     title: string;
@@ -81,6 +102,8 @@ export interface Question {
     explanation?: string;
     isFavorited?: boolean;
     studentAnswer?: string | string[];
+    isadded: boolean;
+
 }
 
 interface Option {
@@ -148,6 +171,26 @@ const toggleFavorite = async (question: Question) => {
         // 请求异常时回滚状态
         question.isFavorited = originalState;
         console.error('收藏操作失败:', err);
+    }
+}
+
+// 添加到错题集
+const addToWrongSet = async (question: Question) => {
+    try {
+        const res = await QuestionApi.addWrongQuestion(
+            question.id,
+            {
+                wrongAnswer: studentAnswers.value[question.id] || ''
+            }
+        )
+        if (res.data.code === 200) {
+            console.log("YESSSSS")
+            question.isadded = true
+        } else {
+            console.log("NOOOOOO")
+        }
+    } catch (e) {
+        console.error('添加到错题集失败:', e)
     }
 }
 
@@ -262,5 +305,45 @@ onMounted(() => {
 
 .error {
     color: #D32F2F;
+}
+
+.btn-primary, .btn-secondary {
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: background-color 0.2s;
+}
+
+.btn-primary {
+    background-color: #2c6ecf;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #215bb4;
+}
+
+.btn-action {
+    padding: 0.375rem 0.75rem;
+    border-radius: 4px;
+    border: none;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-action.preview {
+    background-color: #e3f2fd;
+    color: #1976d2;
+}
+
+.btn-action.preview:hover {
+    background-color: #bbdefb;
+}
+.btn-action.preview.added {
+    background-color: #f5f5f5;
+    color: #424242;
 }
 </style>

@@ -17,7 +17,7 @@ const showCreateClassDialog = ref(false)
 const newClass = ref({
     classTime: '',
     classCode: '',
-    courseId: ''  // 新增课程ID字段
+    courseId: 0  // 新增课程ID字段
 })
 
 const showJoinClassDialog = ref(false)
@@ -31,7 +31,7 @@ const joinClass = async () => {
     }
 
     try {
-        await ClassApi.joinClass(authStore.user?.id, joinClassCode.value)
+        await ClassApi.joinClass(String(authStore.user?.id), joinClassCode.value)
 
         // 重置表单并关闭弹窗
         resetJoinForm()
@@ -55,7 +55,7 @@ const resetJoinForm = () => {
 const fetchClasses = async () => {
     try {
         const response = await ClassApi.getUserClasses(authStore.user?.id)
-        classes.value = response.data.classes
+        classes.value = response.data.data
     } catch (err) {
         error.value = '获取班级列表失败，请稍后再试'
         console.error(err)
@@ -66,7 +66,7 @@ const fetchClasses = async () => {
 const fetchCourses = async () => {
     try {
         const response = await CourseApi.getUserCourses(authStore.user?.id)
-        courses.value = response.data.courses
+        courses.value = response.data.data
     } catch (err) {
         console.error('获取课程列表失败:', err)
     }
@@ -76,7 +76,7 @@ const resetUploadForm = () => {
     showCreateClassDialog.value = false
     newClass.value.classTime = ''
     newClass.value.classCode = ''
-    newClass.value.courseId = ''
+    newClass.value.courseId = 0
 }
 
 // 可以添加更严格的时间有效性验证（可选）
@@ -88,7 +88,7 @@ const isValidTime = (time: string) => {
 
 // 创建班级
 const createClass = async () => {
-    if (!newClass.value.classTime || !newClass.value.classCode || !newClass.value.courseId) {
+    if (!newClass.value.classTime || !newClass.value.classCode || newClass.value.courseId == 0) {
         errorDialog.value = '请填写所有必填字段'
         return
     }

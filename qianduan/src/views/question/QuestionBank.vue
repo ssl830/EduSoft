@@ -15,7 +15,7 @@ const error = ref('')
 
 // Filters
 const selectedChapter = ref('')
-const selectedCourse = ref('')
+const selectedCourse = ref()
 
 // Chapters and types (will be populated from questions)
 const chapters = ref([])
@@ -38,8 +38,6 @@ const uploadError = ref('')
 // Temporary question data for editing
 const tempQuestion = ref({
     type: 'single_choice',
-    teacherId: authStore.user?.id,
-    range: '',
     content: '',
     options: [
         { key: 'A', text: '' },
@@ -47,8 +45,11 @@ const tempQuestion = ref({
         { key: 'C', text: '' },
         { key: 'D', text: '' }
     ],
-    explanation: '',
-    points: 5,
+    answer: '', // 始终保持字符串类型
+    courseId: 0,
+    sectionId: 0,
+    analysis: '',
+    creatorId: authStore.user?.id,
     // 使用计算属性处理多选答案
     get answerArray(): string[] {
         return this.type === 'multiple_choice' && this.answer
@@ -58,9 +59,7 @@ const tempQuestion = ref({
     set answerArray(values: string[]) {
         this.answer = values.join(',');
     },
-    answer: '', // 始终保持字符串类型
-    courseId: 0,
-    sectionId: 0
+
 })
 
 // Add an option for choice questions
@@ -87,20 +86,12 @@ const fetchQuestions = async () => {
     error.value = ''
 
     try {
+        // 使用课程ID而不是名称
         const response = await QuestionApi.getQuestionList({
-            courseId: selectedCourse.value,
-            sectionId: selectedChapter.value,
+            courseId: selectedCourse.value
         })
-        // console.log(selectedChapter.value)
+
         questions.value = response.data.data.questions
-
-        // Extract unique chapters and types
-        const chaptersSet = new Set(questions.value.map((r: any) => r.section_id).filter(Boolean))
-        chapters.value = Array.from(chaptersSet)
-
-        const courseSet = new Set(questions.value.map((r: any) => r.course_name).filter(Boolean))
-        courses.value = Array.from(courseSet)
-
     } catch (err) {
         error.value = '获取资源列表失败，请稍后再试'
         console.error(err)
@@ -125,14 +116,18 @@ interface Section {
 }
 
 // 添加课程和章节数据
-const courses2 = ref<Course[]>([])
 const sections = ref<Section[]>([])
 
 // 获取教师课程列表
 const fetchCourses = async () => {
     try {
         const response = await CourseApi.getUserCourses(authStore.user?.id)
-        courses2.value = response.data.courses
+        // 直接使用 API 返回的课程对象数组
+        courses.value = response.data.data
+
+        // 删除下面两行，不再需要提取课程名称
+        // const courseSet = new Set(courses.value.map((r: any) => r.name).filter(Boolean))
+        // courses.value = Array.from(courseSet)
     } catch (err) {
         console.error('获取课程列表失败:', err)
     }
@@ -140,7 +135,7 @@ const fetchCourses = async () => {
 
 // 监听课程选择变化
 watch(() => tempQuestion.value.courseId, (newCourseId) => {
-    const selectedCourse = courses2.value.find(c => c.id === newCourseId)
+    const selectedCourse = courses.value.find(c => c.id === newCourseId)
     sections.value = selectedCourse?.sections || []
     console.log(sections.value)
     tempQuestion.value.sectionId = 0 // 重置章节选择
@@ -170,8 +165,8 @@ onMounted(() => {
 
 const addQuestion = async () => {
     // Validate question data
-    if (!tempQuestion.value.content || tempQuestion.value.points < 0 || !tempQuestion.value.range) {
-        error.value = '请完成题目内容并设置分值及公开范围'
+    if (!tempQuestion.value.content) {
+        error.value = '请完成题目内容并设置分值'
         return
     }
 
@@ -204,10 +199,9 @@ const addQuestion = async () => {
     }
 
     try {
-        const res = await QuestionApi.uploadQuestion({
+        console.log(tempQuestion.value)
+        const res = await QuestionApi.createQuestion({
             ...tempQuestion.value,
-            courseId: tempQuestion.value.courseId,
-            sectionId: tempQuestion.value.sectionId
         })
         console.log(res)
 
@@ -235,8 +229,7 @@ const resetUploadForm = () => {
             { key: 'C', text: '' },
             { key: 'D', text: '' }
         ],
-        explanation: '',
-        points: 5,
+        analysis: '',
         answer: ''
     }
     uploadProgress.value = 0
@@ -305,13 +298,6 @@ onMounted(() => {
                         <option value="fill_blank">填空题</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label for="range">公开范围</label>
-                    <select id="range" v-model="tempQuestion.range">
-                        <option value="public">公开</option>
-                        <option value="self">私有</option>
-                    </select>
-                </div>
 
                 <div class="form-row">
                     <div class="form-group form-group-half">
@@ -323,7 +309,7 @@ onMounted(() => {
                         >
                             <option value="" disabled>请选择课程</option>
                             <option
-                                v-for="course in courses2"
+                                v-for="course in courses"
                                 :key="course.id"
                                 :value="course.id"
                             >
@@ -441,22 +427,13 @@ onMounted(() => {
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="explanation">答案解析</label>
+                    <label for="analysis">答案解析</label>
                     <textarea
-                        id="explanation"
-                        v-model="tempQuestion.explanation"
+                        id="analysis"
+                        v-model="tempQuestion.analysis"
                         rows="4"
                         placeholder="输入答案解析"
                     ></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="questionPoints">分值</label>
-                    <input
-                        id="questionPoints"
-                        v-model.number="tempQuestion.points"
-                        type="number"
-                        min="1"
-                    />
                 </div>
             </div>
 
@@ -487,24 +464,25 @@ onMounted(() => {
                     v-model="selectedCourse"
                 >
                     <option value="">所有课程</option>
-                    <option v-for="course in courses" :key="course" :value="course">
-                        {{ course }}
+                    <!-- 显示课程名称，绑定值为课程ID -->
+                    <option v-for="course in courses" :key="course.id" :value="course.id">
+                        {{ course.name }}
                     </option>
                 </select>
             </div>
 
-            <div class="filter-section">
-                <label for="chapterFilter">按章节筛选:</label>
-                <select
-                    id="chapterFilter"
-                    v-model="selectedChapter"
-                >
-                    <option value="">所有章节</option>
-                    <option v-for="sectionId in chapters" :key="sectionId" :value="sectionId">
-                        {{ sectionId }}
-                    </option>
-                </select>
-            </div>
+<!--            <div class="filter-section">-->
+<!--                <label for="chapterFilter">按章节筛选:</label>-->
+<!--                <select-->
+<!--                    id="chapterFilter"-->
+<!--                    v-model="selectedChapter"-->
+<!--                >-->
+<!--                    <option value="">所有章节</option>-->
+<!--                    <option v-for="sectionId in chapters" :key="sectionId" :value="sectionId">-->
+<!--                        {{ sectionId }}-->
+<!--                    </option>-->
+<!--                </select>-->
+<!--            </div>-->
         </div>
 
         <!-- Resource List -->
@@ -513,6 +491,7 @@ onMounted(() => {
         <div v-else-if="questions.length === 0" class="empty-state">
             暂无教学资料
         </div>
+        <div v-else-if="!selectedCourse" class="error-message">请选择课程再查看题库</div>
         <div v-else class="resource-table-wrapper">
             <table class="resource-table">
                 <thead>
@@ -526,8 +505,8 @@ onMounted(() => {
                 <tbody>
                 <tr v-for="question in questions" :key="question.id">
                     <td>{{ question.name }}</td>
-                    <td>{{ question.course_name }}</td>
-                    <td>{{ question.section_id || '-' }}</td>
+                    <td>{{ question.courseName }}</td>
+                    <td>{{ question.sectionName || '-' }}</td>
                     <!--         aTODO: 时间-->
                     <td class="actions">
                         <button
@@ -552,11 +531,11 @@ onMounted(() => {
                     <div class="modal-body" v-if="selectedQuestion">
                         <div class="detail-row">
                             <label>课程名称:</label>
-                            <span>{{ selectedQuestion.course_name || '-' }}</span>
+                            <span>{{ selectedQuestion.courseName || '-' }}</span>
                         </div>
                         <div class="detail-row">
                             <label>章节标题:</label>
-                            <span>{{ selectedQuestion.section_name || '-' }}</span>
+                            <span>{{ selectedQuestion.sectionName || '-' }}</span>
                         </div>
                         <div class="detail-row">
                             <label>题目类型:</label>

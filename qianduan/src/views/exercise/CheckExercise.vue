@@ -3,8 +3,8 @@
         <div v-if="loading">加载中...</div>
         <div v-else-if="error" class="error-message">{{ error }}</div>
         <div >
-            <div v-for="question in questions" :key="question.questionId" class="question-item">
-                <h3>题目 {{ question.questionId }} {{ question.questionName }}</h3>
+            <div v-for="question in questions" :key="question.questionName" class="question-item">
+                <h3>{{ question.questionName }}</h3>
                 <p class="answer-text">学生答案：{{ question.answerText }}</p>
                 <p>最大分值：{{ question.maxScore }}</p>
                 <div class="score-input">
@@ -33,13 +33,10 @@ import Exercise from "../../api/exercise.ts";
 import {useRoute, useRouter} from "vue-router";
 
 interface QuestionItem {
-    questionId: number;
     questionName: string;
     answerText: string;
-    isJudged: boolean;
-    correct: boolean;
-    score: number;
     maxScore: number;
+    score: number
 }
 const route = useRoute()
 const router = useRouter()
@@ -55,7 +52,6 @@ const fetchPendingAnswers = async () => {
     try {
         console.log(submissionId)
         const response = await ExerciseApi.fetchPendingAnswers({
-                practiceId: practiceId,
                 submissionId: submissionId,
         });
         console.log(response.data.code)
@@ -90,10 +86,7 @@ const submitScores = async () => {
         {
             submissionId: submissionId,
             question: questions.value.map(q => ({
-                questionId: q.questionId,
                 answerText: q.answerText,
-                isJudged: true,
-                correct: q.score === q.maxScore,
                 score: q.score,
                 maxScore: q.maxScore,
             })),

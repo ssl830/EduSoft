@@ -11,7 +11,7 @@ import ClassProcessing from '../../components/class/ClassProcessing.vue'
 
 const route = useRoute()
 const authStore = useAuthStore()
-const aclassId = computed(() => route.params.id as string)
+const aclassId = computed(() => route.params.id as bigint)
 
 const loading = ref(true)
 const error = ref('')
@@ -30,7 +30,7 @@ onMounted(async () => {
         console.log(response.data.aclass)
         console.log(aclass.value)
     } catch (err) {
-        error.value = '获取课程详情失败，请稍后再试'
+        error.value = '获取班级详情失败，请稍后再试'
         console.error(err)
     } finally {
         loading.value = false
@@ -60,7 +60,7 @@ onMounted(async () => {
                         :class="['tab-button', { active: activeTab === 'homework' }]"
                         @click="activeTab = 'homework'"
                     >
-                        课程作业
+                        班级作业
                     </button>
                     <button
                         :class="['tab-button', { active: activeTab === 'processing' }]"

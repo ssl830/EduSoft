@@ -12,34 +12,15 @@ const questions = ref<any[]>([])
 const loading = ref(true)
 const error = ref('')
 
-// Filters
-const selectedChapter = ref('')
-const selectedCourse = ref('')
-
-// Chapters and types (will be populated from questions)
-const chapters = ref([])
-const courses = ref([])
-
 // Fetch questions
 const fetchQuestions = async () => {
     loading.value = true
     error.value = ''
 
     try {
-        const response = await QuestionApi.getWrongQuestionList({
-            studentId: authStore.user?.id,
-            courseId: selectedCourse.value,
-            sectionId: selectedChapter.value,
-        })
+        const response = await QuestionApi.getWrongQuestionList()
         // console.log(selectedChapter.value)
         questions.value = response.data.data
-
-        // Extract unique chapters and types
-        const chaptersSet = new Set(questions.value.map((r: any) => r.section_id).filter(Boolean))
-        chapters.value = Array.from(chaptersSet)
-
-        const courseSet = new Set(questions.value.map((r: any) => r.course_name).filter(Boolean))
-        courses.value = Array.from(courseSet)
 
     } catch (err) {
         error.value = '获取资源列表失败，请稍后再试'
@@ -64,7 +45,7 @@ const showQuestionDetail = (question: any) => {
     showDetailDialog.value = true
 }
 
-const deleteQuestion = async (questionId: string) => {
+const deleteQuestion = async (questionId: bigint) => {
     const response = await QuestionApi.removeWrongQuestion(questionId);
     console.log(response)
     await fetchQuestions()
@@ -78,11 +59,6 @@ const formatAnswer = (question: any) => {
     return question.answer
 }
 
-// Filter questions when criteria change
-watch([selectedChapter, selectedCourse], () => {
-    fetchQuestions()
-})
-
 onMounted(() => {
     fetchQuestions()
 })
@@ -94,35 +70,6 @@ onMounted(() => {
     <div class="question-bank-container">
         <div class="resource-header">
             <h2>错题集</h2>
-        </div>
-
-        <!-- Filter Section -->
-        <div class="resource-filters">
-            <div class="filter-section">
-                <label for="typeFilter">按课程筛选:</label>
-                <select
-                    id="typeFilter"
-                    v-model="selectedCourse"
-                >
-                    <option value="">所有课程</option>
-                    <option v-for="course in courses" :key="course" :value="course">
-                        {{ course }}
-                    </option>
-                </select>
-            </div>
-
-            <div class="filter-section">
-                <label for="chapterFilter">按章节筛选:</label>
-                <select
-                    id="chapterFilter"
-                    v-model="selectedChapter"
-                >
-                    <option value="">所有章节</option>
-                    <option v-for="sectionId in chapters" :key="sectionId" :value="sectionId">
-                        {{ sectionId }}
-                    </option>
-                </select>
-            </div>
         </div>
 
         <!-- Resource List -->
@@ -145,7 +92,7 @@ onMounted(() => {
                 <tr v-for="question in questions" :key="question.id">
                     <td>{{ question.content }}</td>
                     <td>{{ question.course_name }}</td>
-                    <td>{{ question.section_id || '-' }}</td>
+                    <td>{{ question.section_title || '-' }}</td>
                     <!--         aTODO: 时间-->
                     <td class="actions">
                         <button

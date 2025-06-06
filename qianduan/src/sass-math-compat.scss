@@ -1,0 +1,63 @@
+// sass-math-compat.scss
+// 兼容较老版本Sass中的math模块
+@function math-div($a, $b) {
+  @return $a / $b;
+}
+
+@function math-pow($base, $exponent) {
+  $result: 1;
+  @for $i from 1 through $exponent {
+    $result: $result * $base;
+  }
+  @return $result;
+}
+
+@function math-sqrt($value) {
+  $x: 1;
+  @for $i from 1 through 10 {
+    $x: ($x + $value / $x) / 2;
+  }
+  @return $x;
+}
+
+@function math-cos($angle) {
+  $pi: 3.14159265359;
+  $cos: 0;
+  $angle: $angle % 360;
+  // 简单的余弦近似
+  @if $angle == 0 {
+    $cos: 1;
+  } @else if $angle == 90 {
+    $cos: 0;
+  } @else if $angle == 180 {
+    $cos: -1;
+  } @else if $angle == 270 {
+    $cos: 0;
+  } @else {
+    // 这只是一个粗略的近似
+    $rad: $angle * $pi / 180;
+    $cos: 1 - (($rad * $rad) / 2) + (($rad * $rad * $rad * $rad) / 24);
+  }
+  @return $cos;
+}
+
+@function math-sin($angle) {
+  $pi: 3.14159265359;
+  $sin: 0;
+  $angle: $angle % 360;
+  // 简单的正弦近似
+  @if $angle == 0 {
+    $sin: 0;
+  } @else if $angle == 90 {
+    $sin: 1;
+  } @else if $angle == 180 {
+    $sin: 0;
+  } @else if $angle == 270 {
+    $sin: -1;
+  } @else {
+    // 这只是一个粗略的近似
+    $rad: $angle * $pi / 180;
+    $sin: $rad - (($rad * $rad * $rad) / 6) + (($rad * $rad * $rad * $rad * $rad) / 120);
+  }
+  @return $sin;
+}

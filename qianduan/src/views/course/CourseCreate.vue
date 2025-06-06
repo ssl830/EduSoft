@@ -10,6 +10,7 @@ const authStore = useAuthStore()
 const course = reactive({
     teacherId: authStore.user?.id,
     name: '',
+    code: '',
     outline: '',
     objective: '',
     assessment: ''
@@ -22,6 +23,7 @@ const error = ref('')
 // Reset the question form
 const resetCourse = () => {
     course.name = '';
+    course.code = '';
     course.outline = '';
     course.objective = '';
     course.assessment = '';
@@ -43,9 +45,15 @@ const submitCourse = async () => {
     error.value = ''
 
     try {
-        await CourseApi.createCourse(course)
-        router.push('/') // or to a success page
-        resetCourse()   // TODO
+        const response = await CourseApi.createCourse(course);
+        if (response.data.code !== 200) {
+            // 请求失败时回滚状态
+            console.error('操作失败:', response.data.message);
+            error.value = response.data.message || '创建课程失败，请稍后再试';
+        }else{
+            await router.push('/') // or to a success page
+            resetCourse()   // TODO
+        }
     } catch (err) {
         error.value = '创建课程失败，请稍后再试'
         console.error(err)
@@ -82,6 +90,17 @@ const submitCourse = async () => {
                     v-model="course.outline"
                     type="text"
                     placeholder="输入课程大纲"
+                    required
+                />
+            </div>
+
+            <div class="form-group">
+                <label for="outline">课程代码</label>
+                <input
+                    id="outline"
+                    v-model="course.code"
+                    type="text"
+                    placeholder="输入课程代码"
                     required
                 />
             </div>

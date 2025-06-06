@@ -125,7 +125,7 @@ import ExerciseApi from "../../api/exercise.js";
 const route = useRoute()
 import { useAuthStore } from '../../stores/auth'
 const authStore = useAuthStore()
-const aclassId = computed(() => route.params.id as string)
+const practiceId = computed(() => route.params.id as string)
 
 const router = useRouter()
 const exercise = ref(null)
@@ -147,7 +147,7 @@ const questionTypeMap = {
 // 获取练习详情
 const fetchExercise = async () => {
     try {
-        const res = await ExerciseApi.takeExercise(aclassId.value)
+        const res = await ExerciseApi.takeExercise(practiceId.value)
         exercise.value = res.data
         console.log("herrrrrrrrrrrrr")
         console.log(exercise.value)
@@ -204,7 +204,7 @@ const submitAnswers = async () => {
     console.log(answers)
     try {
         const res = await ExerciseApi.submitExercise({
-            practiceId: aclassId.value,
+            practiceId: practiceId.value,
             studentId: authStore.user?.id, // 从authStore获取
             answers: answers.value
         })
@@ -212,7 +212,7 @@ const submitAnswers = async () => {
 
         router.push({
             name: 'ExerciseFeedback',
-            params: { practiceId: aclassId.value, submissionId: res.data.data.submissionId }
+            params: { practiceId: practiceId.value, submissionId: res.data.data.submissionId }
         })
     } catch (err) {
         error.value = '提交失败，请检查网络连接'
@@ -419,4 +419,6 @@ onMounted(() => {
     align-items: center;
     gap: 0.8rem;
 }
+
+
 </style>

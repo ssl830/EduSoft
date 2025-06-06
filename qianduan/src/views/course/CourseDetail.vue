@@ -6,7 +6,7 @@ import CourseApi from '../../api/course'
 
 import CourseSyllabus from '../../components/course/CourseSyllabus.vue'
 import CourseResourceList from '../../components/course/CourseResourceList.vue'
-// import CourseDiscussion from '../../components/course/CourseDiscussion.vue'
+import CourseVideoList from '../../components/course/CourseVideoList.vue'
 
 const route = useRoute()
 const authStore = useAuthStore()
@@ -15,7 +15,7 @@ const courseId = computed(() => route.params.id as string)
 const loading = ref(true)
 const error = ref('')
 const course = ref<any>(null)
-const activeTab = ref('syllabus') // 'syllabus', 'resources', 'exercises', 'discussion'
+const activeTab = ref('syllabus') // 'syllabus', 'resources', 'video'
 
 const isTeacherOrTutor = computed(() => {
   return ['teacher', 'tutor'].includes(authStore.userRole)
@@ -24,7 +24,7 @@ const isTeacherOrTutor = computed(() => {
 onMounted(async () => {
   try {
     const response = await CourseApi.getCourseById(courseId.value)
-    course.value = response.data.course
+    course.value = response.data.data
   } catch (err) {
     error.value = '获取课程详情失败，请稍后再试'
     console.error(err)
@@ -40,7 +40,7 @@ onMounted(async () => {
     <div v-else-if="error" class="error-message">{{ error }}</div>
     <template v-else-if="course">
       <header class="course-header">
-        <h1>{{ course.name }}</h1>
+        <h1>{{ course.name }} {{ course.code }}</h1>
       </header>
 
       <div class="course-content">
@@ -58,6 +58,12 @@ onMounted(async () => {
           >
             教学资料
           </button>
+            <button
+                :class="['tab-button', { active: activeTab === 'video' }]"
+                @click="activeTab = 'video'"
+            >
+                视频学习
+            </button>
         </div>
 
         <!-- Main Content - Three Panel Layout -->
@@ -74,6 +80,11 @@ onMounted(async () => {
             :course-id="courseId"
             :is-teacher="isTeacherOrTutor"
           />
+            <CourseVideoList
+                v-else-if="activeTab === 'video'"
+                :course-id="courseId"
+                :is-teacher="isTeacherOrTutor"
+            />
         </div>
       </div>
 

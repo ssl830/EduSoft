@@ -1,6 +1,29 @@
 import axios from './axios'
 
 const ResourceApi = {
+  // 获取课程视频列表
+  getChapterResources(courseId: string, formData: FormData){
+    return axios.post(`/api/resources/chapter/${courseId}`, formData)
+  },
+  // 记录视频播放进度
+  recordWatchProgress(formData: FormData){
+    return axios.post('/api/resources/progress', formData)
+  },
+  // 上传视频
+  uploadVideo(formData: FormData, onUploadProgress?: (progressEvent: number) => void) {
+    return axios.post(`/api/resources/upload`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      },
+      onUploadProgress: progressEvent => {
+        if (progressEvent.total && onUploadProgress) {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+          onUploadProgress(percentCompleted)
+        }
+      }
+    })
+  },
+
   // Get resources for a course
   getCourseResources(courseId: string, params = {}) {
     return axios.post(`/api/courses/${courseId}/resources`, { params })

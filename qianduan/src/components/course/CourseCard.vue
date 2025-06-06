@@ -4,6 +4,7 @@ import { defineProps } from 'vue'
 interface Course {
     id: number;
     teacherID: string;
+    teacherName: string;
     name: string;
     code: string;
     outline: string;
@@ -27,24 +28,22 @@ const props = defineProps<{
 <template>
   <router-link :to="`/course/${course.id}`" class="course-card">
     <div class="course-header">
-      <h3 class="course-title">{{ course.name }}</h3>
-      <span class="course-code">{{ course.code }}</span>
+      <h3 class="course-title">{{ course.name }} {{ course.code }}</h3>
+      <span class="course-code">{{ course.teacherName }}</span>
     </div>
 
     <div class="course-content">
-      <p class="course-teacher">教师: {{ course.teacherID }}</p>
-
-      <div v-if="course.progress !== undefined" class="course-progress">
-        <div class="progress-label">
-          学习进度: {{ course.progress }}%
-        </div>
-        <div class="progress-bar">
-          <div
-            class="progress-value"
-            :style="{ width: `${course.progress}%` }"
-          ></div>
-        </div>
-      </div>
+<!--      <div v-if="course.progress !== undefined" class="course-progress">-->
+<!--        <div class="progress-label">-->
+<!--          学习进度: {{ course.progress }}%-->
+<!--        </div>-->
+<!--        <div class="progress-bar">-->
+<!--          <div-->
+<!--            class="progress-value"-->
+<!--            :style="{ width: `${course.progress}%` }"-->
+<!--          ></div>-->
+<!--        </div>-->
+<!--      </div>-->
     </div>
 
     <div class="card-footer">

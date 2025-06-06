@@ -25,30 +25,22 @@
                 <thead>
                 <tr>
                     <th>作业名称</th>
-                    <th>开始时间</th>
                     <th>截止时间</th>
-                    <th>状态</th>
                     <th>操作</th>
                 </tr>
                 </thead>
                 <tbody>
-                <tr v-for="hw in homeworks" :key="hw.id">
+                <tr v-for="hw in homeworks" :key="hw.homeworkId">
                     <td>
                         <div class="homework-title">
                             <i class="icon-hw"></i>
                             <span>{{ hw.title }}</span>
-                            <span v-if="hw.attachment" class="attachment-tag">
+                            <span v-if="hw.fileUrl" class="attachment-tag">
                   <i class="icon-attachment"></i>附件
                 </span>
                         </div>
                     </td>
-                    <td>{{ formatDate(hw.start_time) }}</td>
                     <td>{{ formatDate(hw.end_time) }}</td>
-                    <td>
-              <span :class="getStatusClass(hw)">
-                {{ getStatusText(hw) }}
-              </span>
-                    </td>
                     <td class="actions">
                         <button class="btn-view" @click="viewHomework(hw)">
                             <i class="icon-view"></i> 查看
@@ -112,14 +104,6 @@
                         </div>
                         <div class="form-row">
                             <div class="form-group">
-                                <label>开始时间 *</label>
-                                <input
-                                    type="datetime-local"
-                                    v-model="createForm.start_time"
-                                    required
-                                >
-                            </div>
-                            <div class="form-group">
                                 <label>截止时间 *</label>
                                 <input
                                     type="datetime-local"
@@ -161,10 +145,6 @@
                 <div class="modal-body">
                     <div class="homework-info">
                         <div class="info-item">
-                            <label>开始时间：</label>
-                            <span>{{ formatDate(currentHomework.start_time) }}</span>
-                        </div>
-                        <div class="info-item">
                             <label>截止时间：</label>
                             <span>{{ formatDate(currentHomework.end_time) }}</span>
                         </div>
@@ -181,11 +161,11 @@
                         <p>{{ currentHomework.description || '无具体要求' }}</p>
                     </div>
 
-                    <div v-if="currentHomework.attachment" class="attachment">
+                    <div v-if="currentHomework.fileUrl" class="attachment">
                         <label>作业附件：</label>
                         <div class="attachment-info">
                             <i class="icon-attachment"></i>
-                            <span>{{ currentHomework.attachment_name }}</span>
+                            <span>{{ currentHomework.fileName }}</span>
                             <button
                                 class="btn-download"
                                 @click="downloadHomeworkAttachment(currentHomework)"
@@ -196,7 +176,6 @@
                     </div>
                     <div v-if="downloadError" class="error">{{ downloadError }}</div>
 
-<!--                    -->
                     <div
                         v-if="!isTeacher && canSubmit(currentHomework)"
                         class="submit-section"
@@ -250,6 +229,7 @@
                     </div>
 
                     <div class="submissions-list">
+                        <div v-if="downloadError2" class="error">{{ downloadError2 }}</div>
                         <div v-if="submissionsLoading" class="loading">加载中...</div>
                         <div v-else-if="submissionsError" class="error">{{ submissionsError }}</div>
                         <div v-else-if="submissions.length === 0" class="empty">
@@ -267,8 +247,8 @@
                             </thead>
                             <tbody>
                             <tr v-for="sub in submissions" :key="sub.id">
-                                <td>{{ sub.student_id }}</td>
-                                <td>{{ sub.student_name }}</td>
+                                <td>{{ sub.studentId }}</td>
+                                <td>{{ sub.studentName }}</td>
                                 <td>{{ formatDateTime(sub.submit_time) }}</td>
                                 <td>
                                     <button
@@ -281,7 +261,7 @@
                             </tr>
                             </tbody>
                         </table>
-                    </div>
+                   </div>
                 </div>
             </div>
         </div>
@@ -324,30 +304,28 @@ import {useAuthStore} from "../../stores/auth.ts";
 
 // 定义作业类型
 interface Homework {
-    id: string
+    homeworkId: bigint
     class_id: string
     title: string
     description: string
-    attachment: string | null
-    attachment_name: string | null
-    start_time: string
+    fileUrl: string | null
+    fileName: string | null
     end_time: string
 }
 
 // 定义提交类型
 interface Submission {
-    id: bigint
-    homework_id: string
-    student_id: string
-    student_name: string
-    file_path: string
-    file_name: string
+    submissionId: bigint
+    studentId: string
+    studentName: string
+    fileUrl: string
+    fileName: string
     submit_time: string
 }
 
 // 组件属性
 const props = defineProps<{
-    classId: string
+    classId: bigint
     isTeacher: boolean
 }>()
 
@@ -358,6 +336,7 @@ const error = ref<string | null>(null)
 const createError = ref<string | null>(null)
 const submitError = ref<string | null>(null)
 const downloadError = ref<string | null>(null)
+const downloadError2 = ref<string | null>(null)
 const submissionsError = ref<string | null>(null)
 
 // 弹窗状态
@@ -421,7 +400,6 @@ const createHomework = async () => {
         formData.append('class_id', props.classId)
         formData.append('title', createForm.value.title)
         formData.append('description', createForm.value.description)
-        formData.append('start_time', createForm.value.start_time)
         formData.append('end_time', createForm.value.end_time)
 
         if (createForm.value.file) {
@@ -444,7 +422,7 @@ const createHomework = async () => {
 const viewHomework = (hw: Homework) => {
     currentHomework.value = hw
     if (props.isTeacher) {
-        fetchSubmissions(hw.id)
+        fetchSubmissions(hw.homeworkId)
         showSubmissionDialog.value = true
     } else {
         showDetailDialog.value = true
@@ -452,9 +430,10 @@ const viewHomework = (hw: Homework) => {
 }
 
 // 获取作业提交列表（教师）
-const fetchSubmissions = async (homeworkId: string) => {
+const fetchSubmissions = async (homeworkId: bigint) => {
     submissionsLoading.value = true
     submissionsError.value = null
+    console.log(homeworkId)
     try {
         const response = await ClassApi.fetchSubmissions(homeworkId)
         submissions.value = response.data.data
@@ -520,11 +499,10 @@ const deleteHomework = async () => {
 // 下载作业附件
 const downloadHomeworkAttachment = async (homework: Homework) => {
     try {
-        console.log(homework.id)
+        console.log(homework.homeworkId)
         // 1. 获取文件直链
-        const response = await ClassApi.downloadHomeworkFile(String(homework.id))
-        const fileUrl = response.data.url
-        const fileName = homework.attachment_name
+        const fileUrl = homework.fileUrl
+        const fileName = homework.fileName
 
         // 2. 通过 Fetch/Blob 间接下载
         const res = await fetch(fileUrl)
@@ -550,11 +528,10 @@ const downloadHomeworkAttachment = async (homework: Homework) => {
 // 下载学生提交的作业
 const downloadSubmissionFile = async (submission: Submission) => {
     try {
-        console.log(submission.id)
+        console.log(submission.submissionId)
         // 1. 获取文件直链
-        const response = await ClassApi.downloadSubmissionFile(String(submission.id))
-        const fileUrl = response.data.url
-        const fileName = submission.file_name
+        const fileUrl = submission.fileUrl
+        const fileName = submission.fileName
 
         // 2. 通过 Fetch/Blob 间接下载
         const res = await fetch(fileUrl)
@@ -572,7 +549,7 @@ const downloadSubmissionFile = async (submission: Submission) => {
         window.URL.revokeObjectURL(url)
         document.body.removeChild(link)
     } catch (err) {
-        error.value = '下载资源失败，请稍后再试'
+        downloadError2.value = '下载资源失败，请稍后再试'
         console.error(err)
     }
 }
@@ -628,12 +605,9 @@ const formatDateTime = (dateString: string) => {
 }
 
 const getStatusClass = (hw: Homework) => {
-    const start = new Date(hw.start_time)
     const end = new Date(hw.end_time)
 
-    if (currentTime.value < start) {
-        return 'status-not-started'
-    } else if (currentTime.value >= start && currentTime.value <= end) {
+    if (currentTime.value <= end) {
         return 'status-ongoing'
     } else {
         return 'status-ended'
@@ -654,9 +628,8 @@ const getStatusText = (hw: Homework) => {
 }
 
 const canSubmit = (hw: Homework) => {
-    const start = new Date(hw.start_time)
     const end = new Date(hw.end_time)
-    return currentTime.value >= start && currentTime.value <= end
+    return currentTime.value <= end
 }
 
 // 初始化

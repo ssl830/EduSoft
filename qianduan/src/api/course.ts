@@ -2,13 +2,13 @@ import axios from './axios'
 
 const CourseApi = {
   // Get all courses for current user
-  getUserCourses(id: string) {
-    return axios.get(`/api/courses/user/${id}`)
+  getUserCourses(userId: string) {
+    return axios.get(`/api/courses/user/${userId}`)
   },
 
   // Get course by ID
-  getCourseById(courseID: string) {
-    return axios.get(`/api/courses/${courseID}`)
+  getCourseById(id: string) {
+    return axios.get(`/api/courses/${id}`)
   },
 
   uploadSections(courseId: bigint, data: {sections: any[] }){
@@ -85,7 +85,17 @@ const CourseApi = {
         'Content-Type': 'multipart/form-data'
       }
     })
-  }
+  },
+
+  // 获取用户当前所在的班级
+  getUserClasses() {
+    return axios.get('/api/user/classes')
+  },
+
+  // 获取用户的默认班级（最近活跃的班级）
+  getUserDefaultClass() {
+    return axios.get('/api/user/default-class')
+  },
 }
 
 export default CourseApi
