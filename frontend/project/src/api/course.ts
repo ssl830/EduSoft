@@ -1,6 +1,11 @@
 import axios from './axios'
 
 const CourseApi = {
+  // 获取所有课程列表
+  getAllCourses() {
+    return axios.get('/api/courses')
+  },
+
   // Get all courses for current user
   getUserCourses(userId: string) {
     if (!userId) {
@@ -93,7 +98,7 @@ const CourseApi = {
 
   // 获取用户当前所在的班级
   getUserClasses() {
-    return axios.get('/api/user/classes')
+    return axios.get('/api/classes/user')
   },
 
   // 获取用户的默认班级（最近活跃的班级）

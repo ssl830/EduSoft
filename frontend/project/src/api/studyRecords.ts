@@ -107,7 +107,7 @@ export interface ExerciseReport {
 }
 
 // API 实现
-const StudyRecordsApi = {
+export const StudyRecordsApi = {
   // 获取所有学习记录
   getAllStudyRecords() {
     return axios.get('/api/record/study');
@@ -156,7 +156,7 @@ const StudyRecordsApi = {
     return axios.get(`/api/record/submission/${submissionId}/export-report`, {
       responseType: 'blob',
       headers: {
-        Accept: 'application/pdf'
+        'Accept': '*/*'
       }
     });
   },
