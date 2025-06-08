@@ -1,14 +1,11 @@
 <script setup lang="ts">
 import {ref, reactive, onMounted} from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { useRoute } from 'vue-router'
 import ExerciseApi from '../../api/exercise'
-import {useAuthStore} from "../../stores/auth.ts";
 import { ElMessage } from 'element-plus';
 import QuestionApi from '../../api/question'
 
-const router = useRouter()
 const route = useRoute()
-const authStore = useAuthStore()
 
 const practiceId = Number(route.params.id)
 
@@ -44,9 +41,8 @@ const fetchQuestionBank = async () => {
       list = res.data.questions
     } else if (res.data && Array.isArray(res.data.data?.questions)) {
       list = res.data.data.questions
-    }
-    // 类型修正：单选题但答案长度大于1，视为多选题
-    list.forEach(q => {
+    }    // 类型修正：单选题但答案长度大于1，视为多选题
+    list.forEach((q: any) => {
       if (q.type === 'singlechoice' && typeof q.answer === 'string' && q.answer.length > 1) {
         q.type = 'multiplechoice'
       }
@@ -82,7 +78,7 @@ const addAllSelectedQuestions = () => {
 const fetchPracticeDetail = async () => {
   loading.value = true
   try {
-    const res = await ExerciseApi.takeExercise(practiceId)
+    const res: any = await ExerciseApi.takeExercise(String(practiceId))
     const data = res.data
     exercise.title = data.title
     exercise.courseId = data.courseId
@@ -111,7 +107,7 @@ onMounted(() => {
 const saveBasicInfo = async () => {
   loading.value = true
   try {
-    const response = await ExerciseApi.updateExercise(practiceId, {
+    const response: any = await ExerciseApi.updateExercise(practiceId, {
       title: exercise.title,
       startTime: exercise.startTime,
       endTime: exercise.endTime,
@@ -124,13 +120,13 @@ const saveBasicInfo = async () => {
         if (exercise.questions.length > 0) {
             const questionIds = exercise.questions.map(q => q.id)
             const scores = exercise.questions.map(q => q.score || 5)
-            const response = await ExerciseApi.importQuestionsToPractice({
+            const response2: any = await ExerciseApi.importQuestionsToPractice({
                 practiceId,
                 questionIds,
                 scores
             })
-            if(response.code !== 200) {
-                ElMessage.error(response.message || '题目保存失败，请稍后再试')
+            if(response2.code !== 200) {
+                ElMessage.error(response2.message || '题目保存失败，请稍后再试')
                 return
             }else{
                 ElMessage.success('基本信息和题目保存成功')
@@ -145,7 +141,7 @@ const saveBasicInfo = async () => {
   }
 }
 
-const questionTypeMap = {
+const questionTypeMap: Record<string, string> = {
     'singlechoice': '单选题',
     'multiplechoice': '多选题',
     'judge': '判断题',

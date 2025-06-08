@@ -31,7 +31,7 @@
                 </tr>
                 </thead>
                 <tbody>
-                <tr v-for="hw in homeworks" :key="hw.homeworkId">
+                <tr v-for="hw in homeworks" :key="String(hw.homeworkId)">
                     <td>
                         <div class="homework-title">
                             <i class="icon-hw"></i>
@@ -41,9 +41,8 @@
                 </span>
                         </div>
                     </td>
-                    <td>{{ hw.endTime }}</td>
-                    <td v-if="!isTeacher">
-                        <span v-if="studentSubmissions[hw.homeworkId]" style="color: #4CAF50;">已提交</span>
+                    <td>{{ hw.endTime }}</td>                    <td v-if="!isTeacher">
+                        <span v-if="studentSubmissions[String(hw.homeworkId)]" style="color: #4CAF50;">已提交</span>
                         <span v-else style="color: #f44336;">未提交</span>
                     </td>
                     <td class="actions">
@@ -142,38 +141,36 @@
 
         <!-- 作业详情弹窗（学生） -->
         <div v-if="showDetailDialog" class="modal-backdrop">
-            <div class="modal detail-modal">
-                <div class="modal-header">
-                    <h3>{{ currentHomework.title }}</h3>
+            <div class="modal detail-modal">                <div class="modal-header">
+                    <h3>{{ currentHomework?.title }}</h3>
                     <button class="close-btn" @click="closeDetailDialog">&times;</button>
                 </div>
                 <div class="modal-body">
                     <div class="homework-info">
                         <div class="info-item">
                             <label>截止时间：</label>
-                            <span>{{ currentHomework.endTime }}</span>
+                            <span>{{ currentHomework?.endTime }}</span>
                         </div>
                         <div class="info-item">
-                            <label>作业状态：</label>
-                            <span :class="getStatusClass(currentHomework)">
-                {{ getStatusText(currentHomework) }}
+                            <label>作业状态：</label>                            <span v-if="currentHomework" :class="getStatusClass(currentHomework)">
+                {{ currentHomework ? getStatusText(currentHomework) : '' }}
               </span>
                         </div>
                     </div>
 
                     <div class="description">
                         <label>作业要求：</label>
-                        <p>{{ currentHomework.description || '无具体要求' }}</p>
+                        <p>{{ currentHomework?.description || '无具体要求' }}</p>
                     </div>
 
-                    <div v-if="currentHomework.fileUrl" class="attachment">
+                    <div v-if="currentHomework?.fileUrl" class="attachment">
                         <label>作业附件：</label>
                         <div class="attachment-info">
                             <i class="icon-attachment"></i>
-                            <span>{{ currentHomework.fileName }}</span>
+                            <span>{{ currentHomework?.fileName }}</span>
                             <button
                                 class="btn-download"
-                                @click="downloadHomeworkAttachment(currentHomework)"
+                                @click="currentHomework && downloadHomeworkAttachment(currentHomework)"
                             >
                                 下载附件
                             </button>
@@ -182,7 +179,7 @@
                     <div v-if="downloadError" class="error">{{ downloadError }}</div>
 
                     <div
-                        v-if="!isTeacher && canSubmit(currentHomework)"
+                        v-if="!isTeacher && currentHomework && canSubmit(currentHomework)"
                         class="submit-section"
                     >
                         <div class="form-group">
@@ -223,7 +220,7 @@
         <div v-if="showSubmissionDialog" class="modal-backdrop">
             <div class="modal submissions-modal">
                 <div class="modal-header">
-                    <h3>{{ currentHomework.title }} - 提交列表</h3>
+                    <h3>{{ currentHomework?.title }} - 提交列表</h3>
                     <button class="close-btn" @click="closeSubmissionDialog">&times;</button>
                 </div>
                 <div class="modal-body">
@@ -251,7 +248,7 @@
                             </tr>
                             </thead>
                             <tbody>
-                            <tr v-for="sub in submissions" :key="sub.submissionId">
+                            <tr v-for="sub in submissions" :key="String(sub.submissionId)">
                                 <td>{{ sub.studentId }}</td>
                                 <td>{{ sub.studentName }}</td>
                                 <td>{{ sub.submitTime }}</td>
@@ -303,9 +300,9 @@
 import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
 import { format } from 'date-fns'
-import ClassApi from "../../api/class.ts";
-import ResourceApi from "../../api/resource.ts";
-import {useAuthStore} from "../../stores/auth.ts";
+import ClassApi from "../../api/class";
+import ResourceApi from "../../api/resource";
+import {useAuthStore} from "../../stores/auth";
 
 // 定义作业类型
 interface Homework {
@@ -330,7 +327,7 @@ interface Submission {
 
 // 组件属性
 const props = defineProps<{
-    classId: bigint
+    classId: string
     isTeacher: boolean
 }>()
 
@@ -385,8 +382,11 @@ const fetchHomeworks = async () => {
     error.value = null
     try {
         console.log(props.classId)
-        const response = await ClassApi.getHomeworkList(props.classId)
-        homeworks.value = response.data
+        // 从string转换为bigint
+        const classIdBigint = BigInt(props.classId)
+        const response = await ClassApi.getHomeworkList(classIdBigint)
+        // 假设自定义的API响应格式包含data字段
+        homeworks.value = (response as any).data || []
         // 新增：学生端查提交状态
         await fetchStudentSubmissions()
     } catch (err) {
@@ -425,8 +425,8 @@ const createHomework = async () => {
 
         // 不要手动设置Content-Type，axios会自动处理
         const response = await ClassApi.createHomework(formData)
-        if(response.code != 200){
-            createError.value = response.msg || '创建作业失败，请稍后再试'
+        if((response as any).code != 200){
+            createError.value = (response as any).msg || '创建作业失败，请稍后再试'
             return
         }else{
             closeCreateDialog()
@@ -446,12 +446,12 @@ const studentSubmissions = ref<{ [key: string]: boolean }>({})
 // 批量获取学生每个作业的提交状态
 const fetchStudentSubmissions = async () => {
     if (props.isTeacher || !authStore.user?.id) return
-    const response = ClassApi.getStudentSubmission(5, authStore.user?.id)
+    const response = ClassApi.getStudentSubmission(5, String(authStore.user?.id))
     console.log(response)
     const promises = homeworks.value.map(hw =>
-        ClassApi.getStudentSubmission(hw.homeworkId, authStore.user?.id)
-            .then(res => ({ id: hw.homeworkId, submitted: res.code === 200 && res.data }))
-            .catch(() => ({ id: hw.homeworkId, submitted: false }))
+        ClassApi.getStudentSubmission(hw.homeworkId, String(authStore.user?.id))
+            .then(res => ({ id: String(hw.homeworkId), submitted: (res as any).data && (res as any).code === 200 }))
+            .catch(() => ({ id: String(hw.homeworkId), submitted: false }))
     )
     const results = await Promise.all(promises)
     const map: { [key: string]: boolean } = {}
@@ -465,11 +465,11 @@ const fetchStudentSubmissions = async () => {
 const fetchStudentSubmissionFor = async (homeworkId: bigint) => {
     if (props.isTeacher || !authStore.user?.id) return
     try {
-        const res = await ClassApi.getStudentSubmission(homeworkId, authStore.user?.id)
-        studentSubmissions.value[homeworkId] = (res.data && res.code === 200)
-        console.log(`作业 ${homeworkId} 提交状态:`, studentSubmissions.value[homeworkId])
+        const res = await ClassApi.getStudentSubmission(homeworkId, String(authStore.user?.id))
+        studentSubmissions.value[String(homeworkId)] = ((res as any).data && (res as any).code === 200)
+        console.log(`作业 ${homeworkId} 提交状态:`, studentSubmissions.value[String(homeworkId)])
     } catch {
-        studentSubmissions.value[homeworkId] = false
+        studentSubmissions.value[String(homeworkId)] = false
     }
 }
 
@@ -518,17 +518,21 @@ const submitHomework = async () => {
 
     try {
         const formData = new FormData()
-        formData.append('student_id', authStore.user?.id)
+        if (authStore.user?.id) {
+            formData.append('student_id', String(authStore.user.id))
+        }
         formData.append('file', submitForm.value.file)
 
-        const response = await ClassApi.uploadSubmissionFile(currentHomework.value?.homeworkId, formData)
-        if(response.code != 200){
-            submitError.value = response.msg || '提交作业失败，请稍后再试'
-            return
-        }else{
-            closeDetailDialog()
-            // 修改：提交后刷新作业列表和提交状态
-            await fetchHomeworks()
+        if (currentHomework.value?.homeworkId) {
+            const response = await ClassApi.uploadSubmissionFile(String(currentHomework.value.homeworkId), formData)
+            if ((response as any) && (response as any).code !== 200) {
+                submitError.value = (response as any).msg || '提交作业失败，请稍后再试'
+                return
+            } else {
+                closeDetailDialog()
+                // 修改：提交后刷新作业列表和提交状态
+                await fetchHomeworks()
+            }
         }
     } catch (err) {
         submitError.value = '提交作业失败，请稍后再试'
@@ -570,6 +574,12 @@ const downloadHomeworkAttachment = async (homework: Homework) => {
         const fileUrl = homework.fileUrl
         const fileName = homework.fileName
 
+        // 安全检查 - 确保fileUrl和fileName都有值
+        if (!fileUrl) {
+            downloadError.value = '文件链接不存在'
+            return
+        }
+
         // 2. 通过 Fetch/Blob 间接下载
         const res = await fetch(fileUrl)
         const blob = await res.blob()
@@ -578,7 +588,7 @@ const downloadHomeworkAttachment = async (homework: Homework) => {
         const url = window.URL.createObjectURL(blob)
         const link = document.createElement('a')
         link.href = url
-        link.download = fileName
+        link.download = fileName || 'downloaded-file'
         document.body.appendChild(link)
         link.click()
 
@@ -698,6 +708,11 @@ const canSubmit = (hw: Homework) => {
 onMounted(() => {
     fetchHomeworks()
 })
+</script>
+<script lang="ts">
+export default {
+  name: 'ClassHomework'
+}
 </script>
 
 <style scoped>

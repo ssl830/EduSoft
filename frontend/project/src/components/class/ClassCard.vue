@@ -2,8 +2,8 @@
 import { defineProps } from 'vue'
 
 interface Class {
-    id: bigint;
-    course_id: bigint;
+    id: number | string;
+    course_id: number | string;
     course_name: string;
     teacherID: string;
     class_name: string;

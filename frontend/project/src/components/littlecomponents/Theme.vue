@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { StyleProvider, Themes } from '@varlet/ui'
 </script>
 

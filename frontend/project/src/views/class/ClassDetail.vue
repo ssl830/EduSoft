@@ -11,7 +11,7 @@ import ClassProcessing from '../../components/class/ClassProcessing.vue'
 
 const route = useRoute()
 const authStore = useAuthStore()
-const aclassId = computed(() => route.params.id as bigint)
+const aclassId = computed(() => route.params.id as string)
 
 const loading = ref(true)
 const error = ref('')
@@ -27,7 +27,7 @@ onMounted(async () => {
     const response = await ClassApi.getClassById(aclassId.value)
     console.log('班级详情响应:', response)
 
-    if (response.code === 200 && response.data) {
+    if (response?.code === 200 && response.data) {
       // 处理班级数据
       aclass.value = {
         ...response.data,
@@ -37,10 +37,10 @@ onMounted(async () => {
       }
       console.log('处理后的班级数据:', aclass.value)
     } else {
-      error.value = response.message || '获取班级详情失败'
+      error.value = response?.message || '获取班级详情失败'
       console.error('获取班级详情失败:', response)
     }
-  } catch (err) {
+  } catch (err: any) {
     error.value = '获取班级详情失败，请稍后再试'
     console.error('获取班级详情错误:', err)
   } finally {

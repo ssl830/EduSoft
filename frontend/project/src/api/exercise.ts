@@ -10,11 +10,10 @@ const ExerciseApi = {
     type: string,
     name: string,
   }) {
-    return axios.get(`/classes/${classId}/exercises`, data)
+    return axios.get(`/classes/${classId}/exercises`, { params: data })
   },
-
   // 从题库中导入题目
-  importQuestionsToPractice(data){
+  importQuestionsToPractice(data: any){
     return axios.post('/api/practice/question/import', data)
   },
 
@@ -58,10 +57,9 @@ const ExerciseApi = {
   submitExercise(data: { practiceId: string; studentId: string; answers: any }) {
     return axios.post('/api/submission/submit', data)
   },
-
   // Get exercise details
   getExerciseDetails(exerciseId: string, data: {submissionId: any}) {
-    return axios.get(`/api/practice/${exerciseId}`, data
+    return axios.get(`/api/practice/${exerciseId}`, { params: data }
       // ,{
       // headers: {
       //     Authorization: `Bearer ${authStore.token}`
@@ -101,8 +99,7 @@ const ExerciseApi = {
         }
       }
     )
-  },
-  fetchPendingAnswers(data){
+  },  fetchPendingAnswers(data: any){
     console.log(data)
     console.log()
     return axios.post('/api/judge/pending', data)

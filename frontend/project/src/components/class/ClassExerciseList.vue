@@ -10,7 +10,18 @@ const props = defineProps<{
 }>()
 
 const router = useRouter()
-const exercises = ref([])
+interface Exercise {
+    id: string | number;
+    title: string;
+    status: string;
+    type: string;
+    start_time: string;
+    end_time: string;
+    totalPoints: number;
+    score?: number;
+}
+
+const exercises = ref<Exercise[]>([])
 const loading = ref(true)
 const error = ref('')
 
@@ -18,10 +29,16 @@ const error = ref('')
 const fetchExercises = async () => {
     loading.value = true
     error.value = ''
-
+    
     try {
-        const response = await ExerciseApi.getClassExercises(props.classId)
-        exercises.value = response.practices
+        // 创建一个空的参数对象满足接口需求
+        const data = {
+            practice_id: 0,
+            type: '',
+            name: ''
+        };
+        const response = await ExerciseApi.getClassExercises(props.classId, data)
+        exercises.value = response?.data?.practices || []
     } catch (err) {
         error.value = '获取练习列表失败，请稍后再试'
         console.error(err)

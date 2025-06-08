@@ -111,22 +111,38 @@
 </template>
 
 <script setup lang="ts">
-import {ref, computed, onUnmounted, onMounted} from 'vue'
+import {ref, computed, onMounted} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
-import ExerciseApi from "../../api/exercise.js";
+import ExerciseApi from "../../api/exercise";
 const route = useRoute()
 import { useAuthStore } from '../../stores/auth'
+
+interface Question {
+    id: number;
+    content: string;
+    type: string;
+    options?: string[];
+    score?: number;
+    points?: number;
+    answer?: string;
+}
+
+interface Exercise {
+    questions: Question[];
+    [key: string]: any;
+}
+
 const authStore = useAuthStore()
 const practiceId = computed(() => route.params.id as string)
 
 const router = useRouter()
-const exercise = ref(null)
+const exercise = ref<Exercise | null>(null)
 const loading = ref(true)
 const error = ref('')
-const answers = ref({})
+const answers = ref<Record<number, string | string[]>>({})
 const isSubmitting = ref(false)
 
-const questionTypeMap = {
+const questionTypeMap: Record<string, string> = {
     'singlechoice': '单选题',
     'multiplechoice': '多选题',
     'judge': '判断题',
@@ -138,40 +154,44 @@ const questionTypeMap = {
 const getOptionKey = (idx: number) => String.fromCharCode(65 + idx) // 0->A, 1->B, ...
 
 // 多选题选项是否被选中
-const isChecked = (qid, key) => {
-    return Array.isArray(answers.value[qid]) && answers.value[qid].includes(key)
+const isChecked = (qid: number, key: string) => {
+    return Array.isArray(answers.value[qid]) && (answers.value[qid] as string[]).includes(key)
 }
 
 // 多选题选项变更
-const onMultiChange = (qid, key, event) => {
+const onMultiChange = (qid: number, key: string, event: Event) => {
+    const target = event.target as HTMLInputElement
     if (!Array.isArray(answers.value[qid])) {
         answers.value[qid] = []
     }
-    if (event.target.checked) {
-        if (!answers.value[qid].includes(key)) {
-            answers.value[qid].push(key)
+    const answerArray = answers.value[qid] as string[]
+    if (target.checked) {
+        if (!answerArray.includes(key)) {
+            answerArray.push(key)
         }
     } else {
-        answers.value[qid] = answers.value[qid].filter(k => k !== key)
+        answers.value[qid] = answerArray.filter(k => k !== key)
     }
     // 始终保持从小到大排序
-    answers.value[qid].sort()
+    (answers.value[qid] as string[]).sort()
 }
 
 // 获取练习详情
 const fetchExercise = async () => {
     try {
-        const res = await ExerciseApi.takeExercise(practiceId.value)
+        const res = await ExerciseApi.takeExercise(practiceId.value) as any
         exercise.value = res.data
         // 类型修正：单选题但答案长度大于1，视为多选题
-        exercise.value.questions.forEach((question, id) => {
-            if (question.type === 'singlechoice' && typeof question.answer === 'string' && question.answer.length > 1) {
-                question.type = 'multiplechoice'
-            }
-            if (question.type === 'multiplechoice') {
-                answers.value[question.id] = []
-            }
-        })
+        if (exercise.value) {
+            exercise.value.questions.forEach((question: Question, id: number) => {
+                if (question.type === 'singlechoice' && typeof question.answer === 'string' && question.answer.length > 1) {
+                    question.type = 'multiplechoice'
+                }
+                if (question.type === 'multiplechoice') {
+                    answers.value[question.id] = []
+                }
+            })
+        }
     } catch (err) {
         error.value = '获取练习详情失败，请稍后重试'
     } finally {
@@ -189,7 +209,7 @@ const submitAnswers = async () => {
     isSubmitting.value = true
     try {
         // 创建字符串数组格式的答案
-        const answerList = exercise.value.questions.map((question, id) => {
+        const answerList = exercise.value!.questions.map((question: Question, id: number) => {
             const ans = answers.value[question.id]
 
             // 单选题直接返回选项字母
@@ -220,9 +240,9 @@ const submitAnswers = async () => {
 
         const res = await ExerciseApi.submitExercise({
             practiceId: practiceId.value,
-            studentId: authStore.user?.id,
+            studentId: String(authStore.user?.id),
             answers: answerList  // 直接提交字符串数组
-        })
+        }) as any
 
         router.push({
             name: 'ExerciseFeedback',
@@ -366,6 +386,7 @@ onMounted(() => {
 @supports (-webkit-hyphens:none) {
     .checkbox-input {
         -webkit-appearance: none;
+        appearance: none;
         background: white;
         border: 2px solid #2196F3;
         border-radius: 4px;

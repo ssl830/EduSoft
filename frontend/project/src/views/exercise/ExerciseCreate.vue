@@ -10,17 +10,24 @@ import CourseApi from '../../api/course.ts';
 const router = useRouter()
 const authStore = useAuthStore()
 
-const importQuestionIds = ref([])
-const importQuestionScores = ref([])
-const importQuestions = ref([])
+const importQuestionIds = ref<any[]>([])
+const importQuestionScores = ref<number[]>([])
+const importQuestions = ref<any[]>([])
 
 interface Question {
   type: string;
   content: string;
   options?: Array<{ key: string; text: string }>;
   explanation?: string;
-  answer?: string;
+  answer?: string | string[];
   score: number;
+}
+
+interface ClassItem {
+  id: number;
+  courseName: string;
+  className: string;
+  courseId: number;
 }
 
 const exercise = reactive({
@@ -30,14 +37,14 @@ const exercise = reactive({
   practiceId: 0,
   startTime: '',
   endTime: '',
-    createdBy: authStore.user?.id,
+    createdBy: authStore.user?.id ? BigInt(authStore.user.id) : undefined,
     allowMultipleSubmission: true,
   questions: [] as Question[]
 })
 
 const loading = ref(false)
 const error = ref('')
-const classes = ref([])
+const classes = ref<ClassItem[]>([])
 const selectedQuestion = ref<Question | null>(null)
 const isEditingQuestion = ref(false)
 const currentStep = ref(1) // 1: Basic Info, 2: Questions
@@ -107,9 +114,9 @@ const fetchSections = async (courseId: number) => {
 const fetchClasses = async () => {
     if (authStore.isAuthenticated) {
         try {
-            const response = await ClassApi.getUserClasses(authStore.user?.id)
+            const response: any = await ClassApi.getUserClasses(authStore.user?.id ? String(authStore.user.id) : '')
             console.log(authStore.user?.id)
-            console.log(response.classes)
+            console.log(response.data)
             classes.value = response.data
         } catch (err) {
             error.value = '获取班级列表失败，请稍后再试'
@@ -158,17 +165,15 @@ const nextStep = async () => {
         } else if (!exercise.title || !exercise.classId) { //  || exercise.classIds.length === 0 TODO:
             error.value = '请填写所有必填字段'
             return
-        }
-
-        loading.value = true;
+        }        loading.value = true;
         try {
-            const response = await ExerciseApi.createExercise({
+            const response: any = await ExerciseApi.createExercise({
                 title: exercise.title,
                 classId: exercise.classId,
                 courseId: exercise.courseId,
                 startTime: exercise.startTime,
                 endTime: exercise.endTime,
-                createdBy: authStore.user?.id,
+                createdBy: authStore.user?.id ? BigInt(authStore.user.id) : undefined,
                 allowMultipleSubmission: exercise.allowMultipleSubmission,
             });
             console.log(response.data)
@@ -196,12 +201,12 @@ const nextStep = async () => {
 }
 
 // Go back to the previous step
-const prevStep = () => {
-  currentStep.value = 1
-  error.value = ''
-}
+// const prevStep = () => {
+//   currentStep.value = 1
+//   error.value = ''
+// }
 
-const typeMap = {
+const typeMap: Record<string, string> = {
     'singlechoice': 'singlechoice',
     'multiplechoice': 'singlechoice',
     'judge': 'judge',
@@ -256,9 +261,9 @@ const addOrUpdateQuestion = async () => {
             courseId: exercise.courseId, // 使用练习的课程ID
             sectionId: tempSectionId.value, // 绑定的章节ID
             creatorId: authStore.user?.id
-        };
-        console.log(questionData)
-        const createResponse = await QuestionApi.createQuestion(questionData);
+        };        console.log(questionData)
+        // const createResponse = await QuestionApi.createQuestion(questionData);
+        await QuestionApi.createQuestion(questionData);
         // const questionId = createResponse.data?.data?.questionId;
         // // // 将题目添加到当前练习
         // if (questionId) {
@@ -269,7 +274,8 @@ const addOrUpdateQuestion = async () => {
         //     });
         // }
         await fetchRepoQuestions();
-        const response = await fetchPracticeQuestions();
+        // const response = await fetchPracticeQuestions();
+        await fetchPracticeQuestions();
         // console.log("当前题目列表", response.data)
         error.value = '';
         ElMessage.success('题目创建成功');
@@ -312,14 +318,14 @@ const removeQuestion = (question: Question) => {
 // Reset the question form
 const resetQuestionForm = () => {
   tempQuestion.type = 'singlechoice'
-  tempQuestion.content = ''
+  tempQuestion.content = ''  
   tempQuestion.options = [
     { key: 'A', text: '' },
     { key: 'B', text: '' },
     { key: 'C', text: '' },
     { key: 'D', text: '' }
   ]
-  tempQuestion.answer = tempQuestion.type === 'multiplechoice' ? [] : ''
+  tempQuestion.answer = ''
   tempQuestion.score = 5
     tempQuestion.explanation = ''
 
@@ -378,7 +384,7 @@ const removeOption = (index: number) => {
 // }
 
 // 添加题目类型变化的watch
-watch(() => tempQuestion.type, (newType) => {
+watch(() => tempQuestion.type, (_newType) => {
     tempQuestion.answer = '';
 });
 
@@ -507,7 +513,7 @@ const submitExercise = async () => {
 
 // 修改班级选择逻辑，选择班级时同步 courseId 和 classId，并拉取章节
 const handleClassChange = (classId: number) => {
-    const aclass = classes.value.find((c: any) => c.id === classId);
+    const aclass = classes.value.find((c: ClassItem) => c.id === classId);
     if (aclass) {
         exercise.classId = aclass.id;
         exercise.courseId = aclass.courseId;
@@ -548,8 +554,7 @@ const handleClassChange = (classId: number) => {
               @change="handleClassChange(Number(exercise.classId))"
               required
             >
-              <option value="" disabled>选择课程</option>
-              <option v-for="aclass in classes" :key="aclass.id" :value="aclass.id">
+              <option value="" disabled>选择课程</option>              <option v-for="aclass in classes" :key="aclass.id" :value="aclass.id">
                 {{ aclass.courseName }} {{ aclass.className }}
               </option>
             </select>
@@ -562,8 +567,7 @@ const handleClassChange = (classId: number) => {
                   v-model="exercise.allowMultipleSubmission"
                   required
               >
-                  <option value="" disabled>请选择</option>
-                  <option v-for="type in allowMultipleSubmission" :key="type.id" :value="type.id">
+                  <option value="" disabled>请选择</option>                  <option v-for="type in allowMultipleSubmission" :key="String(type.id)" :value="type.id">
                       {{ type.name }}
                   </option>
               </select>
@@ -633,10 +637,9 @@ const handleClassChange = (classId: number) => {
               </button>
             </div>
           </div>
-          <!-- 待导入题库题目 -->
-          <div
+          <!-- 待导入题库题目 -->          <div
             v-for="(question, index) in importQuestions"
-            :key="'import-' + question.id"
+            :key="'import-' + String(question.id)"
             class="question-list-item"
           >
             <div class="question-list-header">
@@ -655,10 +658,8 @@ const handleClassChange = (classId: number) => {
               <div v-html="question.name"></div>
             </div>
             <div class="question-list-actions">
-              <!-- 可选：添加移除按钮 -->
-              <button
-                class="btn-danger btn-sm"
-                @click="
+              <!-- 可选：添加移除按钮 -->              <button
+                class="btn-danger btn-sm"                @click="
                   () => {
                     const idx = importQuestionIds.indexOf(question.id);
                     if (idx !== -1) {
@@ -772,10 +773,10 @@ const handleClassChange = (classId: number) => {
                       <input
                           :id="`answer-${option.key}`"
                           type="checkbox"
-                          :checked="tempQuestion.answerArray.includes(option.key)"
-                          @change="e => {
+                          :checked="tempQuestion.answerArray.includes(option.key)"                          @change="(e: Event) => {
+                              const target = e.target as HTMLInputElement;
                               let arr = tempQuestion.answerArray.slice();
-                              if(e.target.checked) {
+                              if(target.checked) {
                                   if(!arr.includes(option.key)) arr.push(option.key);
                               } else {
                                   arr = arr.filter(k => k !== option.key);

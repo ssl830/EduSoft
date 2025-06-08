@@ -186,6 +186,11 @@ onMounted(() => {
     fetchData()
 })
 </script>
+<script lang="ts">
+export default {
+  name: 'ClassProcessing'
+}
+</script>
 
 <template>
     <div class="resource-list-container">

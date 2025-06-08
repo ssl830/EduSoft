@@ -357,6 +357,11 @@ onMounted(() => {
     fetchStudents()
 })
 </script>
+<script lang="ts">
+export default {
+  name: 'ClassStudent'
+}
+</script>
 
 <template>
     <div class="resource-list-container">
