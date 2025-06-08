@@ -9,6 +9,15 @@ const route = useRoute()
 
 const practiceId = Number(route.params.id)
 
+interface Question {
+  id: number;
+  content: string;
+  type: string;
+  options?: any[];
+  answer?: string;
+  score?: number;
+  [key: string]: any;
+}
 const exercise = reactive({
   title: '',
   courseId: 0,
@@ -16,7 +25,7 @@ const exercise = reactive({
   startTime: '',
   endTime: '',
   allowMultipleSubmission: true,
-  questions: [] as any[]
+  questions: [] as Question[]
 })
 
 const loading = ref(false)
@@ -25,7 +34,7 @@ const error = ref('')
 // 题库相关
 const questionBankLoading = ref(false)
 const questionBankError = ref('')
-const questionBankList = ref<any[]>([])
+const questionBankList = ref<Question[]>([])
 const selectedQuestionIds = ref<number[]>([])
 
 // 拉取题库题目
@@ -69,7 +78,7 @@ const addAllSelectedQuestions = () => {
       options: q.options,
       answer: q.answer,
       score: q.score || 5
-    })
+    } as Question)
   })
   ElMessage.success('题目已添加')
 }
@@ -87,7 +96,11 @@ const fetchPracticeDetail = async () => {
     exercise.endTime = data.endTime
     exercise.allowMultipleSubmission = data.allowMultipleSubmission
     exercise.questions = (data.questions || []).map((q: any) => ({
-      ...q,
+      id: q.id,
+      content: q.name || q.content,
+      type: q.type,
+      options: q.options,
+      answer: q.answer,
       score: q.score || 5
     }))
     // 拉取题库
@@ -151,13 +164,13 @@ const questionTypeMap: Record<string, string> = {
 
 // 修改题目分值
 const updateQuestionScore = (questionId: number, score: number) => {
-  const q = exercise.questions.find(q => q.id === questionId)
+  const q = exercise.questions.find((q: Question) => q.id === questionId)
   if (q) q.score = score
 }
 
 // 删除题目
 const removeQuestion = (questionId: number) => {
-  exercise.questions = exercise.questions.filter(q => q.id !== questionId)
+  exercise.questions = exercise.questions.filter((q: Question) => q.id !== questionId)
 }
 </script>
 

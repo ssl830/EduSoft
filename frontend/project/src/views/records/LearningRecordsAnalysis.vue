@@ -50,11 +50,6 @@ interface Practice {
   class_id: number; // 班级ID，后端需返回
 }
 
-interface PracticeStats {
-  submissionCount: number;
-  averageScore: number | null;
-}
-
 interface PracticeWithStats extends Practice {
   submissionCount: number;
   averageScore: number | null;

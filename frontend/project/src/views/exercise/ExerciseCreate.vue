@@ -10,9 +10,25 @@ import CourseApi from '../../api/course.ts';
 const router = useRouter()
 const authStore = useAuthStore()
 
+<<<<<<< HEAD
 const importQuestionIds = ref<any[]>([])
 const importQuestionScores = ref<number[]>([])
 const importQuestions = ref<any[]>([])
+=======
+const importQuestionIds = ref<number[]>([])
+const importQuestionScores = ref<number[]>([])
+interface ImportQuestion {
+  id: number;
+  type: string;
+  name?: string;
+  content?: string;
+  options?: any[];
+  answer?: string;
+  score?: number;
+  [key: string]: any;
+}
+const importQuestions = ref<ImportQuestion[]>([])
+>>>>>>> befa75fd673273d52c637cf9a72bdec1783c6909
 
 interface Question {
   type: string;
@@ -44,6 +60,18 @@ const exercise = reactive({
 
 const loading = ref(false)
 const error = ref('')
+<<<<<<< HEAD
+=======
+// 定义 ClassItem 类型
+interface ClassItem {
+  id: number;
+  courseId: number;
+  courseName: string;
+  className: string;
+  [key: string]: any;
+}
+// 明确指定类型
+>>>>>>> befa75fd673273d52c637cf9a72bdec1783c6909
 const classes = ref<ClassItem[]>([])
 const selectedQuestion = ref<Question | null>(null)
 const isEditingQuestion = ref(false)
@@ -63,7 +91,7 @@ const tempQuestion = reactive({
         { key: 'B', text: '' },
         { key: 'C', text: '' },
         { key: 'D', text: '' }
-    ],
+    ] as { key: string; text: string }[],
     explanation: '',
     score: 5,
     // 使用计算属性处理多选答案
@@ -72,14 +100,14 @@ const tempQuestion = reactive({
             if (typeof this.answer === 'string') {
                 return this.answer ? this.answer.split('|') : [];
             }
-            return [];
+            return Array.isArray(this.answer) ? this.answer : [];
         }
         return [];
     },
     set answerArray(values: string[]) {
-        this.answer = values.join(',');
+        this.answer = values;
     },
-    answer: '' // 始终保持字符串类型
+    answer: tempQuestion.type === 'multiplechoice' ? ([] as string[]) : '' as string | string[] // 支持字符串或字符串数组
 });
 
 // 新增：章节相关状态
@@ -206,7 +234,11 @@ const nextStep = async () => {
 //   error.value = ''
 // }
 
+<<<<<<< HEAD
 const typeMap: Record<string, string> = {
+=======
+const typeMap: { [key: string]: string } = {
+>>>>>>> befa75fd673273d52c637cf9a72bdec1783c6909
     'singlechoice': 'singlechoice',
     'multiplechoice': 'singlechoice',
     'judge': 'judge',
@@ -325,7 +357,11 @@ const resetQuestionForm = () => {
     { key: 'C', text: '' },
     { key: 'D', text: '' }
   ]
+<<<<<<< HEAD
   tempQuestion.answer = ''
+=======
+  tempQuestion.answer = tempQuestion.type === 'multiplechoice' ? ([] as string[]) : ''
+>>>>>>> befa75fd673273d52c637cf9a72bdec1783c6909
   tempQuestion.score = 5
     tempQuestion.explanation = ''
 

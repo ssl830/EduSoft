@@ -21,7 +21,7 @@ const hours = Array.from({length: endHour - startHour + 1}, (_, i) => startHour 
 const colorPool = [
   '#6fa8dc', '#f6b26b', '#93c47d', '#e06666', '#8e7cc3', '#ffd966', '#76a5af', '#c27ba0', '#a2c4c9', '#b4a7d6', '#f9cb9c', '#b6d7a8', '#ea9999', '#b7b7b7'
 ]
-function getColor(idx) {
+function getColor(idx: number) {
   return colorPool[idx % colorPool.length]
 }
 
@@ -75,11 +75,11 @@ onMounted(async () => {
   try {
     let response
     if (authStore.userRole === 'teacher') {
-      response = await ClassApi.getTeacherClasses(authStore.user?.id)
+      response = await ClassApi.getTeacherClasses(String(authStore.user?.id ?? ''))
     } else {
-      response = await ClassApi.getUserClasses(authStore.user?.id)
+      response = await ClassApi.getUserClasses(BigInt(authStore.user?.id ?? 0))
     }
-    if (response.code === 200 && Array.isArray(response.data)) {
+    if ((response as any).code === 200 && Array.isArray(response.data)) {
       classes.value = response.data.map(classItem => ({
         ...classItem,
         id: classItem.id || classItem.classId,
@@ -89,7 +89,7 @@ onMounted(async () => {
         createdAt: classItem.createdAt || classItem.joinedAt || new Date().toISOString()
       }))
     } else {
-      error.value = response.message || '获取班级列表失败'
+      error.value = (response as any).message || '获取班级列表失败'
     }
   } catch (err) {
     error.value = '获取班级列表失败，请稍后再试'
@@ -98,7 +98,7 @@ onMounted(async () => {
   }
 })
 
-function getBlockStyle(block, hourIdx) {
+function getBlockStyle(block: any, hourIdx: number) {
   const blockStart = block.start
   const blockEnd = block.end
   const cellStart = hourIdx
@@ -117,11 +117,11 @@ function getBlockStyle(block, hourIdx) {
     '--block-color': getColor(block.colorIdx)
   }
 }
-function getCellBlocks(hourIdx, weekIdx) {
+function getCellBlocks(hourIdx: number, weekIdx: number) {
   // 返回该小时、该周的所有课程块
-  return scheduledBlocks.value.filter(b => b.weekIdx === weekIdx && b.start < hourIdx + 1 && b.end > hourIdx)
+  return scheduledBlocks.value.filter(b => b && b.weekIdx === weekIdx && b.start < hourIdx + 1 && b.end > hourIdx)
 }
-function goToClassDetail(classId) {
+function goToClassDetail(classId: number) {
   router.push(`/class/${classId}`)
 }
 
@@ -246,14 +246,14 @@ function formatBlockTime(block: any): string {
               <div class="time-indicator"></div>
               <div
                 v-for="block in getCellBlocks(hour, weekDays.indexOf(week))"
-                :key="block.class.id"
+                :key="block?.class?.id"
                 class="schedule-block"
                 :style="getBlockStyle(block, hour)"
-                @click="goToClassDetail(block.class.id)"
-                :title="stripClassTime(block.class.name) + ' ' + parseClassTime(block.class.name)"
+                @click="goToClassDetail(block?.class?.id)"
+                :title="stripClassTime(block?.class?.name) + ' ' + parseClassTime(block?.class?.name)"
               >
                 <div class="block-content">
-                  <span class="block-title">{{ stripClassTime(block.class.name) }}</span>
+                  <span class="block-title">{{ stripClassTime(block?.class?.name) }}</span>
                   <span class="block-time">{{ formatBlockTime(block) }}</span>
                 </div>
               </div>

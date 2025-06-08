@@ -72,8 +72,22 @@ import Background from '../components/layout/Background.vue'
 
 const authStore = useAuthStore()
 const router = useRouter()
-const courses = ref([])
-const loading = ref(true)
+
+// 定义 Course 类型
+interface Course {
+  id: number;
+  name: string;
+  code: string;
+  teacherName: string;
+  studentCount: number;
+  practiceCount: number;
+  homeworkCount: number;
+  [key: string]: any;
+}
+
+// 明确指定类型
+const courses = ref<Course[]>([])
+const loading = ref(false)
 const error = ref('')
 
 const goToCourseDetail = (courseId: number) => {
@@ -89,11 +103,11 @@ onMounted(async () => {
       const response = await CourseApi.getUserCourses(authStore.user.id.toString())
       console.log('课程列表响应:', response)
 
-      if (response.code === 200 && response.data) {
+      if ((response as any).code === 200 && response.data) {
         courses.value = Array.isArray(response.data) ? response.data : []
         console.log('课程列表数据:', courses.value)
       } else {
-        error.value = response.message || '获取课程列表失败'
+        error.value = (response as any).message || '获取课程列表失败'
         console.error('获取课程列表失败:', response)
         courses.value = []
       }
