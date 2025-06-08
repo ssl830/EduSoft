@@ -1,11 +1,11 @@
 import axios from 'axios'
 import { useAuthStore } from '../stores/auth'
-
-interface ApiResponse<T> {
-  code: number;
-  message: string;
-  data: T;
-}
+//
+// interface ApiResponse<T> {
+//   code: number;
+//   message: string;
+//   data: T;
+// }
 
 // Create an axios instance
 const instance = axios.create({
@@ -66,8 +66,8 @@ instance.interceptors.response.use(
         // 处理401错误
         if (error.response.status === 401) {
           console.log('未授权，清除用户数据');
-          const authStore = useAuthStore()
-          authStore.clearUserData()
+          // const authStore = useAuthStore()
+          // authStore.clearUserData()
           // 重定向到登录页
           window.location.href = '/login';
         }

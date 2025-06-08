@@ -142,7 +142,7 @@
 
         <!-- 作业详情弹窗（学生） -->
         <div v-if="showDetailDialog" class="modal-backdrop">
-            <div class="modal detail-modal">
+            <div class="modal detail-modal" v-if="currentHomework">
                 <div class="modal-header">
                     <h3>{{ currentHomework.title }}</h3>
                     <button class="close-btn" @click="closeDetailDialog">&times;</button>
@@ -223,7 +223,7 @@
         <div v-if="showSubmissionDialog" class="modal-backdrop">
             <div class="modal submissions-modal">
                 <div class="modal-header">
-                    <h3>{{ currentHomework.title }} - 提交列表</h3>
+                    <h3>{{ currentHomework?.title }} - 提交列表</h3>
                     <button class="close-btn" @click="closeSubmissionDialog">&times;</button>
                 </div>
                 <div class="modal-body">
@@ -301,15 +301,15 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import axios from 'axios'
-import { format } from 'date-fns'
+// import axios from 'axios'
+// import { format } from 'date-fns'
 import ClassApi from "../../api/class.ts";
-import ResourceApi from "../../api/resource.ts";
+// import ResourceApi from "../../api/resource.ts";
 import {useAuthStore} from "../../stores/auth.ts";
 
 // 定义作业类型
 interface Homework {
-    homeworkId: bigint
+    homeworkId: number
     class_id: string
     title: string
     description: string
@@ -320,7 +320,7 @@ interface Homework {
 
 // 定义提交类型
 interface Submission {
-    submissionId: bigint
+    submissionId: number
     studentId: string
     studentName: string
     fileUrl: string
@@ -424,14 +424,14 @@ const createHomework = async () => {
         }
 
         // 不要手动设置Content-Type，axios会自动处理
-        const response = await ClassApi.createHomework(formData)
-        if(response.code != 200){
-            createError.value = response.msg || '创建作业失败，请稍后再试'
-            return
-        }else{
+        // const response = await ClassApi.createHomework(formData)
+        // if(response.code != 200){
+        //     createError.value = response.msg || '创建作业失败，请稍后再试'
+        //     return
+        // }else{
             closeCreateDialog()
             await fetchHomeworks()
-        }
+        // }
     } catch (err) {
         createError.value = '创建作业失败，请稍后再试'
         console.error(err)
@@ -445,28 +445,37 @@ const studentSubmissions = ref<{ [key: string]: boolean }>({})
 
 // 批量获取学生每个作业的提交状态
 const fetchStudentSubmissions = async () => {
-    if (props.isTeacher || !authStore.user?.id) return
-    const response = ClassApi.getStudentSubmission(5, authStore.user?.id)
-    console.log(response)
+    if (props.isTeacher || !authStore.user?.id) return;
+
+    // 确保 authStore.user?.id 是一个字符串
+    const userId = authStore.user?.id?.toString() || '';
+
+    const response = ClassApi.getStudentSubmission(5, userId);
+    console.log(response);
+
     const promises = homeworks.value.map(hw =>
-        ClassApi.getStudentSubmission(hw.homeworkId, authStore.user?.id)
-            .then(res => ({ id: hw.homeworkId, submitted: res.code === 200 && res.data }))
+        ClassApi.getStudentSubmission(hw.homeworkId, userId)
+            .then(res => ({ id: hw.homeworkId, submitted: res.data }))
             .catch(() => ({ id: hw.homeworkId, submitted: false }))
-    )
-    const results = await Promise.all(promises)
-    const map: { [key: string]: boolean } = {}
-    results.forEach(r => { map[r.id] = r.submitted })
-    studentSubmissions.value = map
-    console.log("HERRRRRRR")
-    console.log(studentSubmissions.value)
-}
+    );
+
+    const results = await Promise.all(promises);
+    const map: { [key: string]: boolean } = {};
+    results.forEach(r => { map[r.id] = r.submitted });
+    studentSubmissions.value = map;
+
+    console.log("HERRRRRRR");
+    console.log(studentSubmissions.value);
+};
+
 
 // 单独查某个作业的提交状态
-const fetchStudentSubmissionFor = async (homeworkId: bigint) => {
+const fetchStudentSubmissionFor = async (homeworkId: number) => {
     if (props.isTeacher || !authStore.user?.id) return
+    const userId = authStore.user?.id?.toString() || '';
     try {
-        const res = await ClassApi.getStudentSubmission(homeworkId, authStore.user?.id)
-        studentSubmissions.value[homeworkId] = (res.data && res.code === 200)
+        const res = await ClassApi.getStudentSubmission(homeworkId, userId)
+        studentSubmissions.value[homeworkId] = (res.data)
         console.log(`作业 ${homeworkId} 提交状态:`, studentSubmissions.value[homeworkId])
     } catch {
         studentSubmissions.value[homeworkId] = false
@@ -486,7 +495,7 @@ const viewHomework = async (hw: Homework) => {
 }
 
 // 获取作业提交列表（教师）
-const fetchSubmissions = async (homeworkId: bigint) => {
+const fetchSubmissions = async (homeworkId: number) => {
     submissionsLoading.value = true
     submissionsError.value = null
     console.log(homeworkId)
@@ -518,18 +527,19 @@ const submitHomework = async () => {
 
     try {
         const formData = new FormData()
-        formData.append('student_id', authStore.user?.id)
+        const userId = authStore.user?.id?.toString() || '';
+        formData.append('student_id', userId)
         formData.append('file', submitForm.value.file)
-
-        const response = await ClassApi.uploadSubmissionFile(currentHomework.value?.homeworkId, formData)
-        if(response.code != 200){
-            submitError.value = response.msg || '提交作业失败，请稍后再试'
-            return
-        }else{
+        const homeworkId = currentHomework.value?.homeworkId || 0
+        await ClassApi.uploadSubmissionFile(homeworkId, formData)
+        // if(response.code != 200){
+        //     submitError.value = response.msg || '提交作业失败，请稍后再试'
+        //     return
+        // }else{
             closeDetailDialog()
             // 修改：提交后刷新作业列表和提交状态
             await fetchHomeworks()
-        }
+        // }
     } catch (err) {
         submitError.value = '提交作业失败，请稍后再试'
         console.error(err)
@@ -570,6 +580,11 @@ const downloadHomeworkAttachment = async (homework: Homework) => {
         const fileUrl = homework.fileUrl
         const fileName = homework.fileName
 
+        // 检查 fileUrl 是否是一个有效的 URL
+        if (typeof fileUrl !== 'string' || !fileUrl.startsWith('http')) {
+            throw new Error('无效的文件 URL');
+        }
+
         // 2. 通过 Fetch/Blob 间接下载
         const res = await fetch(fileUrl)
         const blob = await res.blob()
@@ -578,7 +593,9 @@ const downloadHomeworkAttachment = async (homework: Homework) => {
         const url = window.URL.createObjectURL(blob)
         const link = document.createElement('a')
         link.href = url
-        link.download = fileName
+        if (typeof fileName === "string") {
+            link.download = fileName
+        }
         document.body.appendChild(link)
         link.click()
 

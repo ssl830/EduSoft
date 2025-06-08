@@ -10,17 +10,23 @@ const ExerciseApi = {
     type: string,
     name: string,
   }) {
-    return axios.get(`/classes/${classId}/exercises`, data)
+    return axios.get(`/classes/${classId}/exercises`,  {
+      params: {  // 将数据放在 params 对象中
+        practice_id: data.practice_id,
+        type: data.type,
+        name: data.name
+      }
+    })
   },
 
   // 从题库中导入题目
-  importQuestionsToPractice(data){
+  importQuestionsToPractice(data: any){
     return axios.post('/api/practice/question/import', data)
   },
 
   // 获取待批改练习列表
   getPendingJudgeList(data:{
-    practiceId: bigint,
+    practiceId: number,
     classId: string,
   }){
     console.log("data:", data)
@@ -61,7 +67,11 @@ const ExerciseApi = {
 
   // Get exercise details
   getExerciseDetails(exerciseId: string, data: {submissionId: any}) {
-    return axios.get(`/api/practice/${exerciseId}`, data
+    return axios.get(`/api/practice/${exerciseId}`, {
+      params: {
+        submissionId: data.submissionId
+      }
+      }
       // ,{
       // headers: {
       //     Authorization: `Bearer ${authStore.token}`
@@ -102,7 +112,7 @@ const ExerciseApi = {
       }
     )
   },
-  fetchPendingAnswers(data){
+  fetchPendingAnswers(data: any){
     console.log(data)
     console.log()
     return axios.post('/api/judge/pending', data)

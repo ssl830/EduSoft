@@ -34,11 +34,11 @@ const ClassApi = {
     return axios.get(`/api/homework/list?classId=${classId}`)
   },
 
-  deleteHomework(homeworkId: bigint) {
+  deleteHomework(homeworkId: number) {
     return axios.delete(`/api/homework/${homeworkId}`)
   },
 
-  fetchSubmissions(homeworkId: bigint) {
+  fetchSubmissions(homeworkId: number) {
     return axios.get(`/api/homework/submissions/${homeworkId}`)
   },
 
@@ -48,7 +48,7 @@ const ClassApi = {
   },
 
   // Upload resource
-  uploadSubmissionFile(homeworkId: bigint, formData: FormData) {
+  uploadSubmissionFile(homeworkId: number, formData: FormData) {
     return axios.post(`/api/homework/submit/${homeworkId}`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
@@ -142,12 +142,12 @@ const ClassApi = {
    * @param studentId 学生ID
    * @returns Promise
    */
-  getStudentSubmission(homeworkId: bigint | number | string, studentId: bigint | number | string) {
+  getStudentSubmission(homeworkId: number, studentId: string) {
     const params = new URLSearchParams({
-      homeworkId,
-      studentId
+      homeworkId: homeworkId.toString(),
+      studentId: studentId
     });
-    return axios.get(`/api/homework/submission?${params.toString()}`)
+    return axios.get(`/api/homework/submission?${params.toString()}`);
   },
 }
 

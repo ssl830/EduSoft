@@ -22,14 +22,14 @@ const selectedType = ref('')
 const selectedExer = ref(-1)
 
 // Chapters and types (will be populated from resources)
-const names = ref([])
-const practicesTypes = ref([
-    { value: 'unFinished', label: '未完成' },
-    { value: 'unScored', label: '待批改' },
-    { value: 'scored', label: '已批改' },
-    { value: 'overdue', label: '已过期' },
-])
-const practicesName = ref([])
+// const names = ref([])
+// const practicesTypes = ref([
+//     { value: 'unFinished', label: '未完成' },
+//     { value: 'unScored', label: '待批改' },
+//     { value: 'scored', label: '已批改' },
+//     { value: 'overdue', label: '已过期' },
+// ])
+const practicesName = ref<{ id: any; title: any; }[]>([]);
 
 const authStore = useAuthStore()
 const isTeacher = computed(() => authStore.userRole === 'teacher')
@@ -59,7 +59,8 @@ const fetchPractices = async () => {
     try {
         if(isStudent.value){ // 学生视图
             // 调用新的API端点
-            const response = await ExerciseApi.getPracticeList(authStore.user?.id, props.classId)
+            const userId = authStore.user?.id.toString() || ''
+            const response = await ExerciseApi.getPracticeList(userId, props.classId)
             // 更新数据结构处理
             practices.value = response.data
             console.log("Hereeeeeeeeeeeeeeeeeeee", response.data)
@@ -96,9 +97,10 @@ const fetchPendingCorrections = async () => {
 
     try {
         // 调用新的API端点
+        const practiceId2 = selectedExer.value === -1 ? 0 : selectedExer.value
         const response = await ExerciseApi.getPendingJudgeList({
             classId: props.classId,
-            practiceId: selectedExer.value === -1 ? undefined : selectedExer.value
+            practiceId: practiceId2
         })
         console.log("classId:", props.classId)
         console.log()
@@ -173,12 +175,12 @@ watch([selectedChapter, selectedType, selectedExer], () => {
 })
 
 // 新增：在<script setup>中添加：
-const viewPracticeDetail = (practiceId) => {
+const viewPracticeDetail = (practiceId: number) => {
     router.push({ name: 'ExerciseEdit', params: { id: practiceId } })
 }
 
 // 在<script setup>中添加：
-const editPractice = (practiceId) => {
+const editPractice = (practiceId: number) => {
     router.push({ name: 'ExerciseEdit', params: { id: practiceId } })
 }
 

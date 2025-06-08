@@ -16,14 +16,14 @@ const props = defineProps<{
 </script>
 
 <template>
-    <router-link :to="`/class/${aclass.id}`" class="course-card">
+    <router-link :to="`/class/${props.aclass.id}`" class="course-card">
         <div class="course-header">
-            <h3 class="course-title">{{ aclass.course_name }}</h3>
-            <h3 class="course-title2">{{ aclass.class_name }}</h3>
+            <h3 class="course-title">{{ props.aclass.course_name }}</h3>
+            <h3 class="course-title2">{{ props.aclass.class_name }}</h3>
         </div>
 
         <div class="course-content">
-            <p class="course-teacher">教师: {{ aclass.teacherID }}</p>
+            <p class="course-teacher">教师: {{ props.aclass.teacherID }}</p>
         </div>
 
         <div class="card-footer">

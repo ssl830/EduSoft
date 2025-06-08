@@ -100,14 +100,14 @@ const fetchVideos = async () => {
         const formData = new FormData()
         formData.append('studentId', authStore.user?.id?.toString() || '')
         formData.append('chapterId', selectedChapter.value?.toString() || '-1')
-        
+
         const response = await ResourceApi.getChapterResources(props.courseId, formData)
         console.log("response:", response);
         videos.value = response.data.map((video: any) => {
             // 直接使用后端返回的 progress 和 lastWatch/lastPosition
             const progress = video.progress || 0
             const lastWatch = video.lastPosition || 0
-            
+
             return {
                 id: video.resourceId || video.id,
                 title: video.title || '',
@@ -160,11 +160,11 @@ const openVideoPlayer = async (video: VideoResource) => {
             const formData = new FormData()
             formData.append('studentId', authStore.user.id.toString())
             formData.append('chapterId', selectedChapter.value?.toString() || '-1')
-            
+
             // 先获取最新的视频资源数据
             const resourceResponse = await ResourceApi.getChapterResources(props.courseId, formData)
             const updatedVideo = resourceResponse.data.find((v: any) => v.resourceId === video.id)
-            
+
             if (updatedVideo) {
                 // 更新视频对象的进度信息
                 video.progress = updatedVideo.progress || 0
@@ -177,7 +177,7 @@ const openVideoPlayer = async (video: VideoResource) => {
                 video.id.toString(),
                 authStore.user.id.toString()
             )
-            
+
             if (progressResponse.data.code === 200 && progressResponse.data.data) {
                 const { progress, lastPosition } = progressResponse.data.data
                 video.progress = progress
@@ -189,7 +189,7 @@ const openVideoPlayer = async (video: VideoResource) => {
         // 设置视频播放器的状态
         currentVideo.value = video
         showVideoModal.value = true
-        
+
         // 设置进度相关的值
         videoProgress.value = video.progress
         maxAllowedProgress.value = video.progress
@@ -219,7 +219,7 @@ const maxAllowedProgress = ref(0)
 const handleMetadataLoaded = async () => {
     if (!playerRef.value || !currentVideo.value?.id) return
     const duration = Math.floor(playerRef.value.duration)
-    
+
     // Only update if duration has changed
     if (currentVideo.value.duration !== duration) {
         try {
@@ -237,7 +237,7 @@ const handleSeeking = () => {
     if (!playerRef.value || !currentVideo.value?.duration) return
     const seekTime = playerRef.value.currentTime
     const maxAllowedTime = (maxAllowedProgress.value / 100) * currentVideo.value.duration
-    
+
     // If trying to seek beyond max allowed position, prevent it
     if (seekTime > maxAllowedTime) {
         playerRef.value.currentTime = maxAllowedTime
@@ -248,13 +248,13 @@ const handleSeeking = () => {
 const handleTimeUpdate = () => {
     if (!playerRef.value || !currentVideo.value?.duration) return
     const currentTime = Math.floor(playerRef.value.currentTime)
-    
+
     // 更新当前观看时长
     watchedDuration.value = currentTime
-    
+
     // 计算当前播放位置对应的进度百分比
     const currentProgress = Math.round((currentTime / currentVideo.value.duration) * 100)
-    
+
     // 如果当前进度大于之前的进度，则更新进度条
     if (currentProgress > videoProgress.value) {
         videoProgress.value = currentProgress
@@ -279,9 +279,9 @@ const closeVideoPlayer = async () => {
         formData.append('studentId', authStore.user.id.toString())
         formData.append('progress', progressToSave.toString())
         formData.append('position', watchedDuration.value.toString())
-        
+
         await ResourceApi.recordWatchProgress(formData)
-        
+
         // 更新本地视频列表中的进度
         const updatedVideo = videos.value.find(v => v.id === currentVideo.value?.id)
         if (updatedVideo) {
@@ -333,9 +333,10 @@ const uploadVideo = async () => {
     }
 
     try {
-        await ResourceApi.uploadVideo(formData, (progress) => {
+        const response = await ResourceApi.uploadVideo(formData, (progress) => {
             uploadProgress.value = progress
         })
+        console.log(response)
 
         // Reset form and refresh list
         showUploadForm.value = false
@@ -412,9 +413,9 @@ onMounted(() => {
                     class="form-select"
                 >
                     <option value="-1">无章节属性</option>
-                    <option 
-                        v-for="section in props.course?.sections" 
-                        :key="section.id" 
+                    <option
+                        v-for="section in props.course?.sections"
+                        :key="section.id"
                         :value="parseInt(section.id)"
                     >
                         {{ section.title }}
@@ -481,9 +482,9 @@ onMounted(() => {
                     class="chapter-select"
                 >
                     <option value="">所有章节</option>
-                    <option 
-                        v-for="section in props.course?.sections" 
-                        :key="section.id" 
+                    <option
+                        v-for="section in props.course?.sections"
+                        :key="section.id"
                         :value="section.id"
                     >
                         {{ section.title }}

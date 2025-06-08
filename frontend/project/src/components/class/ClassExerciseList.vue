@@ -10,7 +10,18 @@ const props = defineProps<{
 }>()
 
 const router = useRouter()
-const exercises = ref([])
+interface Exercise {
+    id: number;
+    title: string;
+    type: string;
+    status: string; // 状态：not_started, in_progress, completed, expired
+    description: string;
+    start_time: string;
+    end_time: string;
+    totalPoints: number;
+    score?: number; // 可选属性，可能未评分
+}
+const exercises = ref<Exercise[]>([])
 const loading = ref(true)
 const error = ref('')
 
@@ -20,8 +31,12 @@ const fetchExercises = async () => {
     error.value = ''
 
     try {
-        const response = await ExerciseApi.getClassExercises(props.classId)
-        exercises.value = response.practices
+        const response = await ExerciseApi.getClassExercises(props.classId, {
+            practice_id: 0,
+            type: "",
+            name: "",
+        })
+        exercises.value = response.data as Exercise[];
     } catch (err) {
         error.value = '获取练习列表失败，请稍后再试'
         console.error(err)
