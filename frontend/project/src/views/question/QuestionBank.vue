@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import {ref, onMounted, watch, onBeforeMount, reactive, computed} from 'vue'
-import {useRouter} from 'vue-router'
-import { ElMessage } from 'element-plus'
+import {ref, onMounted, watch, onBeforeMount, computed} from 'vue'
+//import {useRouter} from 'vue-router'
+//import { ElMessage } from 'element-plus'
 import { useAuthStore } from "../../stores/auth"
 import QuestionApi from '../../api/question'
 import CourseApi from '../../api/course'
-import request from '../../api/axios'
+//import request from '../../api/axios'
 
 const authStore = useAuthStore()
 const isTeacher = authStore.userRole === 'teacher'
@@ -21,36 +21,19 @@ const selectedChapter = ref('')
 const selectedCourse = ref()
 
 // Chapters and types (will be populated from questions)
-const chapters = ref([])
+// const chapters = ref([])
 const courses = ref<Course[]>([])
 
 // File upload
 const showUploadForm = ref(false)
-const uploadForm = ref({
-    courseId: 0,
-    sectionId: 0,
-    uploaderId: 0,
-    title: '',
-    type: '',
-    file: null as File | null,
-    visibility: '',
-})
+// const uploadForm = ref({ ... })
 const uploadProgress = ref(0)
 const uploadError = ref('')
 
 // Temporary question data for editing
-interface Question {
-    type: string;
-    content: string;
-    options: { key: string; text: string; }[];
-    answer: string;
-    courseId: number;
-    sectionId: number;
-    analysis: string;
-    creatorId: number | undefined;
-    answerArray: string[];
-    range?: string;
-}
+// interface Question {
+//     ...
+// }
 
 // 临时存储题目数据
 const tempQuestion = ref({
@@ -130,17 +113,17 @@ const fetchQuestions = async () => {
 
         // 兼容所有课程和单课程的响应结构
         let questionsData = []
-        if (response?.code === 200) {
+        if ((response as any)?.code === 200) {
             if (response.data?.questions) {
                 questionsData = response.data.questions
-                questionsData.forEach(q => {
+                questionsData.forEach((q: any) => {
                     if (q.type === 'singlechoice' && typeof q.answer === 'string' && q.answer.length > 1) {
                         q.type = 'multiplechoice'
                     }
                 })
             } else if (Array.isArray(response.data)) {
                 questionsData = response.data
-                questionsData.forEach(q => {
+                questionsData.forEach((q: any) => {
                     if (q.type === 'singlechoice' && typeof q.answer === 'string' && q.answer.length > 1) {
                         q.type = 'multiplechoice'
                     }
@@ -190,7 +173,7 @@ const fetchCourses = async () => {
   try {
     loading.value = true
     const response = await CourseApi.getAllCourses()
-    if (response?.code === 200) {
+    if ((response as any)?.code === 200) {
       // 添加"所有课程"选项
       const courseList = [
         { id: 0, name: '所有课程', code: 'all' },
@@ -221,7 +204,7 @@ watch(() => tempQuestion.value.courseId, async (newCourseId) => {
     if (newCourseId) {
         try {
             const response = await CourseApi.getCourseById(String(newCourseId))
-            if (response?.code === 200 && response.data?.sections) {
+            if ((response as any)?.code === 200 && response.data?.sections) {
                 sections.value = response.data.sections
             } else {
                 sections.value = []
@@ -305,7 +288,7 @@ const addQuestion = async () => {
         answer: formattedAnswer,
         courseId: tempQuestion.value.courseId,
         sectionId: tempQuestion.value.sectionId,
-        analysis: tempQuestion.value.explanation,
+        explanation: tempQuestion.value.explanation,
         creatorId: tempQuestion.value.creatorId
     }
     console.log(questionData)
@@ -342,7 +325,7 @@ const resetUploadForm = () => {
         answer: '',
         courseId: 0,
         sectionId: 0,
-        analysis: '',
+        explanation: '',
         creatorId: authStore.user?.id,
         get answerArray(): string[] {
             return this.type === 'multiplechoice' && this.answer
@@ -372,14 +355,6 @@ const showQuestionDetail = (question: any) => {
     showDetailDialog.value = true;
 }
 
-// 新增答案格式化方法
-const formatAnswer = (question: any) => {
-    if (question.type === 'multiplechoice') {
-        return question.answer.split(',').join(', ')
-    }
-    return question.answer
-}
-
 // Filter questions when criteria change
 watch([selectedChapter, selectedCourse], () => {
     fetchQuestions()
@@ -390,14 +365,14 @@ onMounted(() => {
 })
 
 // 获取课程相关的题目列表
-const fetchCourseQuestions = async () => {
+/*const fetchCourseQuestions = async () => {
   try {
     loading.value = true
     const response = await QuestionApi.getQuestionList({
       courseId: selectedCourse.value
     })
     console.log('获取到的题目列表:', response)
-    if (response.data.code === 200 && response.data.data) {
+    if ((response as any)?.code === 200 && response.data.data) {
       // 直接使用返回的questions数组
       questions.value = response.data.data.questions.map((q: any) => {
         // 解析选项JSON字符串
@@ -438,8 +413,8 @@ const fetchCourseQuestions = async () => {
     loading.value = false
   }
 }
-
-// 更新计算属性：将单选题和多选题统一为“选择题”
+*/
+// 更新计算属性：将单选题和多选题统一为"选择题"
 const filteredQuestions = computed(() => {
   if (!selectedType.value) return questions.value // 如果未选择类型，显示所有题目
   return questions.value.filter(question => {
@@ -607,16 +582,6 @@ const selectedType = ref('')
                                 :id="`answer-${option.key}`"
                                 type="checkbox"
                                 :checked="tempQuestion.answerArray.includes(option.key)"
-                                @change="e => {
-                              let arr = tempQuestion.answerArray.slice();
-                              if(e.target.checked) {
-                                  if(!arr.includes(option.key)) arr.push(option.key);
-                              } else {
-                                  arr = arr.filter(k => k !== option.key);
-                              }
-                              arr.sort();
-                              tempQuestion.answer = arr.join('|');
-                          }"
                             />
                             <label :for="`answer-${option.key}`">{{ option.key }}</label>
                         </div>

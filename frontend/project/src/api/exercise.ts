@@ -18,7 +18,6 @@ const ExerciseApi = {
       }
     })
   },
-
   // 从题库中导入题目
   importQuestionsToPractice(data: any){
     return axios.post('/api/practice/question/import', data)
@@ -64,7 +63,6 @@ const ExerciseApi = {
   submitExercise(data: { practiceId: string; studentId: string; answers: any }) {
     return axios.post('/api/submission/submit', data)
   },
-
   // Get exercise details
   getExerciseDetails(exerciseId: string, data: {submissionId: any}) {
     return axios.get(`/api/practice/${exerciseId}`, {

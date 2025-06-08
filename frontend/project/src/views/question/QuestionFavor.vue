@@ -1,12 +1,7 @@
 <script setup lang="ts">
-import {ref, onMounted, watch} from 'vue'
+import {ref, onMounted} from 'vue'
 import QuestionApi from '../../api/question.ts'
-import {useAuthStore} from "../../stores/auth.ts";
 import ExerciseApi from "../../api/exercise.ts";
-
-const authStore = useAuthStore()
-
-// const isTeacher = authStore.userRole === 'teacher'
 
 const questions = ref<any[]>([])
 const loading = ref(true)

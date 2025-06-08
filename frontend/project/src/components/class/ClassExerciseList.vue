@@ -11,15 +11,14 @@ const props = defineProps<{
 
 const router = useRouter()
 interface Exercise {
-    id: number;
+    id: string | number;
     title: string;
+    status: string;
     type: string;
-    status: string; // 状态：not_started, in_progress, completed, expired
-    description: string;
     start_time: string;
     end_time: string;
     totalPoints: number;
-    score?: number; // 可选属性，可能未评分
+    score?: number;
 }
 const exercises = ref<Exercise[]>([])
 const loading = ref(true)
@@ -29,7 +28,7 @@ const error = ref('')
 const fetchExercises = async () => {
     loading.value = true
     error.value = ''
-
+    
     try {
         const response = await ExerciseApi.getClassExercises(props.classId, {
             practice_id: 0,

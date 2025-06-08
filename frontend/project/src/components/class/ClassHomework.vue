@@ -31,7 +31,7 @@
                 </tr>
                 </thead>
                 <tbody>
-                <tr v-for="hw in homeworks" :key="hw.homeworkId">
+                <tr v-for="hw in homeworks" :key="String(hw.homeworkId)">
                     <td>
                         <div class="homework-title">
                             <i class="icon-hw"></i>
@@ -41,9 +41,8 @@
                 </span>
                         </div>
                     </td>
-                    <td>{{ hw.endTime }}</td>
-                    <td v-if="!isTeacher">
-                        <span v-if="studentSubmissions[hw.homeworkId]" style="color: #4CAF50;">已提交</span>
+                    <td>{{ hw.endTime }}</td>                    <td v-if="!isTeacher">
+                        <span v-if="studentSubmissions[String(hw.homeworkId)]" style="color: #4CAF50;">已提交</span>
                         <span v-else style="color: #f44336;">未提交</span>
                     </td>
                     <td class="actions">
@@ -151,29 +150,28 @@
                     <div class="homework-info">
                         <div class="info-item">
                             <label>截止时间：</label>
-                            <span>{{ currentHomework.endTime }}</span>
+                            <span>{{ currentHomework?.endTime }}</span>
                         </div>
                         <div class="info-item">
-                            <label>作业状态：</label>
-                            <span :class="getStatusClass(currentHomework)">
-                {{ getStatusText(currentHomework) }}
+                            <label>作业状态：</label>                            <span v-if="currentHomework" :class="getStatusClass(currentHomework)">
+                {{ currentHomework ? getStatusText(currentHomework) : '' }}
               </span>
                         </div>
                     </div>
 
                     <div class="description">
                         <label>作业要求：</label>
-                        <p>{{ currentHomework.description || '无具体要求' }}</p>
+                        <p>{{ currentHomework?.description || '无具体要求' }}</p>
                     </div>
 
-                    <div v-if="currentHomework.fileUrl" class="attachment">
+                    <div v-if="currentHomework?.fileUrl" class="attachment">
                         <label>作业附件：</label>
                         <div class="attachment-info">
                             <i class="icon-attachment"></i>
-                            <span>{{ currentHomework.fileName }}</span>
+                            <span>{{ currentHomework?.fileName }}</span>
                             <button
                                 class="btn-download"
-                                @click="downloadHomeworkAttachment(currentHomework)"
+                                @click="currentHomework && downloadHomeworkAttachment(currentHomework)"
                             >
                                 下载附件
                             </button>
@@ -182,7 +180,7 @@
                     <div v-if="downloadError" class="error">{{ downloadError }}</div>
 
                     <div
-                        v-if="!isTeacher && canSubmit(currentHomework)"
+                        v-if="!isTeacher && currentHomework && canSubmit(currentHomework)"
                         class="submit-section"
                     >
                         <div class="form-group">
@@ -251,7 +249,7 @@
                             </tr>
                             </thead>
                             <tbody>
-                            <tr v-for="sub in submissions" :key="sub.submissionId">
+                            <tr v-for="sub in submissions" :key="String(sub.submissionId)">
                                 <td>{{ sub.studentId }}</td>
                                 <td>{{ sub.studentName }}</td>
                                 <td>{{ sub.submitTime }}</td>
@@ -301,6 +299,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
+
 // import axios from 'axios'
 // import { format } from 'date-fns'
 import ClassApi from "../../api/class.ts";
@@ -330,7 +329,7 @@ interface Submission {
 
 // 组件属性
 const props = defineProps<{
-    classId: bigint
+    classId: string
     isTeacher: boolean
 }>()
 
@@ -385,8 +384,11 @@ const fetchHomeworks = async () => {
     error.value = null
     try {
         console.log(props.classId)
-        const response = await ClassApi.getHomeworkList(props.classId)
-        homeworks.value = response.data
+        // 从string转换为bigint
+        const classIdBigint = BigInt(props.classId)
+        const response = await ClassApi.getHomeworkList(classIdBigint)
+        // 假设自定义的API响应格式包含data字段
+        homeworks.value = (response as any).data || []
         // 新增：学生端查提交状态
         await fetchStudentSubmissions()
     } catch (err) {
@@ -468,7 +470,6 @@ const fetchStudentSubmissions = async () => {
     console.log(studentSubmissions.value);
 };
 
-
 // 单独查某个作业的提交状态
 const fetchStudentSubmissionFor = async (homeworkId: number) => {
     if (props.isTeacher || !authStore.user?.id) return
@@ -478,7 +479,7 @@ const fetchStudentSubmissionFor = async (homeworkId: number) => {
         studentSubmissions.value[homeworkId] = (res.data)
         console.log(`作业 ${homeworkId} 提交状态:`, studentSubmissions.value[homeworkId])
     } catch {
-        studentSubmissions.value[homeworkId] = false
+        studentSubmissions.value[String(homeworkId)] = false
     }
 }
 
@@ -715,6 +716,11 @@ const canSubmit = (hw: Homework) => {
 onMounted(() => {
     fetchHomeworks()
 })
+</script>
+<script lang="ts">
+export default {
+  name: 'ClassHomework'
+}
 </script>
 
 <style scoped>

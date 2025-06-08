@@ -226,7 +226,6 @@ export const useAuthStore = defineStore('auth', () => {
       throw error
     }
   }
-
   const uploadAvatar = async (formData: FormData) => {
     try {
       const response = await authApi.uploadAvatar(formData);
@@ -248,6 +247,14 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  const clearUserData = () => {
+    user.value = null;
+    token.value = null;
+    localStorage.removeItem('user');
+    localStorage.removeItem('free-fs-token');
+    localStorage.removeItem('userInfo');
+  }
+
   return {
     user,
     token,
@@ -259,6 +266,7 @@ export const useAuthStore = defineStore('auth', () => {
     fetchUserInfo,
     updateProfile,
     changePassword,
-    uploadAvatar
+    uploadAvatar,
+    clearUserData
   }
 })

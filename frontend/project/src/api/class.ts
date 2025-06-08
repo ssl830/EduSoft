@@ -2,7 +2,7 @@ import axios from './axios'
 
 const ClassApi = {
   // Get all classes for current user
-  getUserClasses(id: bigint) {
+  getUserClasses(id: number | string) {
     return axios.get(`/api/classes/user/${id}`)
   },
 
@@ -17,13 +17,13 @@ const ClassApi = {
   },
 
   // Get class by ID
-  getClassById(id: bigint) {
+  getClassById(id: number | string) {
     return axios.get(`/api/classes/${id}`)
   },
 
   // Create new class (teacher only)
   createClass(data: {
-    courseId: bigint;
+    courseId: number | string;
     name: string;
     code?: string;
   }) {
@@ -41,7 +41,6 @@ const ClassApi = {
   fetchSubmissions(homeworkId: number) {
     return axios.get(`/api/homework/submissions/${homeworkId}`)
   },
-
   // Download resource
   downloadSubmissionFile(submissionId: bigint) {
     return axios.get(`/api/homework/submission/file/${submissionId}`)
@@ -64,7 +63,7 @@ const ClassApi = {
     })
   },
 
-  downloadHomeworkFile(homeworkId: bigint) {
+  downloadHomeworkFile(homeworkId: number | string) {
     return axios.get(`/api/homework/file/${homeworkId}`)
   },
 
@@ -141,14 +140,13 @@ const ClassApi = {
    * @param homeworkId 作业ID
    * @param studentId 学生ID
    * @returns Promise
-   */
-  getStudentSubmission(homeworkId: number, studentId: string) {
+   */  getStudentSubmission(homeworkId: bigint | number | string, studentId: bigint | number | string) {
     const params = new URLSearchParams({
       homeworkId: homeworkId.toString(),
-      studentId: studentId
+      studentId: studentId.toString()
     });
-    return axios.get(`/api/homework/submission?${params.toString()}`);
-  },
+    return axios.get(`/api/homework/submission?${params.toString()}`)
+  }
 }
 
 export default ClassApi

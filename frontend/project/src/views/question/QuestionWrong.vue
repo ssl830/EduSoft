@@ -1,10 +1,7 @@
 <script setup lang="ts">
-import {ref, onMounted, watch} from 'vue'
+import {ref, onMounted} from 'vue'
 import QuestionApi from '../../api/question.ts'
-import {useAuthStore} from "../../stores/auth.ts";
-import ExerciseApi from "../../api/exercise.ts";
 
-const authStore = useAuthStore()
 const questions = ref<any[]>([])
 const loading = ref(true)
 const error = ref('')
@@ -18,7 +15,7 @@ const fetchQuestions = async () => {
         const response = await QuestionApi.getWrongQuestionList()
         console.log('错题列表响应:', response)
 
-        if (response.code === 200 && response.data) {
+        if ((response as any).code === 200 && response.data) {
             questions.value = Array.isArray(response.data) ? response.data : []
             console.log('错题列表数据:', questions.value)
             if (questions.value.length > 0) {
@@ -28,7 +25,7 @@ const fetchQuestions = async () => {
                 console.log('第一个错题的所有字段:', Object.keys(firstQuestion))
             }
         } else {
-            error.value = response.message || '获取错题列表失败'
+            error.value = (response as any).message || '获取错题列表失败'
             console.error('获取错题列表失败:', response)
             questions.value = []
         }
@@ -67,10 +64,10 @@ const deleteQuestion = async (questionId: string) => {
         const response = await QuestionApi.removeWrongQuestion(questionId)
         console.log('删除错题响应:', response)
 
-        if (response.code === 200) {
+        if ((response as any).code === 200) {
             await fetchQuestions()
         } else {
-            error.value = response.message || '删除错题失败'
+            error.value = (response as any).message || '删除错题失败'
             console.error('删除错题失败:', response)
         }
     } catch (err) {
@@ -88,18 +85,7 @@ const formatAnswer = (question: any) => {
     return question.correct_answer || '-'
 }
 
-// 格式化选项 (修复：实际使用此函数)
-const formatOptions = (options: string) => {
-    try {
-        if (!options) return []
-        return JSON.parse(options)
-    } catch (err) {
-        console.error('解析选项失败:', err)
-        return []
-    }
-}
-
-// ���似题目弹窗相关状态
+// 类似题目弹窗相关状态
 const showSimilarDialog = ref(false)
 const similarApiKey = ref('')
 const similarLoading = ref(false)

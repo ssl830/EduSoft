@@ -1,17 +1,23 @@
 <script setup lang="ts">
 import {ref, reactive, onMounted} from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { useRoute } from 'vue-router'
 import ExerciseApi from '../../api/exercise'
-import {useAuthStore} from "../../stores/auth.ts";
 import { ElMessage } from 'element-plus';
 import QuestionApi from '../../api/question'
 
-const router = useRouter()
 const route = useRoute()
-const authStore = useAuthStore()
 
 const practiceId = Number(route.params.id)
 
+interface Question {
+  id: number;
+  content: string;
+  type: string;
+  options?: any[];
+  answer?: string;
+  score?: number;
+  [key: string]: any;
+}
 const exercise = reactive({
   title: '',
   courseId: 0,
@@ -19,7 +25,7 @@ const exercise = reactive({
   startTime: '',
   endTime: '',
   allowMultipleSubmission: true,
-  questions: [] as any[]
+  questions: [] as Question[]
 })
 
 const loading = ref(false)
@@ -28,7 +34,7 @@ const error = ref('')
 // 题库相关
 const questionBankLoading = ref(false)
 const questionBankError = ref('')
-const questionBankList = ref<any[]>([])
+const questionBankList = ref<Question[]>([])
 const selectedQuestionIds = ref<number[]>([])
 
 // 拉取题库题目
@@ -44,9 +50,8 @@ const fetchQuestionBank = async () => {
       list = res.data.questions
     } else if (res.data && Array.isArray(res.data.data?.questions)) {
       list = res.data.data.questions
-    }
-    // 类型修正：单选题但答案长度大于1，视为多选题
-    list.forEach(q => {
+    }    // 类型修正：单选题但答案长度大于1，视为多选题
+    list.forEach((q: any) => {
       if (q.type === 'singlechoice' && typeof q.answer === 'string' && q.answer.length > 1) {
         q.type = 'multiplechoice'
       }
@@ -73,7 +78,7 @@ const addAllSelectedQuestions = () => {
       options: q.options,
       answer: q.answer,
       score: q.score || 5
-    })
+    } as Question)
   })
   ElMessage.success('题目已添加')
 }
@@ -82,7 +87,7 @@ const addAllSelectedQuestions = () => {
 const fetchPracticeDetail = async () => {
   loading.value = true
   try {
-    const res = await ExerciseApi.takeExercise(practiceId)
+    const res: any = await ExerciseApi.takeExercise(String(practiceId))
     const data = res.data
     exercise.title = data.title
     exercise.courseId = data.courseId
@@ -91,7 +96,11 @@ const fetchPracticeDetail = async () => {
     exercise.endTime = data.endTime
     exercise.allowMultipleSubmission = data.allowMultipleSubmission
     exercise.questions = (data.questions || []).map((q: any) => ({
-      ...q,
+      id: q.id,
+      content: q.name || q.content,
+      type: q.type,
+      options: q.options,
+      answer: q.answer,
       score: q.score || 5
     }))
     // 拉取题库
@@ -111,7 +120,7 @@ onMounted(() => {
 const saveBasicInfo = async () => {
   loading.value = true
   try {
-    const response = await ExerciseApi.updateExercise(practiceId, {
+    const response: any = await ExerciseApi.updateExercise(practiceId, {
       title: exercise.title,
       startTime: exercise.startTime,
       endTime: exercise.endTime,
@@ -124,13 +133,13 @@ const saveBasicInfo = async () => {
         if (exercise.questions.length > 0) {
             const questionIds = exercise.questions.map(q => q.id)
             const scores = exercise.questions.map(q => q.score || 5)
-            const response = await ExerciseApi.importQuestionsToPractice({
+            const response2: any = await ExerciseApi.importQuestionsToPractice({
                 practiceId,
                 questionIds,
                 scores
             })
-            if(response.code !== 200) {
-                ElMessage.error(response.message || '题目保存失败，请稍后再试')
+            if(response2.code !== 200) {
+                ElMessage.error(response2.message || '题目保存失败，请稍后再试')
                 return
             }else{
                 ElMessage.success('基本信息和题目保存成功')
@@ -145,7 +154,7 @@ const saveBasicInfo = async () => {
   }
 }
 
-const questionTypeMap = {
+const questionTypeMap: Record<string, string> = {
     'singlechoice': '单选题',
     'multiplechoice': '多选题',
     'judge': '判断题',
@@ -155,13 +164,13 @@ const questionTypeMap = {
 
 // 修改题目分值
 const updateQuestionScore = (questionId: number, score: number) => {
-  const q = exercise.questions.find(q => q.id === questionId)
+  const q = exercise.questions.find((q: Question) => q.id === questionId)
   if (q) q.score = score
 }
 
 // 删除题目
 const removeQuestion = (questionId: number) => {
-  exercise.questions = exercise.questions.filter(q => q.id !== questionId)
+  exercise.questions = exercise.questions.filter((q: Question) => q.id !== questionId)
 }
 </script>
 

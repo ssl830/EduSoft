@@ -4,7 +4,7 @@
         <div v-else-if="error" class="error">{{ error }}</div>
         <div v-else>
             <div class="header">
-                <h1>{{ practiceData.title }} - 练习反馈</h1>
+                <h1>{{ practiceData?.title }} - 练习反馈</h1>
                 <div class="total-score">总分：{{ totalScore }}</div>
 <!--                &lt;!&ndash; 新增操作按钮 &ndash;&gt;-->
 <!--                <div class="feedback-actions">-->
@@ -12,10 +12,9 @@
 <!--                </div>-->
             </div>
 
-            <div class="questions-list2">
-                <div v-for="(question, index) in practiceData.questions" :key="question.id" class="question-item">
+            <div class="questions-list2">                <div v-for="(question, index) in practiceData?.questions" :key="question.id" class="question-item">
                     <div class="question-header2">
-                        <h3>题目 {{ index + 1 }} {{ question.content }}</h3>
+                        <h3>题目 {{ index + 1 }} {{ question.content || question.name }}</h3>
                         <div style="display: flex; gap: 8px;">
                             <button
                                 @click="toggleFavorite(question)"
@@ -39,7 +38,7 @@
 
                     <div class="question-content2">
                         <div class="question-type2">{{ questionTypeMap[question.type] }}</div>
-                        <div class="question-points">分值：{{ question.score }}分</div>
+                        <div class="question-points">分值：{{ question.score || question.points }}分</div>
 
                         <!-- 客观题展示 -->
                         <template v-if="isObjective(question.type)">
@@ -204,17 +203,19 @@ export interface PracticeDetail {
 export interface Question {
     id: number;
     name: string;
+    content?: string;
     course_id: number;
     teacher_id: string;
     type: 'singlechoice' | 'multiplechoice' | 'judge' | 'program' | 'fillblank';
     options: Option[];
     answer: string;
     points: number;
+    score?: number;
     explanation?: string;
     isFavorited?: boolean;
     studentAnswer?: string | string[];
     isadded: boolean;
-
+    correctAnswer?: string;
 }
 
 interface Option {
@@ -222,7 +223,6 @@ interface Option {
     text: string;
 }
 
-const authStore = useAuthStore()
 const route = useRoute()
 const practiceId = route.params.practiceId as string
 const submissionId = route.params.submissionId as string
@@ -242,7 +242,7 @@ try {
 }
 
 // 题目类型映射
-const questionTypeMap = {
+const questionTypeMap: Record<string, string> = {
     'singlechoice': '单选题',
     'multiplechoice': '多选题',
     'judge': '判断题',
@@ -253,7 +253,7 @@ const questionTypeMap = {
 // 计算总分
 const totalScore = computed(() => {
     if (!practiceData.value) return 0
-    return practiceData.value.questions.reduce((sum, q) => sum + q.score, 0)
+    return practiceData.value.questions.reduce((sum, q) => sum + (q.score || q.points), 0)
 })
 
 // 判断是否客观题
@@ -278,9 +278,7 @@ const toggleFavorite = async (question: Question) => {
         // 根据新状态调用对应接口
         const apiMethod = question.isFavorited
             ? ExerciseApi.favouriteQuestions
-            : ExerciseApi.enFavouriteQuestions;
-
-        const response = await apiMethod(question.id);
+            : ExerciseApi.enFavouriteQuestions;        const response: any = await apiMethod(String(question.id));
 
         if (response.code !== 200) {
             // 请求失败时回滚状态
@@ -297,10 +295,13 @@ const toggleFavorite = async (question: Question) => {
 // 添加到错题集
 const addToWrongSet = async (question: Question) => {
     try {
-        const res = await QuestionApi.addWrongQuestion(
+        const answerValue = studentAnswers.value[question.id];
+        const wrongAnswer = Array.isArray(answerValue) ? answerValue.join(',') : (answerValue || '');
+        
+        const res: any = await QuestionApi.addWrongQuestion(
             question.id,
             {
-                wrongAnswer: studentAnswers.value[question.id] || ''
+                wrongAnswer: wrongAnswer
             }
         )
         console.log(res)
@@ -322,7 +323,7 @@ const fetchPracticeDetail = async () => {
         console.log(response.data)
         practiceData.value = response.data
         // 初始化学生答案（假设从API获取）
-        practiceData.value.questions.forEach((q: Question, idx: number) => {
+        practiceData.value?.questions.forEach((q: Question, idx: number) => {
             // 优先用 answerList 覆盖 studentAnswer
             if (answerList && answerList[idx] !== undefined) {
                 q.studentAnswer = answerList[idx]
@@ -407,9 +408,9 @@ const handleViewRecord = async () => {
                 reportData = response.data
             }
             if (!reportData) throw new Error('API返回的数据为空')
-            submissionReportModal.value.data = reportData
-            submissionReportModal.value.data.questions.forEach((q: Question, idx: number) => {
-                if (q.type === 'singlechoice' && typeof q.correctAnswer === 'string' && q.correctAnswer.length > 1) {
+            submissionReportModal.value.data = reportData;        
+            submissionReportModal.value.data.questions.forEach((q: Question, _idx: number) => {
+            if (q.type === 'singlechoice' && typeof q.correctAnswer === 'string' && q.correctAnswer.length > 1) {
                     q.type = 'multiplechoice'
                 }
             })
@@ -497,7 +498,7 @@ const closeSubmissionReportModal = () => {
 .question-type2 {
     color: #666;
     font-size: 0.9rem;
-    //max-width: 10px;
+    /* max-width: 10px; */
 }
 
 .question-points {
