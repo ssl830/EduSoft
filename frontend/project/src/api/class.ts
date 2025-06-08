@@ -34,11 +34,11 @@ const ClassApi = {
     return axios.get(`/api/homework/list?classId=${classId}`)
   },
 
-  deleteHomework(homeworkId: bigint) {
+  deleteHomework(homeworkId: number) {
     return axios.delete(`/api/homework/${homeworkId}`)
   },
 
-  fetchSubmissions(homeworkId: bigint) {
+  fetchSubmissions(homeworkId: number) {
     return axios.get(`/api/homework/submissions/${homeworkId}`)
   },
   // Download resource
@@ -47,7 +47,7 @@ const ClassApi = {
   },
 
   // Upload resource
-  uploadSubmissionFile(homeworkId: number | string, formData: FormData) {
+  uploadSubmissionFile(homeworkId: number, formData: FormData) {
     return axios.post(`/api/homework/submit/${homeworkId}`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data'

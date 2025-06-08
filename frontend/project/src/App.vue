@@ -2,7 +2,7 @@
 import { useRoute } from 'vue-router'
 import AppHeader from './components/layout/AppHeader.vue'
 import AppSidebar from './components/layout/AppSidebar.vue'
-import { computed } from 'vue'
+// import { computed } from 'vue'
 
 const route = useRoute()
 </script>

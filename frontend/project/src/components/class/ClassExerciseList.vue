@@ -20,7 +20,6 @@ interface Exercise {
     totalPoints: number;
     score?: number;
 }
-
 const exercises = ref<Exercise[]>([])
 const loading = ref(true)
 const error = ref('')
@@ -31,14 +30,12 @@ const fetchExercises = async () => {
     error.value = ''
     
     try {
-        // 创建一个空的参数对象满足接口需求
-        const data = {
+        const response = await ExerciseApi.getClassExercises(props.classId, {
             practice_id: 0,
-            type: '',
-            name: ''
-        };
-        const response = await ExerciseApi.getClassExercises(props.classId, data)
-        exercises.value = response?.data?.practices || []
+            type: "",
+            name: "",
+        })
+        exercises.value = response.data as Exercise[];
     } catch (err) {
         error.value = '获取练习列表失败，请稍后再试'
         console.error(err)
