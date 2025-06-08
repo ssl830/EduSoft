@@ -811,90 +811,6 @@ const getDistributionClass = (scoreRange: string) => {
   }
 };
 
-// 处理文件下载 - 支持从响应头或参数获取文件名
-const handleFileDownload = async (blob: Blob, filename?: string, response?: any) => {
-  try {
-    // 检查是否为错误响应（通过更精确的判断）
-    // 如果是错误响应，通常 blob 会很小且内容为 JSON
-    if (blob.type === 'application/json' && blob.size < 10000) {
-      try {
-        // 尝试读取并解析为 JSON
-        const text = await blob.text();
-        const errorData = JSON.parse(text);
-        downloadStatus.value.error = errorData.message || '下载失败，请稍后再试';
-        return;
-      } catch (e) {
-        // 如果无法解析为 JSON，可能是正常文件，继续下载
-        console.log('无法解析为JSON，继续文件下载');
-      }
-    }
-
-    // 如果文件大小为0或过小，可能是错误响应
-    if (blob.size === 0) {
-      downloadStatus.value.error = '文件内容为空，下载失败';
-      return;
-    }
-
-    // 尝试从响应头获取文件名
-    let downloadFilename = filename;
-    if (!downloadFilename && response?.headers) {
-      const contentDisposition = response.headers['content-disposition'] || response.headers['Content-Disposition'];
-      if (contentDisposition) {
-        // 解析 Content-Disposition 头获取文件名
-        const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"']).*?\2|[^;\n]*)/);
-        if (filenameMatch) {
-          downloadFilename = filenameMatch[1].replace(/['"]/g, '');
-          // URL解码文件名
-          try {
-            if (downloadFilename) {
-              downloadFilename = decodeURIComponent(downloadFilename);
-            }
-          } catch (e) {
-            console.log('文件名解码失败，使用原始文件名');
-          }
-        }
-      }
-    }
-
-    // 如果仍然没有文件名，使用默认文件名
-    if (!downloadFilename) {
-      const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
-      downloadFilename = `下载文件_${timestamp}`;
-      
-      // 根据blob类型推断文件扩展名
-      if (blob.type.includes('pdf')) {
-        downloadFilename += '.pdf';
-      } else if (blob.type.includes('zip')) {
-        downloadFilename += '.zip';
-      } else if (blob.type.includes('excel') || blob.type.includes('spreadsheet')) {
-        downloadFilename += '.xlsx';
-      } else if (blob.type.includes('word') || blob.type.includes('document')) {
-        downloadFilename += '.docx';
-      }
-    }
-
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', downloadFilename);
-    document.body.appendChild(link);
-    link.click();
-    
-    // 安全地移除DOM元素和释放URL对象
-    if (link.parentNode) {
-      document.body.removeChild(link);
-    }
-    window.URL.revokeObjectURL(url);
-    
-    // 显示成功消息
-    downloadStatus.value.error = null;
-    console.log(`文件下载成功: ${downloadFilename}, 大小: ${blob.size} 字节`);
-  } catch (error) {
-    console.error('文件下载失败:', error);
-    downloadStatus.value.error = '文件下载失败，请稍后再试';
-  }
-};
-
 // 下载报告（PDF 格式）- 使用提交ID导出
 const downloadReport = async (recordIdOrSubmissionId: string) => {
   try {
@@ -1238,7 +1154,7 @@ onMounted(async () => {
   await loadCoursesList()
 })
 
-const fetchSubmissionReport = async (submissionId: string, record: RecordDisplay) => {
+/*const fetchSubmissionReport = async (submissionId: string, record: RecordDisplay) => {
   try {
     submissionReportModal.value.loading = true;
     submissionReportModal.value.error = null;
@@ -1271,7 +1187,7 @@ const fetchSubmissionReport = async (submissionId: string, record: RecordDisplay
   } finally {
     submissionReportModal.value.loading = false;
   }
-};
+};*/
 
 </script>
 

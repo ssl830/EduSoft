@@ -10,9 +10,19 @@ import CourseApi from '../../api/course.ts';
 const router = useRouter()
 const authStore = useAuthStore()
 
-const importQuestionIds = ref([])
-const importQuestionScores = ref([])
-const importQuestions = ref([])
+const importQuestionIds = ref<number[]>([])
+const importQuestionScores = ref<number[]>([])
+interface ImportQuestion {
+  id: number;
+  type: string;
+  name?: string;
+  content?: string;
+  options?: any[];
+  answer?: string;
+  score?: number;
+  [key: string]: any;
+}
+const importQuestions = ref<ImportQuestion[]>([])
 
 interface Question {
   type: string;
@@ -37,7 +47,16 @@ const exercise = reactive({
 
 const loading = ref(false)
 const error = ref('')
-const classes = ref([])
+// 定义 ClassItem 类型
+interface ClassItem {
+  id: number;
+  courseId: number;
+  courseName: string;
+  className: string;
+  [key: string]: any;
+}
+// 明确指定类型
+const classes = ref<ClassItem[]>([])
 const selectedQuestion = ref<Question | null>(null)
 const isEditingQuestion = ref(false)
 const currentStep = ref(1) // 1: Basic Info, 2: Questions
@@ -56,7 +75,7 @@ const tempQuestion = reactive({
         { key: 'B', text: '' },
         { key: 'C', text: '' },
         { key: 'D', text: '' }
-    ],
+    ] as { key: string; text: string }[],
     explanation: '',
     score: 5,
     // 使用计算属性处理多选答案
@@ -65,14 +84,14 @@ const tempQuestion = reactive({
             if (typeof this.answer === 'string') {
                 return this.answer ? this.answer.split('|') : [];
             }
-            return [];
+            return Array.isArray(this.answer) ? this.answer : [];
         }
         return [];
     },
     set answerArray(values: string[]) {
-        this.answer = values.join(',');
+        this.answer = values;
     },
-    answer: '' // 始终保持字符串类型
+    answer: tempQuestion.type === 'multiplechoice' ? ([] as string[]) : '' as string | string[] // 支持字符串或字符串数组
 });
 
 // 新增：章节相关状态
@@ -201,7 +220,7 @@ const prevStep = () => {
   error.value = ''
 }
 
-const typeMap = {
+const typeMap: { [key: string]: string } = {
     'singlechoice': 'singlechoice',
     'multiplechoice': 'singlechoice',
     'judge': 'judge',
@@ -319,7 +338,7 @@ const resetQuestionForm = () => {
     { key: 'C', text: '' },
     { key: 'D', text: '' }
   ]
-  tempQuestion.answer = tempQuestion.type === 'multiplechoice' ? [] : ''
+  tempQuestion.answer = tempQuestion.type === 'multiplechoice' ? ([] as string[]) : ''
   tempQuestion.score = 5
     tempQuestion.explanation = ''
 
