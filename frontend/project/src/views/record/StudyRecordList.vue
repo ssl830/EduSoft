@@ -1,11 +1,48 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { StudyRecord } from '../../api/studyRecords'
 import axios from '../../api/axios'
+import { ElMessage } from 'element-plus'
+import StudyRecordsApi from '../../api/studyRecords'
+import CourseApi from '../../api/course'
 
 const records = ref<StudyRecord[]>([])
 const loading = ref(true)
 const error = ref('')
+const selectedCourse = ref<number | ''>('')
+const downloadStatus = ref({
+  loading: false,
+  courseId: null as number | null
+})
+
+// 练习记录详情弹窗相关数据
+const submissionReportModal = ref({
+  visible: false,
+  loading: false,
+  error: null as string | null,
+  data: null as any
+})
+
+// 获取所有课程列表
+const courses = computed(() => {
+  const courseSet = new Set<{id: number, name: string}>()
+  records.value.forEach(record => {
+    if (record.courseName && record.resourceId) {
+      console.log('处理课程:', record.courseName, 'ID:', record.resourceId)
+      courseSet.add({id: record.resourceId, name: record.courseName})
+    }
+  })
+  console.log('课程列表:', Array.from(courseSet))
+  return Array.from(courseSet)
+})
+
+// 根据筛选条件过滤记录
+const filteredRecords = computed(() => {
+  if (!selectedCourse.value) {
+    return records.value
+  }
+  return records.value.filter(record => record.resourceId === selectedCourse.value)
+})
 
 const fetchRecords = async () => {
   loading.value = true
@@ -13,12 +50,14 @@ const fetchRecords = async () => {
   try {
     const response = await axios.get('/api/record/study')
     // 兼容后端返回数组的情况
-    if (response.code === 200 && Array.isArray(response.data)) {
+    if (Array.isArray(response.data)) {
       records.value = response.data
-    } else if (response.code === 200 && response.data) {
+      console.log('获取到的学习记录:', records.value)
+    } else if (response.data) {
       records.value = [response.data]
+      console.log('获取到的学习记录:', records.value)
     } else {
-      error.value = response.message || '获取学习记录失败'
+      error.value = '获取学习记录失败'
     }
   } catch (err) {
     error.value = '获取学习记录失败，请稍后再试'
@@ -41,6 +80,113 @@ const formatDateTime = (dateTimeStr: string) => {
   })
 }
 
+// 导出课程学习记录
+const exportCourseRecords = async (courseId: number) => {
+  downloadStatus.value = {
+    loading: true,
+    courseId
+  }
+  
+  try {
+    const response = await StudyRecordsApi.exportCourseStudyRecords(courseId.toString())
+    
+    // 创建下载链接
+    const url = window.URL.createObjectURL(new Blob([response.data]))
+    const link = document.createElement('a')
+    link.href = url
+    const courseName = courses.value.find(c => c.id === courseId)?.name || '课程'
+    link.setAttribute('download', `${courseName}学习记录.xlsx`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+    
+    ElMessage.success('导出成功')
+  } catch (err) {
+    console.error('导出失败:', err)
+    ElMessage.error('导出失败，请稍后重试')
+  } finally {
+    downloadStatus.value = {
+      loading: false,
+      courseId: null
+    }
+  }
+}
+
+// 查看练习提交报告
+const viewSubmissionReport = async (recordIdOrSubmissionId: string | undefined, record?: any) => {
+  if (!recordIdOrSubmissionId && !record) {
+    console.error('缺少必要参数，无法查看练习记录');
+    return;
+  }
+
+  try {
+    submissionReportModal.value.visible = true;
+    submissionReportModal.value.loading = true;
+    submissionReportModal.value.error = null;
+    submissionReportModal.value.data = null;
+
+    let submissionId = recordIdOrSubmissionId;
+    
+    // 如果有submission_id，直接使用
+    if (record && record.submission_id) {
+      submissionId = record.submission_id;
+    } else if (record && record.id) {
+      // 如果没有submission_id但有record.id，尝试使用练习ID
+      submissionId = record.id;
+    }
+
+    if (!submissionId) {
+      throw new Error('无法获取有效的提交ID或练习ID');
+    }
+
+    console.log('尝试获取练习提交报告，ID:', submissionId);
+    console.log('记录对象:', record);
+    
+    // 获取提交报告
+    const response = await StudyRecordsApi.getSubmissionReport(submissionId);
+    console.log('练习提交报告API响应:', response);
+    
+    if (response.data) {
+      // 检查响应格式
+      let reportData;
+      if (response.data.code === 200 && response.data.data) {
+        reportData = response.data.data;
+      } else if (response.data.code === 200) {
+        throw new Error('API返回的数据为空');
+      } else {
+        throw new Error(response.data.message || '获取练习提交报告失败');
+      }
+      
+      console.log('处理后的报告数据:', reportData);
+      
+      if (!reportData) {
+        throw new Error('API返回的数据为空');
+      }
+      
+      // 设置报告数据
+      submissionReportModal.value.data = reportData;
+      console.log('成功设置练习提交报告数据:', submissionReportModal.value.data);
+      
+    } else {
+      throw new Error('API响应数据格式不正确');
+    }
+    
+  } catch (err: any) {
+    console.error('获取练习提交报告失败:', err);
+    submissionReportModal.value.error = err.message || '获取记录失败，请稍后再试';
+  } finally {
+    submissionReportModal.value.loading = false;
+  }
+};
+
+// 关闭练习记录详情弹窗
+const closeSubmissionReportModal = () => {
+  submissionReportModal.value.visible = false;
+  submissionReportModal.value.data = null;
+  submissionReportModal.value.error = null;
+};
+
 onMounted(() => {
   fetchRecords()
 })
@@ -50,6 +196,22 @@ onMounted(() => {
   <div class="study-record-container">
     <header class="page-header">
       <h1>学习记录</h1>
+      <div class="filter-section">
+        <select v-model="selectedCourse" class="course-filter">
+          <option value="">所有课程</option>
+          <option v-for="course in courses" :key="course.id" :value="course.id">
+            {{ course.name }}
+          </option>
+        </select>
+        <button 
+          v-if="selectedCourse"
+          @click="exportCourseRecords(selectedCourse)" 
+          class="btn btn-export-course"
+          :disabled="downloadStatus.loading"
+        >
+          <i class="fa fa-download"></i> 导出记录
+        </button>
+      </div>
     </header>
 
     <div v-if="loading" class="loading-container">
@@ -62,7 +224,7 @@ onMounted(() => {
       暂无学习记录
     </div>
     <div v-else class="records-list">
-      <div v-for="record in records" :key="record.id" class="record-card">
+      <div v-for="record in filteredRecords" :key="record.id" class="record-card">
         <div class="record-header">
           <h3>{{ record.courseName }}</h3>
           <span class="completion-status"
@@ -108,6 +270,30 @@ onMounted(() => {
   color: #333;
   font-size: 2rem;
   margin: 0;
+}
+
+.filter-section {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.course-filter {
+  margin-right: 1rem;
+}
+
+.btn-export-course {
+  padding: 0.5rem 1rem;
+  background-color: #42b983;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.btn-export-course:hover {
+  background-color: #36a372;
 }
 
 .loading-container {
