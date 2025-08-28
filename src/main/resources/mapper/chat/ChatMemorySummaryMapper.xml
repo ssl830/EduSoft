@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.edusoft.mapper.chat.ChatMemorySummaryMapper">
+
+    <select id="getSessionSummaries" resultType="org.example.edusoft.entity.chat.ChatMemorySummary">
+        SELECT * FROM chat_memory_summary 
+        WHERE session_id = #{sessionId} 
+        ORDER BY message_range_start ASC
+    </select>
+
+    <select id="getLatestSummary" resultType="org.example.edusoft.entity.chat.ChatMemorySummary">
+        SELECT * FROM chat_memory_summary 
+        WHERE session_id = #{sessionId} 
+        ORDER BY message_range_end DESC 
+        LIMIT 1
+    </select>
+
+    <select id="calculateSummaryTokenCount" resultType="java.lang.Integer">
+        SELECT COALESCE(SUM(token_count), 0) FROM chat_memory_summary 
+        WHERE session_id = #{sessionId}
+    </select>
+
+</mapper>
