@@ -463,7 +463,7 @@ router.beforeEach( async (to, _from, next) => {
     to.meta.title === 'AI自测' || to.meta.title === '自测详情' || to.meta.title === '教师列表' ||
     to.meta.title === '学生列表' || to.meta.title === '管理员列表' || to.meta.title === '资源列表' ||
     to.meta.title === '系统概览' || to.meta.title === '练习列表' ||
-    to.meta.title === '课表' || to.meta.title === '通知中心'
+    to.meta.title === '课表'
   )) {
     next({name: 'Home'})
     return
