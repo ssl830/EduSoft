@@ -8,12 +8,19 @@ import org.example.edusoft.mapper.ClassMapper;
 import org.example.edusoft.mapper.ClassUserMapper;
 import org.example.edusoft.service.ClassService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+
+import org.example.edusoft.client.UserServiceClient;
 
 @Service
 public class ClassServiceImpl implements ClassService {
@@ -24,6 +31,44 @@ public class ClassServiceImpl implements ClassService {
     @Autowired
     private ClassUserMapper classUserMapper;
 
+    @Autowired
+    private UserServiceClient userServiceClient;
+
+    @Value("${services.user.base-url:http://localhost:8081}")
+    private String userServiceBaseUrl;
+
+    private String resolveOutboundToken() {
+        RequestAttributes attrs = RequestContextHolder.getRequestAttributes();
+        if (attrs instanceof ServletRequestAttributes servlet) {
+            String satoken = servlet.getRequest().getHeader("satoken");
+            if (satoken != null && !satoken.isEmpty()) return satoken;
+            String cookie = servlet.getRequest().getHeader("Cookie");
+            if (cookie != null) {
+                for (String part : cookie.split(";")) {
+                    String p = part.trim();
+                    if (p.startsWith("satoken=")) return p.substring("satoken=".length());
+                }
+            }
+            String auth = servlet.getRequest().getHeader("Authorization");
+            if (auth != null && !auth.isEmpty()) return auth;
+        }
+        return null;
+    }
+
+    private String fetchUsernameByUserId(Long userId) {
+        if (userId == null) return null;
+        String token = resolveOutboundToken();
+        try {
+            Map<String, Object> user = userServiceClient.fetchUserById(userServiceBaseUrl, token, String.valueOf(userId));
+            if (user != null) {
+                Object name = user.get("username");
+                return name == null ? null : String.valueOf(name);
+            }
+        } catch (Exception ignore) {
+        }
+        return null;
+    }
+
     @Override
     @Transactional
     public Class createClass(Class clazz) {
@@ -31,17 +76,14 @@ public class ClassServiceImpl implements ClassService {
         if (isClassCodeExists(clazz.getClassCode())) {
             throw new IllegalArgumentException("班级代码已存在");
         }
-        
         // 验证班级名称
         if (!StringUtils.hasText(clazz.getName())) {
             throw new IllegalArgumentException("班级名称不能为空");
         }
-        
         // 验证课程ID
         if (clazz.getCourseId() == null) {
             throw new IllegalArgumentException("课程ID不能为空");
         }
-        
         classMapper.insert(clazz);
         return clazz;
     }
@@ -79,7 +121,14 @@ public class ClassServiceImpl implements ClassService {
         if (id == null) {
             throw new IllegalArgumentException("班级ID不能为空");
         }
-        return classMapper.getClassDetailById(id);
+        ClassDetailDTO detail = classMapper.getClassDetailById(id);
+        if (detail != null) {
+            String teacherName = fetchUsernameByUserId(detail.getTeacherId());
+            if (teacherName != null) {
+                detail.setTeacherName(teacherName);
+            }
+        }
+        return detail;
     }
 
     @Override
@@ -88,19 +137,16 @@ public class ClassServiceImpl implements ClassService {
         if (clazz.getId() == null) {
             throw new IllegalArgumentException("班级ID不能为空");
         }
-        
         // 检查班级是否存在
         Class existingClass = classMapper.selectById(clazz.getId());
         if (existingClass == null) {
             throw new IllegalArgumentException("班级不存在");
         }
-        
         // 如果修改了班级代码，需要检查唯一性
         if (!existingClass.getClassCode().equals(clazz.getClassCode()) 
             && isClassCodeExists(clazz.getClassCode())) {
             throw new IllegalArgumentException("班级代码已存在");
         }
-        
         classMapper.updateById(clazz);
         return clazz;
     }
@@ -111,16 +157,11 @@ public class ClassServiceImpl implements ClassService {
         if (id == null) {
             throw new IllegalArgumentException("班级ID不能为空");
         }
-        
         // 检查班级是否存在
         Class clazz = classMapper.selectById(id);
         if (clazz == null) {
             throw new IllegalArgumentException("班级不存在");
         }
-        
-        // TODO: 检查是否有关联的学生
-        // 这里可以添加检查逻辑，如果有关联数据则抛出异常
-        
         return classMapper.deleteById(id) > 0;
     }
 
@@ -130,18 +171,15 @@ public class ClassServiceImpl implements ClassService {
         if (classId == null || userId == null) {
             throw new IllegalArgumentException("班级ID和用户ID不能为空");
         }
-        
         // 检查班级是否存在
         Class clazz = classMapper.selectById(classId);
         if (clazz == null) {
             throw new IllegalArgumentException("班级不存在");
         }
-        
         // 检查用户是否已经在班级中
         if (classUserMapper.isUserInClass(classId, userId) > 0) {
             throw new IllegalArgumentException("用户已在班级中");
         }
-        
         return classUserMapper.joinClass(classId, userId) > 0;
     }
 
@@ -151,7 +189,6 @@ public class ClassServiceImpl implements ClassService {
         if (classId == null || userId == null) {
             throw new IllegalArgumentException("班级ID和用户ID不能为空");
         }
-        
         return classUserMapper.leaveClass(classId, userId) > 0;
     }
 
@@ -160,6 +197,7 @@ public class ClassServiceImpl implements ClassService {
         if (classId == null) {
             throw new IllegalArgumentException("班级ID不能为空");
         }
+        // 原返回里 studentName 可能为空，这里可按需补充。
         return classUserMapper.getClassUsers(classId);
     }
 
@@ -169,13 +207,11 @@ public class ClassServiceImpl implements ClassService {
         if (classId == null || studentIds == null || studentIds.isEmpty()) {
             throw new IllegalArgumentException("班级ID和学生ID列表不能为空");
         }
-        
         // 检查班级是否存在
         Class clazz = classMapper.selectById(classId);
         if (clazz == null) {
             throw new IllegalArgumentException("班级不存在");
         }
-        
         int successCount = 0;
         for (Long studentId : studentIds) {
             try {
@@ -184,11 +220,9 @@ public class ClassServiceImpl implements ClassService {
                     successCount++;
                 }
             } catch (Exception e) {
-                // 记录失败的学生ID
                 System.err.println("导入学生失败: " + studentId + ", 原因: " + e.getMessage());
             }
         }
-        
         return successCount > 0;
     }
 
@@ -198,31 +232,26 @@ public class ClassServiceImpl implements ClassService {
         if (classId == null || studentId == null) {
             throw new IllegalArgumentException("班级ID和学生ID不能为空");
         }
-        
         // 检查班级是否存在
         Class clazz = classMapper.selectById(classId);
         if (clazz == null) {
             throw new IllegalArgumentException("班级不存在");
         }
-        
         // 检查用户是否已经在班级中
         if (classUserMapper.isUserInClass(classId, studentId) > 0) {
             throw new IllegalArgumentException("用户已在班级中");
         }
-        
         // 添加学生到班级
         classUserMapper.joinClass(classId, studentId);
-        
         // 创建导入记录
         ImportRecord record = new ImportRecord();
         record.setClassId(classId);
-        record.setOperatorId(studentId); // 这里可以传入操作者ID
+        record.setOperatorId(studentId);
         record.setImportTime(LocalDateTime.now());
         record.setImportType("MANUAL_ADD");
         record.setTotalCount(1);
         record.setSuccessCount(1);
         record.setFailCount(0);
-        
         return record;
     }
 
@@ -232,12 +261,10 @@ public class ClassServiceImpl implements ClassService {
         if (classId == null || studentId == null) {
             throw new IllegalArgumentException("班级ID和学生ID不能为空");
         }
-        
         // 检查用户是否在班级中
         if (classUserMapper.isUserInClass(classId, studentId) == 0) {
             throw new IllegalArgumentException("用户不在班级中");
         }
-        
         classUserMapper.leaveClass(classId, studentId);
     }
 
@@ -247,21 +274,17 @@ public class ClassServiceImpl implements ClassService {
         if (!StringUtils.hasText(classCode) || studentId == null) {
             throw new IllegalArgumentException("班级代码和学生ID不能为空");
         }
-        
         // 根据班级代码查找班级
         Class clazz = classUserMapper.getClassByCode(classCode);
         if (clazz == null) {
             throw new IllegalArgumentException("班级代码不存在");
         }
-        
         // 检查用户是否已经在班级中
         if (classUserMapper.isUserInClass(clazz.getId(), studentId) > 0) {
             throw new IllegalArgumentException("用户已在班级中");
         }
-        
         // 添加学生到班级
         classUserMapper.joinClass(clazz.getId(), studentId);
-        
         // 创建导入记录
         ImportRecord record = new ImportRecord();
         record.setClassId(clazz.getId());
@@ -271,7 +294,6 @@ public class ClassServiceImpl implements ClassService {
         record.setTotalCount(1);
         record.setSuccessCount(1);
         record.setFailCount(0);
-        
         return record;
     }
 
@@ -280,7 +302,14 @@ public class ClassServiceImpl implements ClassService {
         if (userId == null) {
             throw new IllegalArgumentException("用户ID不能为空");
         }
-        return classMapper.getClassesByUserId(userId);
+        List<ClassDetailDTO> list = classMapper.getClassesByUserId(userId);
+        for (ClassDetailDTO dto : list) {
+            String teacherName = fetchUsernameByUserId(dto.getTeacherId());
+            if (teacherName != null) {
+                dto.setTeacherName(teacherName);
+            }
+        }
+        return list;
     }
 
     @Override

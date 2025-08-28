@@ -7,7 +7,7 @@ Content-Type: application/json
 {
   "teacherId": 1,
   "name": "Java程序设计",
-  "code": "CS101",
+  "code": "CS100",
   "outline": "Java基础语法、面向对象编程、集合框架等",
   "objective": "掌握Java编程基础知识和面向对象编程思想",
   "assessment": "平时作业30%，期末考试70%"
@@ -59,33 +59,9 @@ GET http://localhost:8082/api/classes/student/3
 ### 10. 获取班级详情
 GET http://localhost:8082/api/classes/1
 
-### 11. 学生加入班级
-POST http://localhost:8082/api/classes/1/join/1001
-Content-Type: application/json
-
-{
-  "userId": 1001
-}
-
-### 12. 通过班级代码加入班级
-POST http://localhost:8082/api/classes/join?classCode=CS101_2024_SPRING&studentId=1002
-
-### 13. 获取班级学生列表
-GET http://localhost:8082/api/classes/1/users
-
-### 14. 学生退出班级
-DELETE http://localhost:8082/api/classes/1/leave/1001
-
-### 15. 添加单个学生到班级
-POST http://localhost:8082/api/classes/1/students?studentId=1003
-
-### 16. 从班级移除学生
-DELETE http://localhost:8082/api/classes/1/remove-student?userId=1003
-
 ### 17. 获取班级学生数量
 GET http://localhost:8082/api/classes/1/student-count
 
-### 课程章节管理测试
 
 ### 18. 创建课程章节
 POST http://localhost:8082/api/course-sections
@@ -93,8 +69,8 @@ Content-Type: application/json
 
 {
   "courseId": 1,
-  "title": "第一章 Java基础语法",
-  "sortOrder": 1
+  "title": "第三章 Java基础语法",
+  "sortOrder": 3
 }
 
 ### 19. 获取课程的所有章节
@@ -111,9 +87,30 @@ Content-Type: application/json
 }
 
 ### 21. 删除课程章节
-DELETE http://localhost:8082/api/course-sections/1
+DELETE http://localhost:8082/api/course-sections/6
 
 ### 学生导入测试
+
+
+### 11. 学生加入班级
+POST http://localhost:8082/api/classes/1/join/1001
+Content-Type: application/json
+
+{
+  "userId": 1001
+}
+
+### 12. 通过班级代码加入班级
+POST http://localhost:8082/api/classes/join?classCode=CS101_2024_SPRING&studentId=1001
+
+### 13. 获取班级学生列表
+GET http://localhost:8082/api/classes/1/users
+
+### 14. 学生退出班级
+DELETE http://localhost:8082/api/classes/3/leave/1001
+
+### 15. 添加单个学生到班级
+POST http://localhost:8082/api/classes/1/students?studentId=1003
 
 ### 22. 导入学生到班级
 POST http://localhost:8082/api/imports/students
@@ -121,18 +118,17 @@ Content-Type: application/json
 
 {
   "classId": 1,
-  "operatorId": 1,
-  "fileName": "students.xlsx",
+  "operatorId": 1001,
+  "fileName": "students.json",
   "importType": "EXCEL",
   "studentData": [
-    {"studentId": "2024001", "studentName": "张三"},
-    {"studentId": "2024002", "studentName": "李四"},
-    {"studentId": "2024003", "studentName": "王五"}
+    { "studentId": "2024001", "studentName": "张三" },
+    { "studentId": 2024003, "studentName": "王五" }
   ]
 }
 
 ### 23. 获取班级的导入记录
-GET http://localhost:8082/api/imports/class/1
+GET http://localhost:8082/api/imports/records/1
 
 ### 24. 获取导入记录详情
-GET http://localhost:8082/api/imports/1
+GET http://localhost:8082/api/imports/record/1
