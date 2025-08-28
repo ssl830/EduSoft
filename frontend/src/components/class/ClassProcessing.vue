@@ -263,7 +263,8 @@ onMounted(() => {
                         <td class="actions">
                             <button
                                 class="btn-action history"
-                                @click="checkPractice(item.submissionId)"
+                                @click="selectedExer !== -1 ? checkPractice(item.submissionId) : error.value = '请选择一个练习进行批改'"
+                                :disabled="selectedExer === -1"
                                 title="批改"
                             >
                                 批改
