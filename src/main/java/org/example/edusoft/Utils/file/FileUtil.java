@@ -1,15 +1,16 @@
 package org.example.edusoft.utils.file;
 
-import org.example.edusoft.common.constant.CommonConstant;
-import jakarta.servlet.ServletOutputStream;
-import jakarta.servlet.http.HttpServletResponse;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLEncoder;
+
+import org.example.edusoft.common.constant.CommonConstant;
+
+import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * 文件工具类
@@ -39,18 +40,21 @@ public class FileUtil {
 
     public static String[] FILE_SUFFIX_CODE = new String[]{"java", "sql", "js", "py", "py3", "php", "vue", "sh", "cmd", "css"};
 
+    // 修正：判断文件名后缀是否允许
     public static boolean isFileAllowed(String fileName) {
+        String suffix = getFileSuffix(fileName);
         for (String ext : ALLOWED_FILE_SUFFIX) {
-            if (ext.equals(fileName)) {
+            if (ext.equalsIgnoreCase(suffix)) {
                 return true;
             }
         }
         return false;
     }
 
-    public static boolean isFileAllowed(String fileName, String[] file) {
-        for (String ext : file) {
-            if (ext.equals(fileName)) {
+    public static boolean isFileAllowed(String fileName, String[] allow) {
+        String suffix = getFileSuffix(fileName);
+        for (String ext : allow) {
+            if (ext.equalsIgnoreCase(suffix)) {
                 return true;
             }
         }
@@ -59,13 +63,10 @@ public class FileUtil {
 
     /**
      * 是否为图片文件
-     *
-     * @param suffix
-     * @return
      */
     public static boolean isImg(String suffix) {
         for (String ext : FILE_SUFFIX_IMAGE) {
-            if (ext.equals(suffix)) {
+            if (ext.equalsIgnoreCase(suffix)) {
                 return true;
             }
         }
@@ -74,13 +75,10 @@ public class FileUtil {
 
     /**
      * 是否是代码文件
-     *
-     * @param suffix
-     * @return
      */
     public static boolean isCode(String suffix) {
         for (String ext : FILE_SUFFIX_CODE) {
-            if (ext.equals(suffix)) {
+            if (ext.equalsIgnoreCase(suffix)) {
                 return true;
             }
         }
@@ -125,10 +123,7 @@ public class FileUtil {
     }
 
     /**
-     * 获取文件名
-     *
-     * @param fileName
-     * @return
+     * 获取文件名（不带扩展名）
      */
     public static String getFileName(String fileName) {
         return fileName.substring(0, fileName.lastIndexOf(CommonConstant.SUFFIX_SPLIT));
@@ -136,21 +131,31 @@ public class FileUtil {
 
     /**
      * 获取文件后缀名
-     *
-     * @return
      */
     public static String getFileSuffix(String fileName) {
-        return fileName.substring(fileName.lastIndexOf(CommonConstant.SUFFIX_SPLIT) + 1).toLowerCase();
+        int idx = fileName.lastIndexOf(CommonConstant.SUFFIX_SPLIT);
+        if (idx == -1) throw new StringIndexOutOfBoundsException("No extension found in fileName: " + fileName);
+        return fileName.substring(idx + 1).toLowerCase();
     }
 
+    /**
+     * 获取基础文件名，去掉"(1)"等重复标记，保留扩展名
+     */
     public static String getFileBaseName(String fileName) {
         if (fileName == null || fileName.isEmpty()) {
             return fileName;
         }
-
-        // 使用正则表达式匹配最后一个(数字)模式
-        String pattern = "\\([0-9]+\\)$";
-        return fileName.replaceAll(pattern, "");
+        int dot = fileName.lastIndexOf('.');
+        String nameWithoutExt, ext = "";
+        if (dot != -1) {
+            nameWithoutExt = fileName.substring(0, dot);
+            ext = fileName.substring(dot); // 包含点
+        } else {
+            nameWithoutExt = fileName;
+        }
+        // 去掉末尾的(数字)
+        nameWithoutExt = nameWithoutExt.replaceAll("\\([0-9]+\\)$", "");
+        return nameWithoutExt + ext;
     }
 
     public static void downLoad(String url, String path, HttpServletResponse response) {
