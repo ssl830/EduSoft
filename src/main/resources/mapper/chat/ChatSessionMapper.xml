@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.edusoft.mapper.chat.ChatSessionMapper">
+
+    <select id="getUserActiveSessions" resultType="org.example.edusoft.entity.chat.ChatSession">
+        SELECT * FROM chat_session 
+        WHERE user_id = #{userId} AND is_active = 1 
+        ORDER BY updated_at DESC
+    </select>
+
+    <update id="deactivateAllUserSessions">
+        UPDATE chat_session 
+        SET is_active = 0 
+        WHERE user_id = #{userId}
+    </update>
+
+    <update id="updateSessionTime">
+        UPDATE chat_session 
+        SET updated_at = CURRENT_TIMESTAMP 
+        WHERE id = #{sessionId}
+    </update>
+
+    <update id="updateSessionTitle">
+        UPDATE chat_session 
+        SET session_title = #{title} 
+        WHERE id = #{sessionId}
+    </update>
+
+</mapper>
