@@ -9,7 +9,7 @@ export interface ApiResponse<T = any> {
 
 // Create an axios instance
 const instance = axios.create({
-  baseURL: 'http://localhost:8080',  // 修改为本地后端服务器地址
+  baseURL: 'http://localhost:8081',  // 修改为user-service端口
   timeout: 1000000,
   headers: {
     'Content-Type': 'application/json'

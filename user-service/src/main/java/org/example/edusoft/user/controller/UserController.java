@@ -116,6 +116,26 @@ public class UserController {
         }
     }
 
+    // 根据userId获取用户信息 - 符合README规范
+    @GetMapping("/{userId}")
+    public SaResult getUserByUserId(@PathVariable String userId) {
+        try {
+            // 检查是否登录
+            StpUtil.checkLogin();
+            // 获取用户信息
+            User user = userService.findByUserId(userId);
+            if (user == null) {
+                return SaResult.error("用户不存在");
+            }
+            // 返回用户信息，但不返回密码
+            user.setPasswordHash(null);
+            return SaResult.ok("获取成功").setData(user);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return SaResult.error("获取用户信息失败：" + e.getMessage());
+        }
+    }
+
     // 获取当前登录用户信息
     @GetMapping("/info")
     public SaResult getUserInfo() {
@@ -141,19 +161,27 @@ public class UserController {
         }
     }
 
-    // 更新用户信息
-    @PostMapping("/update")
-    public SaResult updateUserInfo(@Valid @RequestBody UserUpdate updateDTO) {
+    // 更新用户信息 - 修改为PUT方法，符合README规范
+    @PutMapping("/{userId}")
+    public SaResult updateUserInfo(@PathVariable String userId, @Valid @RequestBody UserUpdate updateDTO) {
         try {
             // 检查登录状态
             StpUtil.checkLogin();
             // 获取当前用户
             String loginIdStr = StpUtil.getLoginId().toString();
             Long currentUserId = Long.parseLong(loginIdStr);
-            User currentUser = userService.findById(currentUserId);
+            
+            // 根据userId查找用户
+            User currentUser = userService.findByUserId(userId);
             if (currentUser == null) {
                 return SaResult.error("用户不存在");
             }
+            
+            // 检查权限：只能更新自己的信息
+            if (!currentUserId.equals(currentUser.getId())) {
+                return SaResult.error("无权限更新其他用户信息");
+            }
+            
             // 只更新允许修改的字段
             if (updateDTO.getUsername() != null) {
                 currentUser.setUsername(updateDTO.getUsername());
@@ -164,7 +192,7 @@ public class UserController {
             // 更新时间
             currentUser.setUpdatedAt(LocalDateTime.now());
             // 保存更新
-            userService.save(currentUser);
+            userService.update(currentUser);
             return SaResult.ok("更新成功");
         } catch (Exception e) {
             e.printStackTrace();
@@ -193,10 +221,8 @@ public class UserController {
             }
             // 更新新密码
             String newPasswordHash = SaSecureUtil.md5BySalt(newPassword, SALT);
-            currentUser.setPasswordHash(newPasswordHash);
-            currentUser.setUpdatedAt(LocalDateTime.now());
-            // 保存更新
-            userService.save(currentUser);
+            // 直接更新密码
+            userService.updatePassword(currentUser.getUserId(), newPasswordHash);
             return SaResult.ok("密码修改成功");
         } catch (Exception e) {
             e.printStackTrace();
@@ -272,9 +298,21 @@ public class UserController {
         }
     }
 
-    @DeleteMapping("/delete/{id}")
+    // 删除用户 - 符合README规范
+    @DeleteMapping("/{id}")
     public SaResult deleteUser(@PathVariable Long id) {
         try {
+            // 检查登录状态
+            StpUtil.checkLogin();
+            // 获取当前用户ID
+            String loginIdStr = StpUtil.getLoginId().toString();
+            Long currentUserId = Long.parseLong(loginIdStr);
+            
+            // 检查权限：只能删除自己的账号
+            if (!currentUserId.equals(id)) {
+                return SaResult.error("无权限删除其他用户");
+            }
+            
             userService.deleteById(id);
             return SaResult.ok("删除用户成功");
         } catch (Exception e) {

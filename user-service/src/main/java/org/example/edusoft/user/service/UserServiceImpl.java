@@ -40,6 +40,11 @@ public class UserServiceImpl implements UserService {
     }
     
     @Override
+    public void updatePassword(String userId, String passwordHash) {
+        userMapper.updatePassword(userId, passwordHash);
+    }
+    
+    @Override
     public void deleteById(Long id) {
         userMapper.deleteById(id);
     }

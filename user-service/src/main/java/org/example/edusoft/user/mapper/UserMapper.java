@@ -121,6 +121,10 @@ public interface UserMapper {
             "WHERE user_id = #{userId}")
     void update(User user);
     
+    @Update("UPDATE user SET password_hash = #{passwordHash}, updated_at = NOW() " +
+            "WHERE user_id = #{userId}")
+    void updatePassword(@Param("userId") String userId, @Param("passwordHash") String passwordHash);
+    
     @Delete("DELETE FROM user WHERE id = #{id}")
     void deleteById(@Param("id") Long id);
     

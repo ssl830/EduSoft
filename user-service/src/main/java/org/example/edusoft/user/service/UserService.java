@@ -27,6 +27,11 @@ public interface UserService {
     User update(User user);
     
     /**
+     * 更新用户密码
+     */
+    void updatePassword(String userId, String passwordHash);
+    
+    /**
      * 根据ID删除用户
      */
     void deleteById(Long id);
