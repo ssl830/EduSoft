@@ -13,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -54,7 +55,31 @@ public class FileController {
                 return ResponseEntity.notFound().build();
             }
             
-            Path filePath = Paths.get(fileInfo.getFilePath());
+            // 处理文件路径
+            String filePathStr = fileInfo.getFilePath();
+            if (filePathStr == null || filePathStr.trim().isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+            
+            Path filePath;
+            
+            // 如果是绝对路径（以/开头），去掉开头的斜杠
+            if (filePathStr.startsWith("/")) {
+                filePathStr = filePathStr.substring(1);
+            }
+            
+            // 使用当前工作目录作为基础路径
+            filePath = Paths.get(System.getProperty("user.dir"), filePathStr);
+            
+            // 检查文件是否存在
+            if (!Files.exists(filePath)) {
+                // 如果文件不存在，尝试使用相对路径
+                filePath = Paths.get(filePathStr);
+                if (!Files.exists(filePath)) {
+                    return ResponseEntity.notFound().build();
+                }
+            }
+            
             Resource resource = new UrlResource(filePath.toUri());
             
             if (resource.exists() && resource.isReadable()) {
@@ -65,8 +90,11 @@ public class FileController {
             } else {
                 return ResponseEntity.notFound().build();
             }
-        } catch (MalformedURLException e) {
-            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            // 记录错误日志
+            System.err.println("文件下载错误: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().build();
         }
     }
 

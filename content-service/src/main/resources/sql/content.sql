@@ -1,7 +1,7 @@
 -- 创建内容服务数据库
-CREATE DATABASE IF NOT EXISTS content-db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE IF NOT EXISTS `content-db` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
-USE content-db;
+USE `content-db`;
 
 -- 文件信息表 (基于现有的file_node表结构)
 CREATE TABLE IF NOT EXISTS file_info (

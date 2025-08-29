@@ -50,3 +50,4 @@ GROUP BY role;
 -- 迁移完成后，可以删除原数据库中的user表（可选）
 -- DROP TABLE IF EXISTS `courseplatform`.`user`;
 
+
