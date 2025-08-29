@@ -47,3 +47,10 @@ logging:
   level:
     org.example.edusoft: DEBUG
     com.baomidou.mybatisplus: DEBUG
+
+services:
+  user:
+    base-url: http://localhost:8081
+
+auth:
+  required: false

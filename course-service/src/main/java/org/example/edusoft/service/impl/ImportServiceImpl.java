@@ -31,15 +31,23 @@ public class ImportServiceImpl implements ImportService {
         record.setOperatorId(operatorId);
         record.setImportTime(LocalDateTime.now());
         record.setImportType(importType);
-        
+
         int totalCount = studentData.size();
         int successCount = 0;
         int failCount = 0;
         List<String> failReasons = new ArrayList<>();
 
-        for (Map<String, Object> student : studentData) {
+        for (int i = 0; i < studentData.size(); i++) {
+            Map<String, Object> student = studentData.get(i);
             try {
-                Long studentId = Long.parseLong(student.get("student_id").toString());
+                Object idVal = student.containsKey("student_id") ? student.get("student_id") : student.get("studentId");
+                if (idVal == null) {
+                    failCount++;
+                    failReasons.add("第" + (i + 1) + "条缺少studentId/student_id");
+                    continue;
+                }
+                Long studentId = Long.parseLong(String.valueOf(idVal));
+
                 if (classUserMapper.isUserInClass(classId, studentId) == 0) {
                     ClassUser classUser = new ClassUser();
                     classUser.setClassId(classId);
@@ -53,7 +61,7 @@ public class ImportServiceImpl implements ImportService {
                 }
             } catch (Exception e) {
                 failCount++;
-                failReasons.add("学生数据处理失败: " + e.getMessage());
+                failReasons.add("第" + (i + 1) + "条学生数据处理失败: " + e.getMessage());
             }
         }
 
@@ -61,7 +69,7 @@ public class ImportServiceImpl implements ImportService {
         record.setSuccessCount(successCount);
         record.setFailCount(failCount);
         record.setFailReason(String.join("; ", failReasons));
-        
+
         importRecordMapper.insert(record);
         return record;
     }

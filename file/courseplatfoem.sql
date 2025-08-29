@@ -23,16 +23,16 @@ DROP TABLE IF EXISTS `aiservicecalllog`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `aiservicecalllog` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `user_id` bigint DEFAULT NULL,
-  `endpoint` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `duration_ms` bigint NOT NULL,
-  `call_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `status` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `error_message` text COLLATE utf8mb4_unicode_ci,
-  PRIMARY KEY (`id`),
-  KEY `user_id` (`user_id`),
-  CONSTRAINT `aiservicecalllog_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
+                                    `id` bigint NOT NULL AUTO_INCREMENT,
+                                    `user_id` bigint DEFAULT NULL,
+                                    `endpoint` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+                                    `duration_ms` bigint NOT NULL,
+                                    `call_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+                                    `status` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+                                    `error_message` text COLLATE utf8mb4_unicode_ci,
+                                    PRIMARY KEY (`id`),
+                                    KEY `user_id` (`user_id`),
+                                    CONSTRAINT `aiservicecalllog_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=154 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -54,19 +54,19 @@ DROP TABLE IF EXISTS `answer`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `answer` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `submission_id` bigint NOT NULL,
-  `question_id` bigint NOT NULL,
-  `answer_text` text COLLATE utf8mb4_unicode_ci,
-  `is_judged` tinyint(1) DEFAULT '0',
-  `correct` tinyint(1) DEFAULT NULL,
-  `score` int DEFAULT NULL,
-  `sort_order` bigint DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `submission_id` (`submission_id`),
-  KEY `question_id` (`question_id`),
-  CONSTRAINT `answer_ibfk_1` FOREIGN KEY (`submission_id`) REFERENCES `submission` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `answer_ibfk_2` FOREIGN KEY (`question_id`) REFERENCES `question` (`id`) ON DELETE CASCADE
+                          `id` bigint NOT NULL AUTO_INCREMENT,
+                          `submission_id` bigint NOT NULL,
+                          `question_id` bigint NOT NULL,
+                          `answer_text` text COLLATE utf8mb4_unicode_ci,
+                          `is_judged` tinyint(1) DEFAULT '0',
+                          `correct` tinyint(1) DEFAULT NULL,
+                          `score` int DEFAULT NULL,
+                          `sort_order` bigint DEFAULT NULL,
+                          PRIMARY KEY (`id`),
+                          KEY `submission_id` (`submission_id`),
+                          KEY `question_id` (`question_id`),
+                          CONSTRAINT `answer_ibfk_1` FOREIGN KEY (`submission_id`) REFERENCES `submission` (`id`) ON DELETE CASCADE,
+                          CONSTRAINT `answer_ibfk_2` FOREIGN KEY (`question_id`) REFERENCES `question` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=44 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -88,14 +88,14 @@ DROP TABLE IF EXISTS `class`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `class` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `course_id` bigint NOT NULL,
-  `name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `class_code` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `class_code` (`class_code`),
-  KEY `course_id` (`course_id`),
-  CONSTRAINT `class_ibfk_1` FOREIGN KEY (`course_id`) REFERENCES `course` (`id`) ON DELETE CASCADE
+                         `id` bigint NOT NULL AUTO_INCREMENT,
+                         `course_id` bigint NOT NULL,
+                         `name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+                         `class_code` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+                         PRIMARY KEY (`id`),
+                         UNIQUE KEY `class_code` (`class_code`),
+                         KEY `course_id` (`course_id`),
+                         CONSTRAINT `class_ibfk_1` FOREIGN KEY (`course_id`) REFERENCES `course` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -117,13 +117,13 @@ DROP TABLE IF EXISTS `classuser`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `classuser` (
-  `class_id` bigint NOT NULL,
-  `user_id` bigint NOT NULL,
-  `joined_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`class_id`,`user_id`),
-  KEY `user_id` (`user_id`),
-  CONSTRAINT `classuser_ibfk_1` FOREIGN KEY (`class_id`) REFERENCES `class` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `classuser_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
+                             `class_id` bigint NOT NULL,
+                             `user_id` bigint NOT NULL,
+                             `joined_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+                             PRIMARY KEY (`class_id`,`user_id`),
+                             KEY `user_id` (`user_id`),
+                             CONSTRAINT `classuser_ibfk_1` FOREIGN KEY (`class_id`) REFERENCES `class` (`id`) ON DELETE CASCADE,
+                             CONSTRAINT `classuser_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -145,18 +145,18 @@ DROP TABLE IF EXISTS `course`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `course` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `teacher_id` bigint NOT NULL,
-  `name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `code` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `outline` text COLLATE utf8mb4_unicode_ci,
-  `objective` text COLLATE utf8mb4_unicode_ci,
-  `assessment` text COLLATE utf8mb4_unicode_ci,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `code` (`code`),
-  KEY `teacher_id` (`teacher_id`),
-  CONSTRAINT `course_ibfk_1` FOREIGN KEY (`teacher_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
+                          `id` bigint NOT NULL AUTO_INCREMENT,
+                          `teacher_id` bigint NOT NULL,
+                          `name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+                          `code` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+                          `outline` text COLLATE utf8mb4_unicode_ci,
+                          `objective` text COLLATE utf8mb4_unicode_ci,
+                          `assessment` text COLLATE utf8mb4_unicode_ci,
+                          `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+                          PRIMARY KEY (`id`),
+                          UNIQUE KEY `code` (`code`),
+                          KEY `teacher_id` (`teacher_id`),
+                          CONSTRAINT `course_ibfk_1` FOREIGN KEY (`teacher_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -178,13 +178,13 @@ DROP TABLE IF EXISTS `courseclass`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `courseclass` (
-  `course_id` bigint NOT NULL,
-  `class_id` bigint NOT NULL,
-  `joined_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`class_id`,`course_id`),
-  KEY `course_id` (`course_id`),
-  CONSTRAINT `courseclass_ibfk_1` FOREIGN KEY (`class_id`) REFERENCES `class` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `courseclass_ibfk_2` FOREIGN KEY (`course_id`) REFERENCES `course` (`id`) ON DELETE CASCADE
+                               `course_id` bigint NOT NULL,
+                               `class_id` bigint NOT NULL,
+                               `joined_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+                               PRIMARY KEY (`class_id`,`course_id`),
+                               KEY `course_id` (`course_id`),
+                               CONSTRAINT `courseclass_ibfk_1` FOREIGN KEY (`class_id`) REFERENCES `class` (`id`) ON DELETE CASCADE,
+                               CONSTRAINT `courseclass_ibfk_2` FOREIGN KEY (`course_id`) REFERENCES `course` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -206,13 +206,13 @@ DROP TABLE IF EXISTS `coursesection`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `coursesection` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `course_id` bigint NOT NULL,
-  `title` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `sort_order` int DEFAULT '0',
-  PRIMARY KEY (`id`),
-  KEY `course_id` (`course_id`),
-  CONSTRAINT `coursesection_ibfk_1` FOREIGN KEY (`course_id`) REFERENCES `course` (`id`) ON DELETE CASCADE
+                                 `id` bigint NOT NULL AUTO_INCREMENT,
+                                 `course_id` bigint NOT NULL,
+                                 `title` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+                                 `sort_order` int DEFAULT '0',
+                                 PRIMARY KEY (`id`),
+                                 KEY `course_id` (`course_id`),
+                                 CONSTRAINT `coursesection_ibfk_1` FOREIGN KEY (`course_id`) REFERENCES `course` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -234,28 +234,28 @@ DROP TABLE IF EXISTS `discussion`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `discussion` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `course_id` bigint NOT NULL,
-  `class_id` bigint NOT NULL,
-  `creator_id` bigint NOT NULL,
-  `creator_num` varchar(15) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `title` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `content` text COLLATE utf8mb4_unicode_ci NOT NULL,
-  `is_pinned` tinyint(1) DEFAULT '0',
-  `is_closed` tinyint(1) DEFAULT '0',
-  `view_count` int DEFAULT '0',
-  `reply_count` int DEFAULT '0',
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `course_id` (`course_id`),
-  KEY `class_id` (`class_id`),
-  KEY `creator_id` (`creator_id`),
-  KEY `creator_num` (`creator_num`),
-  CONSTRAINT `discussion_ibfk_1` FOREIGN KEY (`course_id`) REFERENCES `course` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `discussion_ibfk_2` FOREIGN KEY (`class_id`) REFERENCES `class` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `discussion_ibfk_3` FOREIGN KEY (`creator_id`) REFERENCES `user` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `discussion_ibfk_4` FOREIGN KEY (`creator_num`) REFERENCES `user` (`user_id`) ON DELETE CASCADE
+                              `id` bigint NOT NULL AUTO_INCREMENT,
+                              `course_id` bigint NOT NULL,
+                              `class_id` bigint NOT NULL,
+                              `creator_id` bigint NOT NULL,
+                              `creator_num` varchar(15) COLLATE utf8mb4_unicode_ci NOT NULL,
+                              `title` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+                              `content` text COLLATE utf8mb4_unicode_ci NOT NULL,
+                              `is_pinned` tinyint(1) DEFAULT '0',
+                              `is_closed` tinyint(1) DEFAULT '0',
+                              `view_count` int DEFAULT '0',
+                              `reply_count` int DEFAULT '0',
+                              `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+                              `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                              PRIMARY KEY (`id`),
+                              KEY `course_id` (`course_id`),
+                              KEY `class_id` (`class_id`),
+                              KEY `creator_id` (`creator_id`),
+                              KEY `creator_num` (`creator_num`),
+                              CONSTRAINT `discussion_ibfk_1` FOREIGN KEY (`course_id`) REFERENCES `course` (`id`) ON DELETE CASCADE,
+                              CONSTRAINT `discussion_ibfk_2` FOREIGN KEY (`class_id`) REFERENCES `class` (`id`) ON DELETE CASCADE,
+                              CONSTRAINT `discussion_ibfk_3` FOREIGN KEY (`creator_id`) REFERENCES `user` (`id`) ON DELETE CASCADE,
+                              CONSTRAINT `discussion_ibfk_4` FOREIGN KEY (`creator_num`) REFERENCES `user` (`user_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -277,24 +277,24 @@ DROP TABLE IF EXISTS `discussionreply`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `discussionreply` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `discussion_id` bigint NOT NULL,
-  `user_id` bigint NOT NULL,
-  `user_num` varchar(15) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `content` text COLLATE utf8mb4_unicode_ci NOT NULL,
-  `parent_reply_id` bigint DEFAULT NULL,
-  `is_teacher_reply` tinyint(1) DEFAULT '0',
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `discussion_id` (`discussion_id`),
-  KEY `user_id` (`user_id`),
-  KEY `user_num` (`user_num`),
-  KEY `parent_reply_id` (`parent_reply_id`),
-  CONSTRAINT `discussionreply_ibfk_1` FOREIGN KEY (`discussion_id`) REFERENCES `discussion` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `discussionreply_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `discussionreply_ibfk_3` FOREIGN KEY (`user_num`) REFERENCES `user` (`user_id`) ON DELETE CASCADE,
-  CONSTRAINT `discussionreply_ibfk_4` FOREIGN KEY (`parent_reply_id`) REFERENCES `discussionreply` (`id`) ON DELETE CASCADE
+                                   `id` bigint NOT NULL AUTO_INCREMENT,
+                                   `discussion_id` bigint NOT NULL,
+                                   `user_id` bigint NOT NULL,
+                                   `user_num` varchar(15) COLLATE utf8mb4_unicode_ci NOT NULL,
+                                   `content` text COLLATE utf8mb4_unicode_ci NOT NULL,
+                                   `parent_reply_id` bigint DEFAULT NULL,
+                                   `is_teacher_reply` tinyint(1) DEFAULT '0',
+                                   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+                                   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                                   PRIMARY KEY (`id`),
+                                   KEY `discussion_id` (`discussion_id`),
+                                   KEY `user_id` (`user_id`),
+                                   KEY `user_num` (`user_num`),
+                                   KEY `parent_reply_id` (`parent_reply_id`),
+                                   CONSTRAINT `discussionreply_ibfk_1` FOREIGN KEY (`discussion_id`) REFERENCES `discussion` (`id`) ON DELETE CASCADE,
+                                   CONSTRAINT `discussionreply_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE,
+                                   CONSTRAINT `discussionreply_ibfk_3` FOREIGN KEY (`user_num`) REFERENCES `user` (`user_id`) ON DELETE CASCADE,
+                                   CONSTRAINT `discussionreply_ibfk_4` FOREIGN KEY (`parent_reply_id`) REFERENCES `discussionreply` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -316,12 +316,12 @@ DROP TABLE IF EXISTS `favoritequestion`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `favoritequestion` (
-  `student_id` bigint NOT NULL,
-  `question_id` bigint NOT NULL,
-  PRIMARY KEY (`student_id`,`question_id`),
-  KEY `question_id` (`question_id`),
-  CONSTRAINT `favoritequestion_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `user` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `favoritequestion_ibfk_2` FOREIGN KEY (`question_id`) REFERENCES `question` (`id`) ON DELETE CASCADE
+                                    `student_id` bigint NOT NULL,
+                                    `question_id` bigint NOT NULL,
+                                    PRIMARY KEY (`student_id`,`question_id`),
+                                    KEY `question_id` (`question_id`),
+                                    CONSTRAINT `favoritequestion_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `user` (`id`) ON DELETE CASCADE,
+                                    CONSTRAINT `favoritequestion_ibfk_2` FOREIGN KEY (`question_id`) REFERENCES `question` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -343,34 +343,34 @@ DROP TABLE IF EXISTS `file_node`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `file_node` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `file_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `is_dir` tinyint(1) NOT NULL DEFAULT '0',
-  `parent_id` bigint DEFAULT NULL,
-  `course_id` bigint NOT NULL,
-  `class_id` bigint DEFAULT NULL,
-  `uploader_id` bigint NOT NULL,
-  `sectiondir_id` bigint DEFAULT '-1',
-  `file_type` enum('VIDEO','PPT','CODE','PDF','OTHER') COLLATE utf8mb4_unicode_ci NOT NULL,
-  `section_id` bigint DEFAULT '-1',
-  `last_file_version` bigint NOT NULL DEFAULT '0',
-  `is_current_version` tinyint(1) NOT NULL DEFAULT '1',
-  `file_size` bigint NOT NULL,
-  `visibility` enum('PUBLIC','PRIVATE','CLASS_ONLY') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'CLASS_ONLY',
-  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `file_url` varchar(1024) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `file_version` int DEFAULT NULL,
-  `object_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `course_id` (`course_id`),
-  KEY `class_id` (`class_id`),
-  KEY `uploader_id` (`uploader_id`),
-  KEY `idx_parent_id` (`parent_id`),
-  CONSTRAINT `file_node_ibfk_1` FOREIGN KEY (`parent_id`) REFERENCES `file_node` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `file_node_ibfk_2` FOREIGN KEY (`course_id`) REFERENCES `course` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `file_node_ibfk_3` FOREIGN KEY (`class_id`) REFERENCES `class` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `file_node_ibfk_4` FOREIGN KEY (`uploader_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
+                             `id` bigint NOT NULL AUTO_INCREMENT,
+                             `file_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+                             `is_dir` tinyint(1) NOT NULL DEFAULT '0',
+                             `parent_id` bigint DEFAULT NULL,
+                             `course_id` bigint NOT NULL,
+                             `class_id` bigint DEFAULT NULL,
+                             `uploader_id` bigint NOT NULL,
+                             `sectiondir_id` bigint DEFAULT '-1',
+                             `file_type` enum('VIDEO','PPT','CODE','PDF','OTHER') COLLATE utf8mb4_unicode_ci NOT NULL,
+                             `section_id` bigint DEFAULT '-1',
+                             `last_file_version` bigint NOT NULL DEFAULT '0',
+                             `is_current_version` tinyint(1) NOT NULL DEFAULT '1',
+                             `file_size` bigint NOT NULL,
+                             `visibility` enum('PUBLIC','PRIVATE','CLASS_ONLY') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'CLASS_ONLY',
+                             `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+                             `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                             `file_url` varchar(1024) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+                             `file_version` int DEFAULT NULL,
+                             `object_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+                             PRIMARY KEY (`id`),
+                             KEY `course_id` (`course_id`),
+                             KEY `class_id` (`class_id`),
+                             KEY `uploader_id` (`uploader_id`),
+                             KEY `idx_parent_id` (`parent_id`),
+                             CONSTRAINT `file_node_ibfk_1` FOREIGN KEY (`parent_id`) REFERENCES `file_node` (`id`) ON DELETE CASCADE,
+                             CONSTRAINT `file_node_ibfk_2` FOREIGN KEY (`course_id`) REFERENCES `course` (`id`) ON DELETE CASCADE,
+                             CONSTRAINT `file_node_ibfk_3` FOREIGN KEY (`class_id`) REFERENCES `class` (`id`) ON DELETE CASCADE,
+                             CONSTRAINT `file_node_ibfk_4` FOREIGN KEY (`uploader_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -392,17 +392,17 @@ DROP TABLE IF EXISTS `homework`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `homework` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `description` text COLLATE utf8mb4_unicode_ci,
-  `class_id` bigint NOT NULL,
-  `created_by` bigint NOT NULL,
-  `attachment_url` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `object_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `deadline` datetime NOT NULL,
-  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
+                            `id` bigint NOT NULL AUTO_INCREMENT,
+                            `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+                            `description` text COLLATE utf8mb4_unicode_ci,
+                            `class_id` bigint NOT NULL,
+                            `created_by` bigint NOT NULL,
+                            `attachment_url` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+                            `object_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+                            `deadline` datetime NOT NULL,
+                            `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+                            `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                            PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -424,15 +424,15 @@ DROP TABLE IF EXISTS `homeworksubmission`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `homeworksubmission` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `homework_id` bigint NOT NULL,
-  `student_id` bigint NOT NULL,
-  `file_url` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `object_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `submitted_at` datetime DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `homework_id` (`homework_id`),
-  CONSTRAINT `homeworksubmission_ibfk_1` FOREIGN KEY (`homework_id`) REFERENCES `homework` (`id`) ON DELETE CASCADE
+                                      `id` bigint NOT NULL AUTO_INCREMENT,
+                                      `homework_id` bigint NOT NULL,
+                                      `student_id` bigint NOT NULL,
+                                      `file_url` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+                                      `object_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+                                      `submitted_at` datetime DEFAULT CURRENT_TIMESTAMP,
+                                      PRIMARY KEY (`id`),
+                                      KEY `homework_id` (`homework_id`),
+                                      CONSTRAINT `homeworksubmission_ibfk_1` FOREIGN KEY (`homework_id`) REFERENCES `homework` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -454,21 +454,21 @@ DROP TABLE IF EXISTS `import_record`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `import_record` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `class_id` bigint NOT NULL,
-  `operator_id` bigint NOT NULL,
-  `file_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `total_count` int NOT NULL,
-  `success_count` int NOT NULL,
-  `fail_count` int NOT NULL,
-  `fail_reason` text COLLATE utf8mb4_unicode_ci,
-  `import_time` datetime NOT NULL,
-  `import_type` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `class_id` (`class_id`),
-  KEY `operator_id` (`operator_id`),
-  CONSTRAINT `import_record_ibfk_1` FOREIGN KEY (`class_id`) REFERENCES `class` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `import_record_ibfk_2` FOREIGN KEY (`operator_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
+                                 `id` bigint NOT NULL AUTO_INCREMENT,
+                                 `class_id` bigint NOT NULL,
+                                 `operator_id` bigint NOT NULL,
+                                 `file_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+                                 `total_count` int NOT NULL,
+                                 `success_count` int NOT NULL,
+                                 `fail_count` int NOT NULL,
+                                 `fail_reason` text COLLATE utf8mb4_unicode_ci,
+                                 `import_time` datetime NOT NULL,
+                                 `import_type` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+                                 PRIMARY KEY (`id`),
+                                 KEY `class_id` (`class_id`),
+                                 KEY `operator_id` (`operator_id`),
+                                 CONSTRAINT `import_record_ibfk_1` FOREIGN KEY (`class_id`) REFERENCES `class` (`id`) ON DELETE CASCADE,
+                                 CONSTRAINT `import_record_ibfk_2` FOREIGN KEY (`operator_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -490,18 +490,18 @@ DROP TABLE IF EXISTS `learning_progress`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `learning_progress` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `resource_id` bigint NOT NULL,
-  `student_id` bigint NOT NULL,
-  `progress` decimal(5,2) NOT NULL,
-  `last_position` int NOT NULL,
-  `watch_count` int DEFAULT '0',
-  `last_watch_time` datetime DEFAULT NULL,
-  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_resource_student` (`resource_id`,`student_id`),
-  CONSTRAINT `learning_progress_ibfk_1` FOREIGN KEY (`resource_id`) REFERENCES `teaching_resource` (`id`) ON DELETE CASCADE
+                                     `id` bigint NOT NULL AUTO_INCREMENT,
+                                     `resource_id` bigint NOT NULL,
+                                     `student_id` bigint NOT NULL,
+                                     `progress` decimal(5,2) NOT NULL,
+                                     `last_position` int NOT NULL,
+                                     `watch_count` int DEFAULT '0',
+                                     `last_watch_time` datetime DEFAULT NULL,
+                                     `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+                                     `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                                     PRIMARY KEY (`id`),
+                                     UNIQUE KEY `uk_resource_student` (`resource_id`,`student_id`),
+                                     CONSTRAINT `learning_progress_ibfk_1` FOREIGN KEY (`resource_id`) REFERENCES `teaching_resource` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -523,18 +523,18 @@ DROP TABLE IF EXISTS `notification`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `notification` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `user_id` bigint NOT NULL,
-  `title` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `message` text COLLATE utf8mb4_unicode_ci,
-  `type` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `read_flag` tinyint(1) DEFAULT '0',
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `related_id` bigint DEFAULT NULL,
-  `related_type` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `user_id` (`user_id`),
-  CONSTRAINT `notification_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
+                                `id` bigint NOT NULL AUTO_INCREMENT,
+                                `user_id` bigint NOT NULL,
+                                `title` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+                                `message` text COLLATE utf8mb4_unicode_ci,
+                                `type` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+                                `read_flag` tinyint(1) DEFAULT '0',
+                                `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+                                `related_id` bigint DEFAULT NULL,
+                                `related_type` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+                                PRIMARY KEY (`id`),
+                                KEY `user_id` (`user_id`),
+                                CONSTRAINT `notification_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -556,22 +556,22 @@ DROP TABLE IF EXISTS `practice`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `practice` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `course_id` bigint NOT NULL,
-  `class_id` bigint NOT NULL,
-  `title` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `start_time` datetime DEFAULT NULL,
-  `end_time` datetime DEFAULT NULL,
-  `allow_multiple_submission` tinyint(1) DEFAULT '1',
-  `created_by` bigint DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `course_id` (`course_id`),
-  KEY `created_by` (`created_by`),
-  KEY `class_id` (`class_id`),
-  CONSTRAINT `practice_ibfk_1` FOREIGN KEY (`course_id`) REFERENCES `course` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `practice_ibfk_2` FOREIGN KEY (`created_by`) REFERENCES `user` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `practice_ibfk_3` FOREIGN KEY (`class_id`) REFERENCES `class` (`id`) ON DELETE CASCADE
+                            `id` bigint NOT NULL AUTO_INCREMENT,
+                            `course_id` bigint NOT NULL,
+                            `class_id` bigint NOT NULL,
+                            `title` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+                            `start_time` datetime DEFAULT NULL,
+                            `end_time` datetime DEFAULT NULL,
+                            `allow_multiple_submission` tinyint(1) DEFAULT '1',
+                            `created_by` bigint DEFAULT NULL,
+                            `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+                            PRIMARY KEY (`id`),
+                            KEY `course_id` (`course_id`),
+                            KEY `created_by` (`created_by`),
+                            KEY `class_id` (`class_id`),
+                            CONSTRAINT `practice_ibfk_1` FOREIGN KEY (`course_id`) REFERENCES `course` (`id`) ON DELETE CASCADE,
+                            CONSTRAINT `practice_ibfk_2` FOREIGN KEY (`created_by`) REFERENCES `user` (`id`) ON DELETE CASCADE,
+                            CONSTRAINT `practice_ibfk_3` FOREIGN KEY (`class_id`) REFERENCES `class` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -593,15 +593,15 @@ DROP TABLE IF EXISTS `practicequestion`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `practicequestion` (
-  `practice_id` bigint NOT NULL,
-  `question_id` bigint NOT NULL,
-  `sort_order` bigint DEFAULT NULL,
-  `score` int NOT NULL,
-  `score_rate` decimal(5,4) DEFAULT NULL,
-  PRIMARY KEY (`practice_id`,`question_id`),
-  KEY `question_id` (`question_id`),
-  CONSTRAINT `practicequestion_ibfk_1` FOREIGN KEY (`practice_id`) REFERENCES `practice` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `practicequestion_ibfk_2` FOREIGN KEY (`question_id`) REFERENCES `question` (`id`) ON DELETE CASCADE
+                                    `practice_id` bigint NOT NULL,
+                                    `question_id` bigint NOT NULL,
+                                    `sort_order` bigint DEFAULT NULL,
+                                    `score` int NOT NULL,
+                                    `score_rate` decimal(5,4) DEFAULT NULL,
+                                    PRIMARY KEY (`practice_id`,`question_id`),
+                                    KEY `question_id` (`question_id`),
+                                    CONSTRAINT `practicequestion_ibfk_1` FOREIGN KEY (`practice_id`) REFERENCES `practice` (`id`) ON DELETE CASCADE,
+                                    CONSTRAINT `practicequestion_ibfk_2` FOREIGN KEY (`question_id`) REFERENCES `question` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -623,19 +623,19 @@ DROP TABLE IF EXISTS `progress`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `progress` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `student_id` bigint NOT NULL,
-  `course_id` bigint NOT NULL,
-  `section_id` bigint DEFAULT NULL,
-  `completed` tinyint(1) DEFAULT '0',
-  `completed_at` timestamp NULL DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `student_id` (`student_id`),
-  KEY `course_id` (`course_id`),
-  KEY `section_id` (`section_id`),
-  CONSTRAINT `progress_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `user` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `progress_ibfk_2` FOREIGN KEY (`course_id`) REFERENCES `course` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `progress_ibfk_3` FOREIGN KEY (`section_id`) REFERENCES `coursesection` (`id`) ON DELETE CASCADE
+                            `id` bigint NOT NULL AUTO_INCREMENT,
+                            `student_id` bigint NOT NULL,
+                            `course_id` bigint NOT NULL,
+                            `section_id` bigint DEFAULT NULL,
+                            `completed` tinyint(1) DEFAULT '0',
+                            `completed_at` timestamp NULL DEFAULT NULL,
+                            PRIMARY KEY (`id`),
+                            KEY `student_id` (`student_id`),
+                            KEY `course_id` (`course_id`),
+                            KEY `section_id` (`section_id`),
+                            CONSTRAINT `progress_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `user` (`id`) ON DELETE CASCADE,
+                            CONSTRAINT `progress_ibfk_2` FOREIGN KEY (`course_id`) REFERENCES `course` (`id`) ON DELETE CASCADE,
+                            CONSTRAINT `progress_ibfk_3` FOREIGN KEY (`section_id`) REFERENCES `coursesection` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -657,22 +657,22 @@ DROP TABLE IF EXISTS `question`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `question` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `creator_id` bigint NOT NULL,
-  `type` enum('singlechoice','program','fillblank','judge') COLLATE utf8mb4_unicode_ci NOT NULL,
-  `content` text COLLATE utf8mb4_unicode_ci NOT NULL,
-  `analysis` text COLLATE utf8mb4_unicode_ci,
-  `options` text COLLATE utf8mb4_unicode_ci,
-  `answer` text COLLATE utf8mb4_unicode_ci,
-  `course_id` bigint DEFAULT NULL,
-  `section_id` bigint DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `creator_id` (`creator_id`),
-  KEY `course_id` (`course_id`),
-  KEY `section_id` (`section_id`),
-  CONSTRAINT `question_ibfk_1` FOREIGN KEY (`creator_id`) REFERENCES `user` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `question_ibfk_3` FOREIGN KEY (`section_id`) REFERENCES `coursesection` (`id`) ON DELETE CASCADE
+                            `id` bigint NOT NULL AUTO_INCREMENT,
+                            `creator_id` bigint NOT NULL,
+                            `type` enum('singlechoice','program','fillblank','judge') COLLATE utf8mb4_unicode_ci NOT NULL,
+                            `content` text COLLATE utf8mb4_unicode_ci NOT NULL,
+                            `analysis` text COLLATE utf8mb4_unicode_ci,
+                            `options` text COLLATE utf8mb4_unicode_ci,
+                            `answer` text COLLATE utf8mb4_unicode_ci,
+                            `course_id` bigint DEFAULT NULL,
+                            `section_id` bigint DEFAULT NULL,
+                            `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+                            PRIMARY KEY (`id`),
+                            KEY `creator_id` (`creator_id`),
+                            KEY `course_id` (`course_id`),
+                            KEY `section_id` (`section_id`),
+                            CONSTRAINT `question_ibfk_1` FOREIGN KEY (`creator_id`) REFERENCES `user` (`id`) ON DELETE CASCADE,
+                            CONSTRAINT `question_ibfk_3` FOREIGN KEY (`section_id`) REFERENCES `coursesection` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=42 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -694,19 +694,19 @@ DROP TABLE IF EXISTS `selfanswer`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `selfanswer` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `submission_id` bigint NOT NULL,
-  `question_id` bigint NOT NULL,
-  `answer_text` text COLLATE utf8mb4_unicode_ci,
-  `is_judged` tinyint(1) DEFAULT '0',
-  `correct` tinyint(1) DEFAULT NULL,
-  `score` int DEFAULT NULL,
-  `sort_order` int DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `submission_id` (`submission_id`),
-  KEY `question_id` (`question_id`),
-  CONSTRAINT `selfanswer_ibfk_1` FOREIGN KEY (`submission_id`) REFERENCES `selfsubmission` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `selfanswer_ibfk_2` FOREIGN KEY (`question_id`) REFERENCES `question` (`id`) ON DELETE CASCADE
+                              `id` bigint NOT NULL AUTO_INCREMENT,
+                              `submission_id` bigint NOT NULL,
+                              `question_id` bigint NOT NULL,
+                              `answer_text` text COLLATE utf8mb4_unicode_ci,
+                              `is_judged` tinyint(1) DEFAULT '0',
+                              `correct` tinyint(1) DEFAULT NULL,
+                              `score` int DEFAULT NULL,
+                              `sort_order` int DEFAULT NULL,
+                              PRIMARY KEY (`id`),
+                              KEY `submission_id` (`submission_id`),
+                              KEY `question_id` (`question_id`),
+                              CONSTRAINT `selfanswer_ibfk_1` FOREIGN KEY (`submission_id`) REFERENCES `selfsubmission` (`id`) ON DELETE CASCADE,
+                              CONSTRAINT `selfanswer_ibfk_2` FOREIGN KEY (`question_id`) REFERENCES `question` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -728,13 +728,13 @@ DROP TABLE IF EXISTS `selfpractice`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `selfpractice` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `student_id` bigint NOT NULL COMMENT '发起学生 ID',
-  `title` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '练习标题',
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `student_id` (`student_id`),
-  CONSTRAINT `selfpractice_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
+                                `id` bigint NOT NULL AUTO_INCREMENT,
+                                `student_id` bigint NOT NULL COMMENT '发起学生 ID',
+                                `title` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '练习标题',
+                                `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+                                PRIMARY KEY (`id`),
+                                KEY `student_id` (`student_id`),
+                                CONSTRAINT `selfpractice_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -756,14 +756,14 @@ DROP TABLE IF EXISTS `selfpracticequestion`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `selfpracticequestion` (
-  `self_practice_id` bigint NOT NULL,
-  `question_id` bigint NOT NULL,
-  `sort_order` int DEFAULT '0',
-  `score` int NOT NULL,
-  PRIMARY KEY (`self_practice_id`,`question_id`),
-  KEY `question_id` (`question_id`),
-  CONSTRAINT `selfpracticequestion_ibfk_1` FOREIGN KEY (`self_practice_id`) REFERENCES `selfpractice` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `selfpracticequestion_ibfk_2` FOREIGN KEY (`question_id`) REFERENCES `question` (`id`) ON DELETE CASCADE
+                                        `self_practice_id` bigint NOT NULL,
+                                        `question_id` bigint NOT NULL,
+                                        `sort_order` int DEFAULT '0',
+                                        `score` int NOT NULL,
+                                        PRIMARY KEY (`self_practice_id`,`question_id`),
+                                        KEY `question_id` (`question_id`),
+                                        CONSTRAINT `selfpracticequestion_ibfk_1` FOREIGN KEY (`self_practice_id`) REFERENCES `selfpractice` (`id`) ON DELETE CASCADE,
+                                        CONSTRAINT `selfpracticequestion_ibfk_2` FOREIGN KEY (`question_id`) REFERENCES `question` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -785,16 +785,16 @@ DROP TABLE IF EXISTS `selfprogress`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `selfprogress` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `self_practice_id` bigint NOT NULL,
-  `student_id` bigint NOT NULL,
-  `progress_json` json NOT NULL COMMENT '题目作答进度(JSON)',
-  `saved_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `self_practice_id` (`self_practice_id`),
-  KEY `student_id` (`student_id`),
-  CONSTRAINT `selfprogress_ibfk_1` FOREIGN KEY (`self_practice_id`) REFERENCES `selfpractice` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `selfprogress_ibfk_2` FOREIGN KEY (`student_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
+                                `id` bigint NOT NULL AUTO_INCREMENT,
+                                `self_practice_id` bigint NOT NULL,
+                                `student_id` bigint NOT NULL,
+                                `progress_json` json NOT NULL COMMENT '题目作答进度(JSON)',
+                                `saved_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+                                PRIMARY KEY (`id`),
+                                KEY `self_practice_id` (`self_practice_id`),
+                                KEY `student_id` (`student_id`),
+                                CONSTRAINT `selfprogress_ibfk_1` FOREIGN KEY (`self_practice_id`) REFERENCES `selfpractice` (`id`) ON DELETE CASCADE,
+                                CONSTRAINT `selfprogress_ibfk_2` FOREIGN KEY (`student_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -815,18 +815,18 @@ DROP TABLE IF EXISTS `selfsubmission`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `selfsubmission` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `self_practice_id` bigint NOT NULL,
-  `student_id` bigint NOT NULL,
-  `submitted_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `score` int DEFAULT '0',
-  `is_judged` tinyint(1) DEFAULT '0',
-  `feedback` json DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `self_practice_id` (`self_practice_id`),
-  KEY `student_id` (`student_id`),
-  CONSTRAINT `selfsubmission_ibfk_1` FOREIGN KEY (`self_practice_id`) REFERENCES `selfpractice` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `selfsubmission_ibfk_2` FOREIGN KEY (`student_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
+                                  `id` bigint NOT NULL AUTO_INCREMENT,
+                                  `self_practice_id` bigint NOT NULL,
+                                  `student_id` bigint NOT NULL,
+                                  `submitted_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+                                  `score` int DEFAULT '0',
+                                  `is_judged` tinyint(1) DEFAULT '0',
+                                  `feedback` json DEFAULT NULL,
+                                  PRIMARY KEY (`id`),
+                                  KEY `self_practice_id` (`self_practice_id`),
+                                  KEY `student_id` (`student_id`),
+                                  CONSTRAINT `selfsubmission_ibfk_1` FOREIGN KEY (`self_practice_id`) REFERENCES `selfpractice` (`id`) ON DELETE CASCADE,
+                                  CONSTRAINT `selfsubmission_ibfk_2` FOREIGN KEY (`student_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=25 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -848,18 +848,18 @@ DROP TABLE IF EXISTS `submission`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `submission` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `practice_id` bigint NOT NULL,
-  `student_id` bigint NOT NULL,
-  `submitted_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `score` int DEFAULT '0',
-  `is_judged` int DEFAULT '0',
-  `feedback` text COLLATE utf8mb4_unicode_ci,
-  PRIMARY KEY (`id`),
-  KEY `practice_id` (`practice_id`),
-  KEY `student_id` (`student_id`),
-  CONSTRAINT `submission_ibfk_1` FOREIGN KEY (`practice_id`) REFERENCES `practice` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `submission_ibfk_2` FOREIGN KEY (`student_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
+                              `id` bigint NOT NULL AUTO_INCREMENT,
+                              `practice_id` bigint NOT NULL,
+                              `student_id` bigint NOT NULL,
+                              `submitted_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+                              `score` int DEFAULT '0',
+                              `is_judged` int DEFAULT '0',
+                              `feedback` text COLLATE utf8mb4_unicode_ci,
+                              PRIMARY KEY (`id`),
+                              KEY `practice_id` (`practice_id`),
+                              KEY `student_id` (`student_id`),
+                              CONSTRAINT `submission_ibfk_1` FOREIGN KEY (`practice_id`) REFERENCES `practice` (`id`) ON DELETE CASCADE,
+                              CONSTRAINT `submission_ibfk_2` FOREIGN KEY (`student_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -881,11 +881,11 @@ DROP TABLE IF EXISTS `teacherknowledgebase`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `teacherknowledgebase` (
-  `teacher_id` bigint NOT NULL,
-  `paths_json` json NOT NULL,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`teacher_id`),
-  CONSTRAINT `teacherknowledgebase_ibfk_1` FOREIGN KEY (`teacher_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
+                                        `teacher_id` bigint NOT NULL,
+                                        `paths_json` json NOT NULL,
+                                        `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                                        PRIMARY KEY (`teacher_id`),
+                                        CONSTRAINT `teacherknowledgebase_ibfk_1` FOREIGN KEY (`teacher_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -906,20 +906,20 @@ DROP TABLE IF EXISTS `teaching_resource`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `teaching_resource` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `description` text COLLATE utf8mb4_unicode_ci,
-  `course_id` bigint NOT NULL,
-  `chapter_id` bigint NOT NULL,
-  `chapter_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `resource_type` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `file_url` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `object_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `duration` int DEFAULT NULL,
-  `created_by` bigint NOT NULL,
-  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
+                                     `id` bigint NOT NULL AUTO_INCREMENT,
+                                     `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+                                     `description` text COLLATE utf8mb4_unicode_ci,
+                                     `course_id` bigint NOT NULL,
+                                     `chapter_id` bigint NOT NULL,
+                                     `chapter_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+                                     `resource_type` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+                                     `file_url` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+                                     `object_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+                                     `duration` int DEFAULT NULL,
+                                     `created_by` bigint NOT NULL,
+                                     `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+                                     `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                                     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -941,16 +941,16 @@ DROP TABLE IF EXISTS `user`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `user` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `user_id` varchar(15) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `username` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `password_hash` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `role` enum('student','teacher','tutor') COLLATE utf8mb4_unicode_ci NOT NULL,
-  `email` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `user_id` (`user_id`)
+                        `id` bigint NOT NULL AUTO_INCREMENT,
+                        `user_id` varchar(15) COLLATE utf8mb4_unicode_ci NOT NULL,
+                        `username` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+                        `password_hash` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+                        `role` enum('student','teacher','tutor') COLLATE utf8mb4_unicode_ci NOT NULL,
+                        `email` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+                        `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+                        `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                        PRIMARY KEY (`id`),
+                        UNIQUE KEY `user_id` (`user_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -972,19 +972,19 @@ DROP TABLE IF EXISTS `wrongquestion`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `wrongquestion` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `student_id` bigint NOT NULL,
-  `question_id` bigint NOT NULL,
-  `wrong_answer` text COLLATE utf8mb4_unicode_ci,
-  `correct_answer` text COLLATE utf8mb4_unicode_ci,
-  `wrong_count` int DEFAULT '1',
-  `last_wrong_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `student_id` (`student_id`),
-  KEY `question_id` (`question_id`),
-  CONSTRAINT `wrongquestion_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `user` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `wrongquestion_ibfk_2` FOREIGN KEY (`question_id`) REFERENCES `question` (`id`) ON DELETE CASCADE
+                                 `id` bigint NOT NULL AUTO_INCREMENT,
+                                 `student_id` bigint NOT NULL,
+                                 `question_id` bigint NOT NULL,
+                                 `wrong_answer` text COLLATE utf8mb4_unicode_ci,
+                                 `correct_answer` text COLLATE utf8mb4_unicode_ci,
+                                 `wrong_count` int DEFAULT '1',
+                                 `last_wrong_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+                                 `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+                                 PRIMARY KEY (`id`),
+                                 KEY `student_id` (`student_id`),
+                                 KEY `question_id` (`question_id`),
+                                 CONSTRAINT `wrongquestion_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `user` (`id`) ON DELETE CASCADE,
+                                 CONSTRAINT `wrongquestion_ibfk_2` FOREIGN KEY (`question_id`) REFERENCES `question` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -1005,21 +1005,21 @@ DROP TABLE IF EXISTS `chat_session`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `chat_session` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `user_id` bigint NOT NULL,
-  `session_title` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT 'New Chat',
-  `course_id` bigint DEFAULT NULL,
-  `course_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `is_active` tinyint(1) DEFAULT '1',
-  PRIMARY KEY (`id`),
-  KEY `user_id` (`user_id`),
-  KEY `course_id` (`course_id`),
-  KEY `idx_user_active` (`user_id`, `is_active`),
-  KEY `idx_updated_at` (`updated_at`),
-  CONSTRAINT `chat_session_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `chat_session_ibfk_2` FOREIGN KEY (`course_id`) REFERENCES `course` (`id`) ON DELETE SET NULL
+                                `id` bigint NOT NULL AUTO_INCREMENT,
+                                `user_id` bigint NOT NULL,
+                                `session_title` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT 'New Chat',
+                                `course_id` bigint DEFAULT NULL,
+                                `course_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+                                `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+                                `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                                `is_active` tinyint(1) DEFAULT '1',
+                                PRIMARY KEY (`id`),
+                                KEY `user_id` (`user_id`),
+                                KEY `course_id` (`course_id`),
+                                KEY `idx_user_active` (`user_id`, `is_active`),
+                                KEY `idx_updated_at` (`updated_at`),
+                                CONSTRAINT `chat_session_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE,
+                                CONSTRAINT `chat_session_ibfk_2` FOREIGN KEY (`course_id`) REFERENCES `course` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -1031,20 +1031,20 @@ DROP TABLE IF EXISTS `chat_message`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `chat_message` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `session_id` bigint NOT NULL,
-  `role` enum('user','assistant') COLLATE utf8mb4_unicode_ci NOT NULL,
-  `content` text COLLATE utf8mb4_unicode_ci NOT NULL,
-  `references` json DEFAULT NULL,
-  `knowledge_points` json DEFAULT NULL,
-  `message_order` int NOT NULL,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `token_count` int DEFAULT '0',
-  PRIMARY KEY (`id`),
-  KEY `session_id` (`session_id`),
-  KEY `idx_session_order` (`session_id`, `message_order`),
-  KEY `idx_created_at` (`created_at`),
-  CONSTRAINT `chat_message_ibfk_1` FOREIGN KEY (`session_id`) REFERENCES `chat_session` (`id`) ON DELETE CASCADE
+                                `id` bigint NOT NULL AUTO_INCREMENT,
+                                `session_id` bigint NOT NULL,
+                                `role` enum('user','assistant') COLLATE utf8mb4_unicode_ci NOT NULL,
+                                `content` text COLLATE utf8mb4_unicode_ci NOT NULL,
+                                `references` json DEFAULT NULL,
+                                `knowledge_points` json DEFAULT NULL,
+                                `message_order` int NOT NULL,
+                                `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+                                `token_count` int DEFAULT '0',
+                                PRIMARY KEY (`id`),
+                                KEY `session_id` (`session_id`),
+                                KEY `idx_session_order` (`session_id`, `message_order`),
+                                KEY `idx_created_at` (`created_at`),
+                                CONSTRAINT `chat_message_ibfk_1` FOREIGN KEY (`session_id`) REFERENCES `chat_session` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -1056,17 +1056,17 @@ DROP TABLE IF EXISTS `chat_memory_summary`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `chat_memory_summary` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `session_id` bigint NOT NULL,
-  `summary_content` text COLLATE utf8mb4_unicode_ci NOT NULL,
-  `message_range_start` bigint NOT NULL,
-  `message_range_end` bigint NOT NULL,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `token_count` int DEFAULT '0',
-  PRIMARY KEY (`id`),
-  KEY `session_id` (`session_id`),
-  KEY `idx_session_range` (`session_id`, `message_range_start`, `message_range_end`),
-  CONSTRAINT `chat_memory_summary_ibfk_1` FOREIGN KEY (`session_id`) REFERENCES `chat_session` (`id`) ON DELETE CASCADE
+                                       `id` bigint NOT NULL AUTO_INCREMENT,
+                                       `session_id` bigint NOT NULL,
+                                       `summary_content` text COLLATE utf8mb4_unicode_ci NOT NULL,
+                                       `message_range_start` bigint NOT NULL,
+                                       `message_range_end` bigint NOT NULL,
+                                       `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+                                       `token_count` int DEFAULT '0',
+                                       PRIMARY KEY (`id`),
+                                       KEY `session_id` (`session_id`),
+                                       KEY `idx_session_range` (`session_id`, `message_range_start`, `message_range_end`),
+                                       CONSTRAINT `chat_memory_summary_ibfk_1` FOREIGN KEY (`session_id`) REFERENCES `chat_session` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
