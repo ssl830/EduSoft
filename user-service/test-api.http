@@ -18,7 +18,7 @@ userId=S003&password=123456
 
 ### 获取用户信息（将上一步返回的token替换到下行）
 GET http://localhost:8081/api/user/S003
-Authorization: Bearer ddd8e115-9987-4423-a62a-1c7d4c3ea75a
+Authorization: Bearer 9acf3777-1502-480d-b735-a44d31388035
 
 ### 教师注册（示例）
 POST http://localhost:8081/api/user/register

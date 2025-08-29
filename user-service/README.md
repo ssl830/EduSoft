@@ -33,6 +33,7 @@
 CREATE DATABASE user-db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
+
 2. 修改 `application.yml` 中的数据库连接信息
 
 ### 启动服务

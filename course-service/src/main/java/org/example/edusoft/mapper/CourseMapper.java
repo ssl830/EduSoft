@@ -123,6 +123,14 @@ public interface CourseMapper extends BaseMapper<Course> {
     @Delete("DELETE FROM course WHERE id = #{id}")
     int deleteById(Long id);
     
+    // 删除课程相关的题库题目
+    @Delete("DELETE FROM question WHERE course_id = #{courseId}")
+    int deleteQuestionsByCourseId(Long courseId);
+    
+    // 删除课程相关的练习
+    @Delete("DELETE FROM practice WHERE course_id = #{courseId}")
+    int deletePracticesByCourseId(Long courseId);
+    
     @Select("""
             SELECT 
                 cl.id,

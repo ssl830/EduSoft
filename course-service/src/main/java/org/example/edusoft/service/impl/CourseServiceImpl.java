@@ -51,16 +51,38 @@ public class CourseServiceImpl implements CourseService {
         return null;
     }
 
-    private String fetchUsernameByUserId(Long userId) {
-        if (userId == null) return null;
-        String token = resolveOutboundToken();
+    private String fetchUsernameByUserId(Long userId, String token) {
+        if (userId == null || token == null) {
+            System.out.println("fetchUsernameByUserId: userId=" + userId + ", token=" + token + " - 参数无效");
+            return null;
+        }
+    
+        System.out.println("fetchUsernameByUserId: 开始调用用户微服务，userId=" + userId + ", token=" + token);
+        System.out.println("fetchUsernameByUserId: 用户微服务地址=" + userServiceBaseUrl);
+    
         try {
-            Map<String, Object> user = userServiceClient.fetchUserById(userServiceBaseUrl, token, String.valueOf(userId));
-            if (user != null) {
-                Object name = user.get("username");
-                return name == null ? null : String.valueOf(name);
+            // 最外层 Map：{code=200, msg=..., data={...}}
+            Map<String, Object> resp = userServiceClient.fetchUserById(
+                    userServiceBaseUrl, token, String.valueOf(userId));
+            System.out.println("fetchUsernameByUserId: 用户微服务返回数据=" + resp);
+    
+            if (resp != null) {
+                // 取出 data 节点
+                Map<String, Object> data = (Map<String, Object>) resp.get("data");
+                if (data != null) {
+                    Object name = data.get("username");
+                    String result = name == null ? null : String.valueOf(name);
+                    System.out.println("fetchUsernameByUserId: 提取的用户名=" + result);
+                    return result;
+                } else {
+                    System.out.println("fetchUsernameByUserId: data节点为空");
+                }
+            } else {
+                System.out.println("fetchUsernameByUserId: 用户微服务返回null");
             }
-        } catch (Exception ignore) {
+        } catch (Exception e) {
+            System.out.println("fetchUsernameByUserId: 调用用户微服务异常=" + e.getMessage());
+            e.printStackTrace();
         }
         return null;
     }
@@ -80,8 +102,15 @@ public class CourseServiceImpl implements CourseService {
         if (course.getTeacherId() == null) {
             throw new IllegalArgumentException("教师ID不能为空");
         }
+        
+        // 不手动设置createdAt，让数据库的默认值生效
+        // course.setCreatedAt(java.time.LocalDateTime.now());
+        
+        // 插入课程
         courseMapper.insert(course);
-        return course;
+        
+        // 重新查询获取完整的对象（包含数据库生成的ID和时间）
+        return courseMapper.selectById(course.getId());
     }
 
     @Override
@@ -122,8 +151,12 @@ public class CourseServiceImpl implements CourseService {
         }
         // 不允许修改教师ID
         course.setTeacherId(existingCourse.getTeacherId());
+        
+        // 更新课程
         courseMapper.updateById(course);
-        return course;
+        
+        // 重新查询获取完整的对象（包含数据库中的createdAt等字段）
+        return courseMapper.selectById(course.getId());
     }
 
     @Override
@@ -137,6 +170,15 @@ public class CourseServiceImpl implements CourseService {
         if (course == null) {
             throw new IllegalArgumentException("课程不存在");
         }
+        
+        // 清理没有外键约束的关联数据
+        // 1. 删除课程相关的题库题目
+        courseMapper.deleteQuestionsByCourseId(id);
+        
+        // 2. 删除课程相关的练习
+        courseMapper.deletePracticesByCourseId(id);
+        
+        // 3. 删除课程（会自动级联删除：coursesection, courseclass, discussion, progress等）
         return courseMapper.deleteById(id) > 0;
     }
     
@@ -148,11 +190,11 @@ public class CourseServiceImpl implements CourseService {
     }
 
     @Override
-    public CourseDetailDTO getCourseDetailById(Long courseId) {
+    public CourseDetailDTO getCourseDetailById(Long courseId, String token) {
         CourseDetailDTO courseDetail = courseMapper.getCourseDetailById(courseId);
         if (courseDetail != null) {
             // 用户服务获取教师名
-            String teacherName = fetchUsernameByUserId(courseDetail.getTeacherId());
+            String teacherName = fetchUsernameByUserId(courseDetail.getTeacherId(), token);
             if (teacherName != null) {
                 courseDetail.setTeacherName(teacherName);
             }
@@ -167,13 +209,13 @@ public class CourseServiceImpl implements CourseService {
     }
 
     @Override
-    public List<CourseDetailDTO> getCourseDetailsByUserId(Long userId) {
+    public List<CourseDetailDTO> getCourseDetailsByUserId(Long userId, String token) {
         if (userId == null) {
             throw new IllegalArgumentException("用户ID不能为空");
         }
         List<CourseDetailDTO> courses = courseMapper.getCourseDetailsByUserId(userId);
         for (CourseDetailDTO course : courses) {
-            String teacherName = fetchUsernameByUserId(course.getTeacherId());
+            String teacherName = fetchUsernameByUserId(course.getTeacherId(), token);
             if (teacherName != null) {
                 course.setTeacherName(teacherName);
             }
@@ -186,11 +228,11 @@ public class CourseServiceImpl implements CourseService {
     }
 
     @Override
-    public List<CourseDetailDTO> getAllCourses() {
+    public List<CourseDetailDTO> getAllCourses(String token) {
         List<CourseDetailDTO> list = courseMapper.selectAllCoursesWithNames(new QueryWrapper<Course>().orderByDesc("id"));
         for (CourseDetailDTO dto : list) {
             // 教师名补齐
-            String teacherName = fetchUsernameByUserId(dto.getTeacherId());
+            String teacherName = fetchUsernameByUserId(dto.getTeacherId(), token);
             if (teacherName != null) {
                 dto.setTeacherName(teacherName);
             }

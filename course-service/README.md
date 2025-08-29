@@ -1,341 +1,169 @@
-# Course Service (课程班级管理微服务)
+# 课程班级管理微服务
 
 ## 项目简介
+课程班级管理微服务，负责处理课程、班级、学生等相关的业务逻辑。
 
-课程班级管理微服务是EduSoft教育平台的核心服务之一，负责管理课程、班级、章节等相关功能。
-
-## 功能特性
-
-### 课程管理
-- 创建、更新、删除课程
-- 获取课程列表和详情
+## 主要功能
+- 课程管理（增删改查）
+- 班级管理（增删改查、学生加入/退出）
 - 课程章节管理
-- 课程统计信息
-
-### 班级管理
-- 创建、更新、删除班级
-- 学生加入/退出班级
-- 班级成员管理
-- 通过班级代码加入班级
-- 批量导入学生
-
-### 章节管理
-- 创建、更新、删除课程章节
-- 章节排序管理
-
-### 学生导入管理
-- 批量导入学生到班级
-- 手动添加单个学生
-- 通过班级代码加入班级
-- 导入记录管理和查询
+- 学生导入管理
+- 用户认证集成
 
 ## 技术栈
-
-- Spring Boot 3.2.0
-- Spring Cloud 2023.0.0
-- MyBatis Plus 3.5.4
+- Spring Boot 3.1.0
+- MyBatis Plus 3.5.7
 - MySQL 8.0
-- Maven
+- Spring Cloud (已禁用)
 
 ## 快速开始
 
-### 环境要求
-- JDK 17+
-- Maven 3.6+
+### 1. 环境要求
+- Java 21
 - MySQL 8.0+
+- Maven 3.6+
 
-### 安装步骤
+### 2. 数据库配置
+确保MySQL中已创建 `course_db` 数据库，并导入相应的表结构。
 
-1. 克隆项目
+### 3. 配置文件
+修改 `src/main/resources/application.yml` 中的数据库连接信息。
+
+### 4. 启动服务
 ```bash
-git clone <repository-url>
-cd course-service
+mvn spring-boot:run
 ```
 
-2. 配置数据库
-- 确保MySQL服务已启动
-- 创建数据库：`courseplatform`
-- 导入SQL文件：`courseplatfoem.sql`
+服务将在 `http://localhost:8082` 启动。
 
-3. 修改配置
-编辑 `src/main/resources/application.yml`，修改数据库连接信息：
-```yaml
-spring:
-  datasource:
-    url: jdbc:mysql://localhost:3306/courseplatform?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&useSSL=false&zeroDateTimeBehavior=convertToNull&serverTimezone=Asia/Shanghai
-    username: your_username
-    password: your_password
-```
+## 微服务通信
 
-4. 编译运行
-```bash
-mvn clean package
-java -jar target/course-service-1.0.0.jar
-```
+### 用户服务集成
+本微服务与用户微服务集成，用于：
+- 用户身份验证
+- 获取用户信息
+- 权限控制
 
-5. 访问服务
-服务启动后，访问地址：http://localhost:8082
+### 认证方式
+支持以下认证头格式：
+
+1. **Authorization头（推荐）**：
+   ```
+   Authorization: Bearer {token}
+   X-User-Id: {userId}
+   ```
+
+2. **satoken头**：
+   ```
+   satoken: {token}
+   X-User-Id: {userId}
+   ```
+
+3. **Cookie方式**：
+   ```
+   Cookie: satoken={token}
+   X-User-Id: {userId}
+   ```
+
+### 测试认证
+在测试API时，请确保：
+
+1. 先在用户微服务登录获取token
+2. 在请求头中包含：
+   - `Authorization: Bearer {你的token}`
+   - `X-User-Id: {你的用户ID}`
+
+### 绕过认证（仅用于测试）
+如需跳过认证进行测试，可以：
+
+1. **临时方式**：在请求头添加 `X-Bypass-Auth: true`
+2. **全局方式**：在 `application.yml` 中设置 `auth.required: false`
 
 ## API文档
 
-### 课程相关接口
+### 课程管理
+- `POST /api/courses` - 创建课程
+- `GET /api/courses/list` - 获取所有课程
+- `GET /api/courses/{id}` - 获取课程详情
+- `PUT /api/courses/{id}` - 更新课程
+- `DELETE /api/courses/{id}` - 删除课程
 
-#### 创建课程
-```
-POST /api/courses
-Content-Type: application/json
+### 班级管理
+- `POST /api/classes` - 创建班级
+- `GET /api/classes/{id}` - 获取班级详情
+- `PUT /api/classes/{id}` - 更新班级
+- `DELETE /api/classes/{id}` - 删除班级
+- `POST /api/classes/{id}/join/{userId}` - 加入班级
+- `DELETE /api/classes/{id}/leave/{userId}` - 离开班级
 
-{
-    "teacherId": 1,
-    "name": "数据库原理",
-    "code": "CS101",
-    "outline": "介绍关系数据库",
-    "objective": "掌握SQL",
-    "assessment": "期末考试+作业"
-}
-```
+### 课程章节
+- `POST /api/course-sections` - 创建章节
+- `GET /api/course-sections/course/{courseId}` - 获取课程章节
+- `PUT /api/course-sections/{id}` - 更新章节
+- `DELETE /api/course-sections/{id}` - 删除章节
 
-#### 获取用户课程列表
-```
-GET /api/courses/user/{userId}
-```
-
-#### 获取课程详情
-```
-GET /api/courses/{id}
-```
-
-#### 更新课程
-```
-PUT /api/courses/{id}
-Content-Type: application/json
-
-{
-    "name": "新课程名称",
-    "code": "NEW101",
-    "outline": "新大纲",
-    "objective": "新目标",
-    "assessment": "新考核方式"
-}
-```
-
-#### 删除课程
-```
-DELETE /api/courses/{id}
-```
-
-### 班级相关接口
-
-#### 创建班级
-```
-POST /api/classes
-Content-Type: application/json
-
-{
-    "courseId": 1,
-    "name": "数据库-01班",
-    "classCode": "DBCLASS01"
-}
-```
-
-#### 获取用户班级列表
-```
-GET /api/classes/user/{userId}
-```
-
-#### 获取班级详情
-```
-GET /api/classes/{id}
-```
-
-#### 学生加入班级
-```
-POST /api/classes/{classId}/join/{userId}
-```
-
-#### 学生退出班级
-```
-DELETE /api/classes/{classId}/leave/{userId}
-```
-
-#### 通过班级代码加入班级
-```
-POST /api/classes/join?classCode=DBCLASS01&studentId=1
-```
-
-#### 获取班级成员列表
-```
-GET /api/classes/{classId}/users
-```
-
-#### 批量导入学生
-```
-POST /api/classes/{classId}/import
-Content-Type: application/json
-
-[1, 2, 3, 4, 5]
-```
-
-### 章节相关接口
-
-#### 获取课程章节列表
-```
-GET /api/course-sections/course/{courseId}
-```
-
-#### 创建章节
-```
-POST /api/course-sections
-Content-Type: application/json
-
-{
-    "courseId": 1,
-    "title": "第一章 数据库基础",
-    "sortOrder": 1
-}
-```
-
-#### 更新章节
-```
-PUT /api/course-sections/{id}
-Content-Type: application/json
-
-{
-    "title": "新章节标题",
-    "sortOrder": 2
-}
-```
-
-#### 删除章节
-```
-DELETE /api/course-sections/{id}
-```
-
-### 学生导入相关接口
-
-#### 统一导入学生接口
-```
-POST /api/imports/students
-Content-Type: application/json
-
-{
-    "classId": 1,
-    "operatorId": 1,
-    "importType": "MANUAL",
-    "fileName": "students.csv",
-    "studentData": [
-        {
-            "student_id": "1"
-        },
-        {
-            "student_id": "2"
-        }
-    ]
-}
-```
-
-#### 获取班级导入记录列表
-```
-GET /api/imports/records/{classId}
-```
-
-#### 获取导入记录详情
-```
-GET /api/imports/record/{id}
-```
+### 学生导入
+- `POST /api/imports/students` - 批量导入学生
+- `GET /api/imports/records/{classId}` - 获取导入记录
 
 ## 数据库表结构
 
-### Course表
-- id: 主键
-- teacher_id: 教师ID
-- name: 课程名称
-- code: 课程代码
-- outline: 课程大纲
-- objective: 教学目标
-- assessment: 考核方式
-- created_at: 创建时间
-
-### Class表
-- id: 主键
-- course_id: 课程ID
-- name: 班级名称
-- class_code: 班级代码
-
-### ClassUser表
-- class_id: 班级ID
-- user_id: 用户ID
-- joined_at: 加入时间
-
-### CourseSection表
-- id: 主键
-- course_id: 课程ID
-- title: 章节标题
-- sort_order: 排序
-
-### ImportRecord表
-- id: 主键
-- class_id: 班级ID
-- operator_id: 操作人ID
-- file_name: 导入文件名
-- total_count: 总记录数
-- success_count: 成功导入数
-- fail_count: 失败数
-- fail_reason: 失败原因
-- import_time: 导入时间
-- import_type: 导入类型
+### 主要表
+- `course` - 课程信息
+- `class` - 班级信息
+- `courseclass` - 课程班级关联
+- `coursesection` - 课程章节
+- `classuser` - 班级用户关联
+- `import_record` - 导入记录
 
 ## 部署
 
 ### Docker部署
 ```bash
-# 构建镜像
 docker build -t course-service .
-
-# 运行容器
-docker run -d -p 8082:8082 --name course-service course-service
+docker run -p 8082:8082 course-service
 ```
 
 ### Kubernetes部署
-```bash
-kubectl apply -f kubernetes/course-service.yaml
+参考 `kubernetes/course-service.yaml` 配置文件。
+
+## 监控
+
+### 健康检查
+- `GET /actuator/health` - 服务健康状态
+
+### 日志
+日志级别可在 `application.yml` 中配置，支持DEBUG、INFO、WARN、ERROR级别。
+
+## 故障排除
+
+### 常见问题
+
+1. **401 Unauthorized**
+   - 检查认证头是否正确
+   - 确认token是否有效
+   - 验证用户ID是否存在
+
+2. **数据库连接失败**
+   - 检查MySQL服务是否启动
+   - 验证数据库连接参数
+   - 确认数据库是否存在
+
+3. **用户服务通信失败**
+   - 检查用户服务是否启动
+   - 验证 `services.user.base-url` 配置
+   - 确认网络连通性
+
+### 调试模式
+启用DEBUG日志：
+```yaml
+logging:
+  level:
+    org.example.edusoft: DEBUG
 ```
 
-## 监控和日志
-
-服务启动后，可以通过以下方式查看日志：
-```bash
-# 查看应用日志
-tail -f logs/course-service.log
-
-# 查看错误日志
-tail -f logs/error.log
-```
-
-## 常见问题
-
-### 1. 数据库连接失败
-- 检查MySQL服务是否启动
-- 确认数据库连接信息是否正确
-- 检查防火墙设置
-
-### 2. 端口被占用
-- 修改 `application.yml` 中的端口配置
-- 或者停止占用端口的进程
-
-### 3. 依赖下载失败
-- 检查网络连接
-- 配置Maven镜像源
-- 清理Maven缓存：`mvn clean`
-
-## 贡献指南
-
-1. Fork 项目
-2. 创建功能分支
-3. 提交更改
-4. 推送到分支
-5. 创建 Pull Request
+## 贡献
+欢迎提交Issue和Pull Request。
 
 ## 许可证
-
-本项目采用 MIT 许可证。
+本项目采用MIT许可证。

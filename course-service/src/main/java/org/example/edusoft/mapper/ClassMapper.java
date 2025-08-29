@@ -1,6 +1,8 @@
 package org.example.edusoft.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Delete;
+import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 import org.example.edusoft.entity.Class;
@@ -39,4 +41,13 @@ public interface ClassMapper extends BaseMapper<Class> {
 
     @Select("SELECT COUNT(*) FROM classuser WHERE class_id = #{classId}")
     int getClassStudentCount(Long classId);
+    
+    @Insert("INSERT INTO courseclass (course_id, class_id) VALUES (#{courseId}, #{classId})")
+    int insertCourseClassRelation(Long courseId, Long classId);
+    
+    @Delete("DELETE FROM courseclass WHERE course_id = #{courseId} AND class_id = #{classId}")
+    int deleteCourseClassRelation(Long courseId, Long classId);
+    
+    @Delete("DELETE FROM courseclass WHERE class_id = #{classId}")
+    int deleteCourseClassRelationByClassId(Long classId);
 }

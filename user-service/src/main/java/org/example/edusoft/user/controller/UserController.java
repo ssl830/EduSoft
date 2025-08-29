@@ -136,6 +136,26 @@ public class UserController {
         }
     }
 
+    // 根据数据库ID获取用户信息 - 专门为课程微服务提供
+    @GetMapping("/id/{id}")
+    public SaResult getUserById(@PathVariable Long id) {
+        try {
+            // 检查是否登录
+            StpUtil.checkLogin();
+            // 获取用户信息
+            User user = userService.findById(id);
+            if (user == null) {
+                return SaResult.error("用户不存在");
+            }
+            // 返回用户信息，但不返回密码
+            user.setPasswordHash(null);
+            return SaResult.ok("获取成功").setData(user);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return SaResult.error("获取用户信息失败：" + e.getMessage());
+        }
+    }
+
     // 获取当前登录用户信息
     @GetMapping("/info")
     public SaResult getUserInfo() {

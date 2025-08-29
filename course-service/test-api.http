@@ -1,134 +1,210 @@
-### 课程管理测试
-
 ### 1. 创建课程
 POST http://localhost:8082/api/courses
 Content-Type: application/json
+Authorization: Bearer 9039559a-1f5d-4f16-a438-d3f223e3ac49
+X-User-Id: S003
 
 {
   "teacherId": 1,
-  "name": "Java程序设计",
-  "code": "CS100",
-  "outline": "Java基础语法、面向对象编程、集合框架等",
-  "objective": "掌握Java编程基础知识和面向对象编程思想",
-  "assessment": "平时作业30%，期末考试70%"
+  "name": "计算机科学导论",
+  "code": "CS99",
+  "outline": "计算机科学基础课程",
+  "objective": "了解计算机科学的基本概念",
+  "assessment": "期末考试 + 平时作业"
 }
 
-### 2. 获取所有课程列表
-GET http://localhost:8082/api/courses/list
+### 2. 获取用户课程列表
+GET http://localhost:8082/api/courses/user/10
+Authorization: Bearer bba8033e-3a83-44e7-b5cc-3aa67afdbbf6
+X-User-Id: S003
 
-### 3. 根据用户ID获取课程
-GET http://localhost:8082/api/courses/user/1
-
-### 4. 获取课程详情
+### 3. 获取课程详情
 GET http://localhost:8082/api/courses/1
+Authorization: Bearer bba8033e-3a83-44e7-b5cc-3aa67afdbbf6
+X-User-Id: S003
 
-### 5. 更新课程
-PUT http://localhost:8082/api/courses/1
+### 4. 更新课程
+PUT http://localhost:8082/api/courses/9
 Content-Type: application/json
+Authorization: Bearer 9039559a-1f5d-4f16-a438-d3f223e3ac49
+X-User-Id: S003
 
 {
   "teacherId": 1,
-  "name": "Java程序设计（更新版）",
-  "code": "CS101",
-  "outline": "Java基础语法、面向对象编程、集合框架、多线程编程等",
-  "objective": "掌握Java编程基础知识和面向对象编程思想",
-  "assessment": "平时作业40%，期末考试60%"
+  "name": "计算机科学导论（更新版）",
+  "code": "CS99",
+  "outline": "计算机科学基础课程 - 更新版",
+  "objective": "了解计算机科学的基本概念和最新发展",
+  "assessment": "期末考试 + 平时作业 + 项目实践"
 }
 
-### 6. 删除课程
-DELETE http://localhost:8082/api/courses/4
+### 5. 删除课程
+DELETE http://localhost:8082/api/courses/9
+Authorization: Bearer 9039559a-1f5d-4f16-a438-d3f223e3ac49
+X-User-Id: S003
 
-### 班级管理测试
+### 6. 获取所有课程
+GET http://localhost:8082/api/courses/list
+Authorization: Bearer bba8033e-3a83-44e7-b5cc-3aa67afdbbf6
+X-User-Id: S003
 
 ### 7. 创建班级
 POST http://localhost:8082/api/classes
 Content-Type: application/json
+Authorization: Bearer 9039559a-1f5d-4f16-a438-d3f223e3ac49
+X-User-Id: S003
 
 {
   "courseId": 1,
-  "name": "Java程序设计-2024春季班",
-  "classCode": "CS101_2024_SPRING"
+  "name": "CS101-2024春季班",
+  "classCode": "CS100_2024_SPRING"
 }
 
-### 8. 获取教师的班级列表
+### 8. 获取教师班级列表
 GET http://localhost:8082/api/classes/teacher/1
+Authorization: Bearer 9039559a-1f5d-4f16-a438-d3f223e3ac49
+X-User-Id: S003
 
-### 9. 获取学生的班级列表
-GET http://localhost:8082/api/classes/student/3
+### 9. 获取学生班级列表
+GET http://localhost:8082/api/classes/student/S003
+Authorization: Bearer 9039559a-1f5d-4f16-a438-d3f223e3ac49
+X-User-Id: S003
 
 ### 10. 获取班级详情
 GET http://localhost:8082/api/classes/1
+Authorization: Bearer 9039559a-1f5d-4f16-a438-d3f223e3ac49
+X-User-Id: S003
 
-### 17. 获取班级学生数量
-GET http://localhost:8082/api/classes/1/student-count
-
-
-### 18. 创建课程章节
-POST http://localhost:8082/api/course-sections
+### 11. 更新班级
+PUT http://localhost:8082/api/classes/5
 Content-Type: application/json
+Authorization: Bearer 9039559a-1f5d-4f16-a438-d3f223e3ac49
+X-User-Id: S003
 
 {
   "courseId": 1,
-  "title": "第三章 Java基础语法",
-  "sortOrder": 3
+  "name": "CS101-2024春季班（更新版）",
+  "classCode": "CS101_2024_V2"
 }
 
-### 19. 获取课程的所有章节
-GET http://localhost:8082/api/course-sections/course/1
+### 12. 删除班级
+DELETE http://localhost:8082/api/classes/1
+Authorization: Bearer 9039559a-1f5d-4f16-a438-d3f223e3ac49
+X-User-Id: S003
 
-### 20. 更新课程章节
-PUT http://localhost:8082/api/course-sections/1
+### 13. 加入班级
+POST http://localhost:8082/api/classes/2/join/12
+Authorization: Bearer 9039559a-1f5d-4f16-a438-d3f223e3ac49
+X-User-Id: S003
+
+### 14. 离开班级
+DELETE http://localhost:8082/api/classes/12/leave/2
+Authorization: Bearer 9039559a-1f5d-4f16-a438-d3f223e3ac49
+X-User-Id: S003
+
+### 15. 获取班级成员
+GET http://localhost:8082/api/classes/2/users
+Authorization: Bearer 9039559a-1f5d-4f16-a438-d3f223e3ac49
+X-User-Id: S003
+
+### 16. 通过班级代码加入班级
+POST http://localhost:8082/api/classes/join?classCode=CS101_2024_SPRING&studentId=12
 Content-Type: application/json
+Authorization: Bearer 9039559a-1f5d-4f16-a438-d3f223e3ac49
+X-User-Id: S003
+
+### 17. 添加学生到班级
+POST http://localhost:8082/api/classes/5/students?studentId=13
+Content-Type: application/json
+Authorization: Bearer 9039559a-1f5d-4f16-a438-d3f223e3ac49
+X-User-Id: S003
 
 {
-  "courseId": 1,
-  "title": "第一章 Java基础语法（更新版）",
+  "studentName": "李四"
+}
+
+### 18. 从班级移除学生
+DELETE http://localhost:8082/api/classes/5/students/13
+Authorization: Bearer 9039559a-1f5d-4f16-a438-d3f223e3ac49
+X-User-Id: S003
+
+### 19. 获取教师简化班级列表
+GET http://localhost:8082/api/classes/teacher/simple/1
+Authorization: Bearer 9039559a-1f5d-4f16-a438-d3f223e3ac49
+X-User-Id: S003
+
+### 20. 获取用户课程表
+GET http://localhost:8082/api/classes/schedule/user/12
+Authorization: Bearer 9039559a-1f5d-4f16-a438-d3f223e3ac49
+X-User-Id: S003
+
+### 21. 获取班级学生数量
+GET http://localhost:8082/api/classes/2/student-count
+Authorization: Bearer 9039559a-1f5d-4f16-a438-d3f223e3ac49
+X-User-Id: S003
+
+### 22. 创建课程章节
+POST http://localhost:8082/api/course-sections
+Content-Type: application/json
+Authorization: Bearer 9039559a-1f5d-4f16-a438-d3f223e3ac49
+X-User-Id: S003
+{
+  "courseId": 5,
+  "title": "第一章：计算机基础",
   "sortOrder": 1
 }
 
-### 21. 删除课程章节
-DELETE http://localhost:8082/api/course-sections/6
+### 23. 获取课程章节列表
+GET http://localhost:8082/api/course-sections/course/2
+Authorization: Bearer 9039559a-1f5d-4f16-a438-d3f223e3ac49
+X-User-Id: S003
 
-### 学生导入测试
-
-
-### 11. 学生加入班级
-POST http://localhost:8082/api/classes/1/join/1001
+### 24. 更新课程章节
+PUT http://localhost:8082/api/course-sections/8
 Content-Type: application/json
+Authorization: Bearer 9039559a-1f5d-4f16-a438-d3f223e3ac49
+X-User-Id: S003
 
 {
-  "userId": 1001
+  "courseId": 5,
+  "title": "第一章：计算机基础（更新版）",
+  "sortOrder": 1
 }
 
-### 12. 通过班级代码加入班级
-POST http://localhost:8082/api/classes/join?classCode=CS101_2024_SPRING&studentId=1001
+### 25. 删除课程章节
+DELETE http://localhost:8082/api/course-sections/8
+Authorization: Bearer 9039559a-1f5d-4f16-a438-d3f223e3ac49
+X-User-Id: S003
 
-### 13. 获取班级学生列表
-GET http://localhost:8082/api/classes/1/users
-
-### 14. 学生退出班级
-DELETE http://localhost:8082/api/classes/3/leave/1001
-
-### 15. 添加单个学生到班级
-POST http://localhost:8082/api/classes/1/students?studentId=1003
-
-### 22. 导入学生到班级
+### 26. 导入学生
 POST http://localhost:8082/api/imports/students
 Content-Type: application/json
+Authorization: Bearer 9039559a-1f5d-4f16-a438-d3f223e3ac49
+X-User-Id: S003
 
 {
-  "classId": 1,
-  "operatorId": 1001,
-  "fileName": "students.json",
-  "importType": "EXCEL",
+  "classId": 5,
+  "operatorId": 1,
+  "fileName": "students_import.csv",
+  "importType": "BATCH_IMPORT",
   "studentData": [
-    { "studentId": "2024001", "studentName": "张三" },
-    { "studentId": 2024003, "studentName": "王五" }
+    {
+      "studentId": 14,
+      "studentName": "王五"
+    },
+    {
+      "studentId": 15,
+      "studentName": "赵六"
+    }
   ]
 }
 
-### 23. 获取班级的导入记录
-GET http://localhost:8082/api/imports/records/1
+### 27. 获取导入记录
+GET http://localhost:8082/api/imports/records/5
+Authorization: Bearer 9039559a-1f5d-4f16-a438-d3f223e3ac49
+X-User-Id: S003
 
-### 24. 获取导入记录详情
-GET http://localhost:8082/api/imports/record/1
+### 28. 获取特定导入记录
+GET http://localhost:8082/api/imports/record/14
+Authorization: Bearer 9039559a-1f5d-4f16-a438-d3f223e3ac49
+X-User-Id: S003

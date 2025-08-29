@@ -1,5 +1,6 @@
 package org.example.edusoft.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.example.edusoft.common.Result;
 import org.example.edusoft.entity.Course;
@@ -28,9 +29,10 @@ public class CourseController {
     }
 
     @GetMapping("/user/{userId}")
-    public Result<List<CourseDetailDTO>> getCoursesByUserId(@PathVariable Long userId) {
+    public Result<List<CourseDetailDTO>> getCoursesByUserId(@PathVariable Long userId, HttpServletRequest request) {
         try {
-            List<CourseDetailDTO> courses = courseService.getCourseDetailsByUserId(userId);
+            String token = extractToken(request);
+            List<CourseDetailDTO> courses = courseService.getCourseDetailsByUserId(userId, token);
             return Result.success(courses);
         } catch (Exception e) {
             return Result.error(500, "获取课程列表失败：" + e.getMessage());
@@ -38,9 +40,10 @@ public class CourseController {
     }
 
     @GetMapping("/{id}")
-    public Result<CourseDetailDTO> getCourseById(@PathVariable Long id) {
+    public Result<CourseDetailDTO> getCourseById(@PathVariable Long id, HttpServletRequest request) {
         try {
-            CourseDetailDTO course = courseService.getCourseDetailById(id);
+            String token = extractToken(request);
+            CourseDetailDTO course = courseService.getCourseDetailById(id, token);
             return Result.success(course);
         } catch (Exception e) {
             return Result.error(500, "获取课程详情失败：" + e.getMessage());
@@ -69,12 +72,25 @@ public class CourseController {
     }
 
     @GetMapping("/list")
-    public Result<List<CourseDetailDTO>> getAllCourses() {
+    public Result<List<CourseDetailDTO>> getAllCourses(HttpServletRequest request) {
         try {
-            List<CourseDetailDTO> courses = courseService.getAllCourses();
+            String token = extractToken(request);
+            List<CourseDetailDTO> courses = courseService.getAllCourses(token);
             return Result.success(courses);
         } catch (Exception e) {
             return Result.error(500, "获取课程列表失败：" + e.getMessage());
         }
+    }
+    
+    private String extractToken(HttpServletRequest request) {
+        String auth = request.getHeader("Authorization");
+        if (auth != null && !auth.trim().isEmpty()) {
+            return auth;
+        }
+        String satoken = request.getHeader("satoken");
+        if (satoken != null && !satoken.trim().isEmpty()) {
+            return satoken;
+        }
+        return null;
     }
 }
