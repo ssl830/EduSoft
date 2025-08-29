@@ -39,4 +39,13 @@ mybatis:
     map-underscore-to-camel-case: true
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
+# 微服务配置
+user:
+  service:
+    url: http://localhost:8081
+
+course:
+  service:
+    url: http://localhost:8082
+
 
