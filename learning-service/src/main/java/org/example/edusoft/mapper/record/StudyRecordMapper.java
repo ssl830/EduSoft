@@ -1,10 +1,11 @@
 package org.example.edusoft.learning.mapper.record;
 
 import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Param;
-import java.util.List;
+import org.apache.ibatis.annotations.Select;
 import org.example.edusoft.learning.entity.record.StudyRecord;
+
+import java.util.List;
 
 @Mapper
 public interface StudyRecordMapper {
@@ -69,4 +70,8 @@ public interface StudyRecordMapper {
                 ) t
             """)
     int getPracticeRank(@Param("practiceId") Long practiceId, @Param("studentId") Long studentId);
+
+    void insert(StudyRecord record);
+
+    List<StudyRecord> selectByUserId(Long userId);
 }
