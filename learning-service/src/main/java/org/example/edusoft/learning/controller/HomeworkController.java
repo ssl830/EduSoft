@@ -1,13 +1,15 @@
 package org.example.edusoft.learning.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.example.edusoft.common.Result;
+import org.example.edusoft.learning.Result;
 import org.example.edusoft.learning.dto.HomeworkDTO;
 import org.example.edusoft.learning.dto.HomeworkSubmissionDTO;
 import org.example.edusoft.learning.service.HomeworkService;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import javax.servlet.http.HttpServletResponse;
+//import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.util.List;
 
 @RestController
@@ -29,7 +31,7 @@ public class HomeworkController {
             Long homeworkId = homeworkService.createHomework(classId, title, description, endTime, file, userId);
             return Result.success(homeworkId, "作业创建成功");
         } catch (Exception e) {
-            return Result.failure("作业创建失败：" + e.getMessage());
+            return Result.error("作业创建失败：" + e.getMessage());
         }
     }
 
@@ -39,7 +41,7 @@ public class HomeworkController {
             HomeworkDTO homework = homeworkService.getHomework(id);
             return Result.success(homework, "获取作业详情成功");
         } catch (Exception e) {
-            return Result.failure("获取作业详情失败：" + e.getMessage());
+            return Result.error("获取作业详情失败：" + e.getMessage());
         }
     }
 
@@ -49,7 +51,7 @@ public class HomeworkController {
             List<HomeworkDTO> homeworkList = homeworkService.getHomeworkList(classId);
             return Result.success(homeworkList, "获取作业列表成功");
         } catch (Exception e) {
-            return Result.failure("获取作业列表失败：" + e.getMessage());
+            return Result.error("获取作业列表失败：" + e.getMessage());
         }
     }
 
@@ -62,7 +64,7 @@ public class HomeworkController {
             Long submissionId = homeworkService.submitHomework(homeworkId, studentId, file);
             return Result.success(submissionId, "作业提交成功");
         } catch (Exception e) {
-            return Result.failure("作业提交失败：" + e.getMessage());
+            return Result.error("作业提交失败：" + e.getMessage());
         }
     }
 
@@ -72,7 +74,7 @@ public class HomeworkController {
             List<HomeworkSubmissionDTO> submissionList = homeworkService.getSubmissionList(homeworkId);
             return Result.success(submissionList, "获取提交列表成功");
         } catch (Exception e) {
-            return Result.failure("获取提交列表失败：" + e.getMessage());
+            return Result.error("获取提交列表失败：" + e.getMessage());
         }
     }
 
@@ -84,7 +86,7 @@ public class HomeworkController {
             HomeworkSubmissionDTO submission = homeworkService.getStudentSubmission(homeworkId, studentId);
             return Result.success(submission, "获取提交记录成功");
         } catch (Exception e) {
-            return Result.failure("获取提交记录失败：" + e.getMessage());
+            return Result.error("获取提交记录失败：" + e.getMessage());
         }
     }
 
@@ -114,7 +116,7 @@ public class HomeworkController {
             homeworkService.deleteHomework(homeworkId);
             return Result.success(null, "作业删除成功");
         } catch (Exception e) {
-            return Result.failure("作业删除失败：" + e.getMessage());
+            return Result.error("作业删除失败：" + e.getMessage());
         }
     }
 }

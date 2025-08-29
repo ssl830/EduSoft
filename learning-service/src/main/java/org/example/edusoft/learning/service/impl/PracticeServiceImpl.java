@@ -1,7 +1,7 @@
 package org.example.edusoft.learning.service.impl;
 
 import lombok.RequiredArgsConstructor;
-import org.example.edusoft.common.exception.BusinessException;
+import org.example.edusoft.learning.other.BusinessException;
 import org.example.edusoft.learning.dto.PracticeDTO;
 import org.example.edusoft.learning.entity.Practice;
 import org.example.edusoft.learning.entity.Question;

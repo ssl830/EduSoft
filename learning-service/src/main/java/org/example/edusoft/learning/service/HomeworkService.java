@@ -3,7 +3,9 @@ package org.example.edusoft.learning.service;
 import org.example.edusoft.learning.dto.HomeworkDTO;
 import org.example.edusoft.learning.dto.HomeworkSubmissionDTO;
 import org.springframework.web.multipart.MultipartFile;
-import javax.servlet.http.HttpServletResponse;
+//import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.util.List;
 
 public interface HomeworkService {

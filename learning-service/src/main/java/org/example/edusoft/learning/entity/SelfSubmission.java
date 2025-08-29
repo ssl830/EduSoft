@@ -17,4 +17,8 @@ public class SelfSubmission {
     private Integer score;
     private Boolean isJudged;
     private String feedback;
+
+    public void setPracticeId(Long practiceId) {
+        this.selfPracticeId = practiceId;
+    }
 }

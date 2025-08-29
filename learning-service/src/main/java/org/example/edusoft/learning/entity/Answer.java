@@ -33,4 +33,8 @@ public class Answer {
 
     @Column(name = "sort_order")
     private Long sortOrder;
-} 
+
+    public String getAnswer() {
+        return answerText;
+    }
+}

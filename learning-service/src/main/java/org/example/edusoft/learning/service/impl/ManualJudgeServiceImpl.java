@@ -1,8 +1,8 @@
 package org.example.edusoft.learning.service.impl;
 
 import lombok.RequiredArgsConstructor;
-import org.example.edusoft.common.Result;
-import org.example.edusoft.common.client.UserClient;
+import org.example.edusoft.learning.Result;
+import org.example.edusoft.learning.client.UserClient;
 import org.example.edusoft.learning.dto.JudgeQuestionRequest;
 import org.example.edusoft.learning.dto.JudgeSubmissionRequest;
 import org.example.edusoft.learning.dto.PendingSubmissionDTO;
@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,7 +26,10 @@ public class ManualJudgeServiceImpl implements ManualJudgeService {
     private final SubmissionMapper submissionMapper;
     private final QuestionMapper questionMapper;
     private final PracticeMapper practiceMapper;
-    private final UserClient userClient; // Use Feign Client to get user info
+    private final UserClient userClient; // 使用RestTemplate实现
+
+    // 可根据实际情况注入baseUrl和token
+    private final String userServiceBaseUrl = "http://localhost:8081"; // 示例
 
     @Override
     public Result<List<PendingSubmissionDTO>> getPendingSubmissionList(Long practiceId, Long classId) {
@@ -42,16 +46,17 @@ public class ManualJudgeServiceImpl implements ManualJudgeService {
 
         List<PendingSubmissionDTO> result = submissions.stream().map(submission -> {
             Practice practice = practiceMapper.getPracticeById(submission.getPracticeId());
-            String studentName = "Unknown"; // Placeholder
+            String studentName = "Unknown";
             try {
-                Result<org.example.edusoft.common.dto.UserDTO> userResult = userClient.getUserById(submission.getStudentId());
-                if (userResult != null && userResult.isSuccess()) {
-                    studentName = userResult.getData().getUsername();
+                // 这里token可从上下文获取，如SecurityContextHolder等
+                String token = null; // TODO: 获取当前请求token
+                Map<String, Object> userMap = userClient.fetchUserById(userServiceBaseUrl, token, submission.getStudentId());
+                if (userMap != null && userMap.get("username") != null) {
+                    studentName = userMap.get("username").toString();
                 }
             } catch (Exception e) {
                 // Log the exception, but continue with a placeholder name
             }
-            
             return new PendingSubmissionDTO(
                 studentName,
                 practice.getTitle(),
@@ -66,15 +71,16 @@ public class ManualJudgeServiceImpl implements ManualJudgeService {
     public Result<List<SubmissionDetailDTO>> getSubmissionDetail(Long submissionId) {
         PracticeSubmission submission = submissionMapper.selectById(submissionId);
         if (submission == null) {
-            return Result.failure("提交不存在");
+            return Result.error("提交不存在");
         }
 
         // String studentName = userClient.getUserById(submission.getStudentId()).getData().getUsername();
         String studentName = "Unknown"; // Placeholder
         try {
-            Result<org.example.edusoft.common.dto.UserDTO> userResult = userClient.getUserById(submission.getStudentId());
-            if (userResult != null && userResult.isSuccess()) {
-                studentName = userResult.getData().getUsername();
+            String token = null; // TODO: 获取当前请求token
+            Map<String, Object> userMap = userClient.fetchUserById(userServiceBaseUrl, token, submission.getStudentId());
+            if (userMap != null && userMap.get("username") != null) {
+                studentName = userMap.get("username").toString();
             }
         } catch (Exception e) {
             // Log the exception, but continue with a placeholder name
@@ -104,7 +110,7 @@ public class ManualJudgeServiceImpl implements ManualJudgeService {
     public Result<Void> judgeSubmission(JudgeSubmissionRequest request) {
         PracticeSubmission submission = submissionMapper.selectById(request.getSubmissionId());
         if (submission == null) {
-            return Result.failure("提交不存在");
+            return Result.error("提交不存在");
         }
 
         int totalScore = submission.getScore() != null ? submission.getScore() : 0;

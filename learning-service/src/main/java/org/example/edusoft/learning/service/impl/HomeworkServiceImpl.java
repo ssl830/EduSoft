@@ -1,7 +1,7 @@
 package org.example.edusoft.learning.service.impl;
 
 import lombok.RequiredArgsConstructor;
-import org.example.edusoft.common.exception.BusinessException;
+import org.example.edusoft.learning.other.BusinessException;
 import org.example.edusoft.learning.dto.HomeworkDTO;
 import org.example.edusoft.learning.dto.HomeworkSubmissionDTO;
 import org.example.edusoft.learning.entity.Homework;
@@ -12,7 +12,9 @@ import org.example.edusoft.learning.service.HomeworkService;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpServletResponse;
+//import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;

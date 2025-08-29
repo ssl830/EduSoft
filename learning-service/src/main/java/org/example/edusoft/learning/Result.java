@@ -1,4 +1,4 @@
-package org.example.edusoft.common;
+package org.example.edusoft.learning;
 
 import lombok.Data;
 

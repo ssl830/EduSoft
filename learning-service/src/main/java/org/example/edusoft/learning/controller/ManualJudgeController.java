@@ -1,7 +1,7 @@
 package org.example.edusoft.learning.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.example.edusoft.common.Result;
+import org.example.edusoft.learning.Result;
 import org.example.edusoft.learning.dto.JudgeSubmissionRequest;
 import org.example.edusoft.learning.dto.PendingListRequest;
 import org.example.edusoft.learning.dto.PendingSubmissionDTO;

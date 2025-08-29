@@ -17,4 +17,8 @@ public class SelfAnswer {
     private Boolean correct;
     private Integer score;
     private Integer sortOrder;
+
+    public void setAnswer(String answer) {
+        this.answerText = answer;
+    }
 }

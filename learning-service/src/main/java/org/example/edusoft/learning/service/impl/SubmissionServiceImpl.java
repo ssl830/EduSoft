@@ -1,7 +1,7 @@
 package org.example.edusoft.learning.service.impl;
 
 import lombok.RequiredArgsConstructor;
-import org.example.edusoft.common.Result;
+import org.example.edusoft.learning.Result;
 import org.example.edusoft.learning.entity.Answer;
 import org.example.edusoft.learning.entity.PracticeQuestion;
 import org.example.edusoft.learning.entity.PracticeSubmission;
@@ -32,7 +32,7 @@ public class SubmissionServiceImpl implements SubmissionService {
         // Assuming getQuestionsByPractice returns questions with their order.
         List<Question> questions = questionMapper.getQuestionsByPractice(practiceId);
         if (questions.isEmpty()) {
-            return Result.failure("练习不存在或没有题目");
+            return Result.error("练习不存在或没有题目");
         }
 
         PracticeSubmission submission = new PracticeSubmission();

@@ -1,7 +1,7 @@
 package org.example.edusoft.learning.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.example.edusoft.common.Result;
+import org.example.edusoft.learning.Result;
 import org.example.edusoft.learning.entity.SelfAnswer;
 import org.example.edusoft.learning.entity.SelfSubmission;
 import org.example.edusoft.learning.mapper.SelfAnswerMapper;

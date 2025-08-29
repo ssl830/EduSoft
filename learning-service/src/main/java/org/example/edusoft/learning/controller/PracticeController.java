@@ -1,7 +1,7 @@
 package org.example.edusoft.learning.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.example.edusoft.common.Result;
+import org.example.edusoft.learning.Result;
 import org.example.edusoft.learning.dto.PracticeDTO;
 import org.example.edusoft.learning.entity.Practice;
 import org.example.edusoft.learning.entity.Question;
@@ -28,7 +28,7 @@ public class PracticeController {
             response.put("practiceId", createdPractice.getId());
             return Result.success(response, "练习创建成功");
         } catch (Exception e) {
-            return Result.failure("创建练习失败：" + e.getMessage());
+            return Result.error("创建练习失败：" + e.getMessage());
         }
     }
 
@@ -39,7 +39,7 @@ public class PracticeController {
             Practice updatedPractice = practiceService.updatePractice(practice);
             return Result.success(updatedPractice, "练习更新成功");
         } catch (Exception e) {
-            return Result.failure("更新练习失败：" + e.getMessage());
+            return Result.error("更新练习失败：" + e.getMessage());
         }
     }
 
@@ -49,7 +49,7 @@ public class PracticeController {
             List<Practice> practices = practiceService.getPracticeList(classId);
             return Result.success(practices, "获取练习列表成功");
         } catch (Exception e) {
-            return Result.failure("获取练习列表失败：" + e.getMessage());
+            return Result.error("获取练习列表失败：" + e.getMessage());
         }
     }
 
@@ -59,7 +59,7 @@ public class PracticeController {
             Practice practice = practiceService.getPracticeDetail(id);
             return Result.success(practice, "获取练习详情成功");
         } catch (Exception e) {
-            return Result.failure("获取练习详情失败：" + e.getMessage());
+            return Result.error("获取练习详情失败：" + e.getMessage());
         }
     }
 
@@ -69,7 +69,7 @@ public class PracticeController {
             practiceService.deletePractice(id);
             return Result.success(null, "练习删除成功");
         } catch (Exception e) {
-            return Result.failure("删除练习失败：" + e.getMessage());
+            return Result.error("删除练习失败：" + e.getMessage());
         }
     }
 
@@ -82,7 +82,7 @@ public class PracticeController {
             practiceService.addQuestionToPractice(practiceId, questionId, score);
             return Result.success(null, "添加题目成功");
         } catch (Exception e) {
-            return Result.failure("添加题目失败：" + e.getMessage());
+            return Result.error("添加题目失败：" + e.getMessage());
         }
     }
 
@@ -94,7 +94,7 @@ public class PracticeController {
             practiceService.removeQuestionFromPractice(practiceId, questionId);
             return Result.success(null, "移除题目成功");
         } catch (Exception e) {
-            return Result.failure("移除题目失败：" + e.getMessage());
+            return Result.error("移除题目失败：" + e.getMessage());
         }
     }
 
@@ -104,7 +104,7 @@ public class PracticeController {
             List<Question> questions = practiceService.getPracticeQuestions(practiceId);
             return Result.success(questions, "获取练习题目成功");
         } catch (Exception e) {
-            return Result.failure("获取练习题目失败：" + e.getMessage());
+            return Result.error("获取练习题目失败：" + e.getMessage());
         }
     }
 
@@ -114,7 +114,7 @@ public class PracticeController {
             practiceService.favoriteQuestion(studentId, questionId);
             return Result.success(null, "收藏成功");
         } catch (Exception e) {
-            return Result.failure("收藏失败：" + e.getMessage());
+            return Result.error("收藏失败：" + e.getMessage());
         }
     }
 
@@ -124,7 +124,7 @@ public class PracticeController {
             practiceService.unfavoriteQuestion(studentId, questionId);
             return Result.success(null, "取消收藏成功");
         } catch (Exception e) {
-            return Result.failure("取消收藏失败：" + e.getMessage());
+            return Result.error("取消收藏失败：" + e.getMessage());
         }
     }
 
@@ -134,7 +134,7 @@ public class PracticeController {
             List<Map<String, Object>> questions = practiceService.getFavoriteQuestions(studentId);
             return Result.success(questions, "获取收藏列表成功");
         } catch (Exception e) {
-            return Result.failure("获取收藏列表失败：" + e.getMessage());
+            return Result.error("获取收藏列表失败：" + e.getMessage());
         }
     }
 
@@ -144,7 +144,7 @@ public class PracticeController {
             List<Map<String, Object>> questions = practiceService.getWrongQuestions(studentId);
             return Result.success(questions, "获取错题列表成功");
         } catch (Exception e) {
-            return Result.failure("获取错题列表失败：" + e.getMessage());
+            return Result.error("获取错题列表失败：" + e.getMessage());
         }
     }
     
@@ -154,7 +154,7 @@ public class PracticeController {
             List<PracticeDTO> practiceList = practiceService.getStudentPracticeList(studentId, classId);
             return Result.success(practiceList, "获取学生练习列表成功");
         } catch (Exception e) {
-            return Result.failure("获取学生练习列表失败：" + e.getMessage());
+            return Result.error("获取学生练习列表失败：" + e.getMessage());
         }
     }
 }

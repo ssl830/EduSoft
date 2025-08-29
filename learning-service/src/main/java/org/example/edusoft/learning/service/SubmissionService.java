@@ -1,6 +1,6 @@
 package org.example.edusoft.learning.service;
 
-import org.example.edusoft.common.Result;
+import org.example.edusoft.learning.Result;
 import org.example.edusoft.learning.dto.SubmissionDTO;
 
 import java.util.List;

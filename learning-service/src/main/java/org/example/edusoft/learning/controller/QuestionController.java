@@ -1,7 +1,7 @@
 package org.example.edusoft.learning.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.example.edusoft.common.Result;
+import org.example.edusoft.learning.Result;
 import org.example.edusoft.learning.dto.QuestionDTO;
 import org.example.edusoft.learning.entity.Question;
 import org.example.edusoft.learning.service.QuestionService;

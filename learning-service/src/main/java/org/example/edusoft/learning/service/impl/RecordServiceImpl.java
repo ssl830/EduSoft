@@ -28,12 +28,12 @@ public class RecordServiceImpl implements RecordService {
     }
 
     @Override
-    public List<PracticeRecord> getPracticeRecords(Long studentId) {
+    public List<StudyRecord> getPracticeRecords(Long studentId) {
         return recordMapper.getPracticeRecordsByStudentId(studentId);
     }
 
     @Override
-    public List<PracticeRecord> getPracticeRecordsByCourse(Long studentId, Long courseId) {
+    public List<StudyRecord> getPracticeRecordsByCourse(Long studentId, Long courseId) {
         return recordMapper.getPracticeRecordsByStudentAndCourse(studentId, courseId);
     }
 

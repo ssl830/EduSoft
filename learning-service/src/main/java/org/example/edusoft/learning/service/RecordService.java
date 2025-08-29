@@ -9,8 +9,8 @@ import java.util.Map;
 public interface RecordService {
     List<StudyRecord> getStudyRecords(Long studentId);
     List<StudyRecord> getStudyRecordsByCourse(Long studentId, Long courseId);
-    List<PracticeRecord> getPracticeRecords(Long studentId);
-    List<PracticeRecord> getPracticeRecordsByCourse(Long studentId, Long courseId);
+    List<StudyRecord> getPracticeRecords(Long studentId);
+    List<StudyRecord> getPracticeRecordsByCourse(Long studentId, Long courseId);
     // byte[] exportRecordsToExcel(Long studentId);
     // byte[] exportStudyRecordsByCourseToExcel(Long studentId, Long courseId);
     // byte[] exportPracticeRecordsToExcel(Long studentId);

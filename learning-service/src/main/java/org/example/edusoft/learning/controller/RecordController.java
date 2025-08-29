@@ -1,7 +1,7 @@
 package org.example.edusoft.learning.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.example.edusoft.common.Result;
+import org.example.edusoft.learning.Result;
 import org.example.edusoft.learning.entity.PracticeRecord;
 import org.example.edusoft.learning.entity.StudyRecord;
 import org.example.edusoft.learning.service.RecordService;
@@ -28,13 +28,13 @@ public class RecordController {
     }
 
     @GetMapping("/practice")
-    public Result<List<PracticeRecord>> getPracticeRecords(@RequestHeader("X-User-Id") Long studentId) {
+    public Result<List<StudyRecord>> getPracticeRecords(@RequestHeader("X-User-Id") Long studentId) {
         return Result.success(recordService.getPracticeRecords(studentId));
     }
 
     @GetMapping("/practice/course/{courseId}")
-    public Result<List<PracticeRecord>> getPracticeRecordsByCourse(@PathVariable Long courseId, @RequestHeader("X-User-Id") Long studentId) {
-        List<PracticeRecord> records = recordService.getPracticeRecordsByCourse(studentId, courseId);
+    public Result<List<StudyRecord>> getPracticeRecordsByCourse(@PathVariable Long courseId, @RequestHeader("X-User-Id") Long studentId) {
+        List<StudyRecord> records = recordService.getPracticeRecordsByCourse(studentId, courseId);
         return Result.success(records);
     }
 }
