@@ -1,0 +1,46 @@
+package org.example.edusoft.learning.entity;
+
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+import javax.persistence.*;
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity
+@Table(name = "practice")
+public class Practice {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "course_id", nullable = false)
+    private Long courseId;
+
+    @Column(name = "class_id", nullable = false)
+    private Long classId;
+
+    @Column(nullable = false)
+    private String title;
+
+    @Column(name = "start_time")
+    private LocalDateTime startTime;
+
+    @Column(name = "end_time")
+    private LocalDateTime endTime;
+
+    @Column(name = "allow_multiple_submission")
+    private Boolean allowMultipleSubmission = true;
+
+    @Column(name = "created_by")
+    private Long createdBy;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @Transient
+    private List<Question> questions;
+}
