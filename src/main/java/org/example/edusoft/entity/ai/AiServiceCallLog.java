@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@TableName("AiServiceCallLog")
+@TableName("aiServiceCallLog")
 public class AiServiceCallLog {
     @TableId(type = IdType.AUTO)
     private Long id;

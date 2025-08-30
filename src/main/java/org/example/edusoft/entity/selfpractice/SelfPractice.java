@@ -7,7 +7,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Data
-@TableName("SelfPractice")
+@TableName("selfPractice")
 public class SelfPractice {
     @TableId(type = IdType.AUTO)
     private Long id;

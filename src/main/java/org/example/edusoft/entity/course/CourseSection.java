@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 @Data
-@TableName("CourseSection")
+@TableName("courseSection")
 public class CourseSection {
     @TableId(type = IdType.AUTO)
     private Long id;

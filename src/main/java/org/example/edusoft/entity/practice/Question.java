@@ -24,8 +24,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "Question")
-@TableName("Question")
+@Table(name = "question")
+@TableName("question")
 public class Question {
     @TableId(type = IdType.AUTO)
     @Id

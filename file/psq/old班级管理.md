@@ -31,7 +31,7 @@ src/main/java/org/example/edusoft/
 关键代码：
 ```java
 @Data
-@TableName("Class")
+@TableName("class")
 public class Class {
     @TableId(type = IdType.AUTO)
     private Long id;
@@ -49,7 +49,7 @@ public class Class {
 关键代码：
 ```java
 @Data
-@TableName("ClassUser")
+@TableName("classUser")
 public class ClassUser {
     private Long classId;
     private Long userId;

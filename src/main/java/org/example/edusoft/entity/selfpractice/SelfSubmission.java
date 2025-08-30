@@ -7,7 +7,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Data
-@TableName("SelfSubmission")
+@TableName("selfSubmission")
 public class SelfSubmission {
     @TableId(type = IdType.AUTO)
     private Long id;
