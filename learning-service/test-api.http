@@ -18,36 +18,31 @@ Content-Type: application/x-www-form-urlencoded
 
 userId=T002&password=123456
 
-# 人工判题测试
+# 人工判题相关接口
 
-### 1. 获取待判列表
-POST http://localhost:8084/api/learning/judge/pending-list
+### 1. 获取待批改提交列表
+POST http://localhost:8084/api/judge/pendinglist
 Content-Type: application/json
-satoken: e139b55a-1a41-4a35-b50d-5dc23c2339b9
+satoken: b56578af-90db-4c72-abc4-a7c0ef83c806
 
 {
   "practiceId": 1,
   "classId": 1
 }
 
-### 1.2 获取待判列表
-POST http://localhost:8084/api/learning/judge/pending-list
+### 2. 获取提交详情
+POST http://localhost:8084/api/judge/pending
 Content-Type: application/json
-satoken: e139b55a-1a41-4a35-b50d-5dc23c2339b9
+satoken: b56578af-90db-4c72-abc4-a7c0ef83c806
 
 {
-  "practiceId": null,
-  "classId": 1
+  "submissionId": 3
 }
 
-### 2. 获取提交详情
-GET http://localhost:8084/api/learning/judge/submission/3
-satoken: e139b55a-1a41-4a35-b50d-5dc23c2339b9
-
 ### 3. 判题操作
-POST http://localhost:8084/api/learning/judge/submission
+POST http://localhost:8084/api/judge/judge
 Content-Type: application/json
-satoken: e139b55a-1a41-4a35-b50d-5dc23c2339b9
+satoken: b56578af-90db-4c72-abc4-a7c0ef83c806
 
 {
   "submissionId": 1,
@@ -67,13 +62,12 @@ satoken: e139b55a-1a41-4a35-b50d-5dc23c2339b9
   ]
 }
 
-### 提交练习测试
+# 提交练习相关接口
 
 ### 1. 提交练习答案
-POST http://localhost:8084/api/learning/submission/submit
+POST http://localhost:8084/api/submission/submit
 Content-Type: application/json
-X-User-Id: 1
-satoken: e139b55a-1a41-4a35-b50d-5dc23c2339b9
+satoken: b56578af-90db-4c72-abc4-a7c0ef83c806
 
 {
   "practiceId": 1,
