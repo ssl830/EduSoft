@@ -162,6 +162,15 @@ const switchView = (view: string) => {
     fetchData()
 }
 
+// 修复：按钮点击逻辑提取，避免模板直接赋值ref.value
+const handleCheckPractice = (submissionId: number) => {
+    if (selectedExer.value !== -1) {
+        checkPractice(submissionId)
+    } else {
+        error.value = '请选择一个练习进行批改'
+    }
+}
+
 // 新增：跳转到新建练习页面
 const goToCreateExercise = () => {
     router.push({ name: 'ExerciseCreate'})
@@ -263,7 +272,7 @@ onMounted(() => {
                         <td class="actions">
                             <button
                                 class="btn-action history"
-                                @click="selectedExer !== -1 ? checkPractice(item.submissionId) : error.value = '请选择一个练习进行批改'"
+                                @click="handleCheckPractice(item.submissionId)"
                                 :disabled="selectedExer === -1"
                                 title="批改"
                             >
