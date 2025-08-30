@@ -3,6 +3,7 @@ package org.example.edusoft.learning.controller;
 import lombok.RequiredArgsConstructor;
 import org.example.edusoft.learning.Result;
 import org.example.edusoft.learning.dto.QuestionDTO;
+import org.example.edusoft.learning.dto.QuestionListDTO;
 import org.example.edusoft.learning.entity.Question;
 import org.example.edusoft.learning.service.QuestionService;
 import org.springframework.web.bind.annotation.*;
@@ -33,8 +34,8 @@ public class QuestionController {
     }
 
     @GetMapping("/list")
-    public Result<List<QuestionDTO>> getQuestionList(@RequestParam(required = false) Long courseId) {
-        List<QuestionDTO> questions;
+    public Result<List<QuestionListDTO>> getQuestionList(@RequestParam(required = false) Long courseId) {
+        List<QuestionListDTO> questions;
         if (courseId != null) {
             questions = questionService.getQuestionListByCourse(courseId);
         } else {

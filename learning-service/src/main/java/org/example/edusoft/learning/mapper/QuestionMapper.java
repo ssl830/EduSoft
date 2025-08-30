@@ -62,21 +62,21 @@ public interface QuestionMapper {
             @Param("teacherId") Long teacherId,
             @Param("courseId") Long courseId,
             @Param("sectionId") Long sectionId);
-
-    @Select("SELECT q.*, c.name as course_name, cs.title as section_name " +
-            "FROM question q " +
-            "LEFT JOIN course c ON q.course_id = c.id " +
-            "LEFT JOIN coursesection cs ON q.section_id = cs.id " +
-            "ORDER BY q.created_at DESC")
-    List<Map<String, Object>> getAllQuestionsWithNames();
-
-    @Select("SELECT q.*, c.name as course_name, cs.title as section_name " +
-            "FROM question q " +
-            "LEFT JOIN course c ON q.course_id = c.id " +
-            "LEFT JOIN coursesection cs ON q.section_id = cs.id " +
-            "WHERE q.course_id = #{courseId} " +
-            "ORDER BY q.created_at DESC")
-    List<Map<String, Object>> getQuestionListWithNames(@Param("courseId") Long courseId);
+//
+//    @Select("SELECT q.*, c.name as course_name, cs.title as section_name " +
+//            "FROM question q " +
+//            "LEFT JOIN course c ON q.course_id = c.id " +
+//            "LEFT JOIN coursesection cs ON q.section_id = cs.id " +
+//            "ORDER BY q.created_at DESC")
+//    List<Map<String, Object>> getAllQuestionsWithNames();
+//
+//    @Select("SELECT q.*, c.name as course_name, cs.title as section_name " +
+//            "FROM question q " +
+//            "LEFT JOIN course c ON q.course_id = c.id " +
+//            "LEFT JOIN coursesection cs ON q.section_id = cs.id " +
+//            "WHERE q.course_id = #{courseId} " +
+//            "ORDER BY q.created_at DESC")
+//    List<Map<String, Object>> getQuestionListWithNames(@Param("courseId") Long courseId);
 
     @Update("UPDATE practice_question SET score = #{score} WHERE practice_id = #{practiceId} AND question_id = #{questionId}")
     void updatePracticeQuestionScore(@Param("practiceId") Long practiceId, @Param("questionId") Long questionId, @Param("score") Integer score);
