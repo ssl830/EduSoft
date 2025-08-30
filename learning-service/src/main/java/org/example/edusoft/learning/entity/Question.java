@@ -69,14 +69,15 @@ public class Question {
     }
 
     public List<String> getOptionsList() {
-        if (this.options != null) {
-            return Arrays.asList(this.options.split("\\\\|\\\\|\\\\|"));
+        if (this.options != null && !this.options.isEmpty()) {
+            return Arrays.asList(this.options.split("\\|\\|\\|"));
         }
         return null;
     }
 
     public enum QuestionType {
         singlechoice,
+        multiplechoice,
         program,
         fillblank,
         judge

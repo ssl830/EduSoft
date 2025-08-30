@@ -1,0 +1,274 @@
+### Learning Service 练习和题目管理接口测试
+### 注意：请确保数据库中有课程ID为1的课程和班级ID为1的班级
+### 调试说明：如果获取题目列表返回null，可能的原因：
+### 1. 数据库中没有题目数据
+### 2. QuestionServiceImpl的getAllQuestions()或getQuestionListByCourse()方法有问题
+### 3. QuestionMapper的SQL查询有问题
+### 建议先执行创建题目的测试，然后再测试获取列表
+### 
+### 微服务说明：
+### - 收藏和错题列表返回的数据只包含learning-service内的字段（如course_id, section_id）
+### - 如需课程名称、章节名称，需要调用course-service的API
+### - 这是微服务架构的正常设计，避免跨服务数据库查询
+
+### 题目管理测试 (QuestionController)
+
+### 1. 创建题目 - 单选题
+# 预期响应：{"code": 200, "message": "题目创建成功", "data": 题目ID}
+
+POST http://localhost:8084/api/learning/question
+Content-Type: application/json
+X-User-Id: 1001
+
+{
+  "type": "singlechoice",
+  "content": "以下哪个关键字用于定义Java类？",
+  "optionsList": ["class", "interface", "abstract", "public"],
+  "answer": "class",
+  "analysis": "class关键字用于定义Java类",
+  "courseId": 1,
+  "sectionId": 1
+}
+
+### 2. 创建题目 - 编程题
+# 预期响应：{"code": 200, "message": "题目创建成功", "data": 题目ID}
+POST http://localhost:8084/api/learning/question
+Content-Type: application/json
+X-User-Id: 1001
+
+{
+  "type": "program",
+  "content": "请编写一个Java程序，实现计算两个整数的和",
+  "answer": "public class Sum { public static int add(int a, int b) { return a + b; } }",
+  "analysis": "这是一个简单的加法函数实现",
+  "courseId": 1,
+  "sectionId": 1
+}
+
+### 2.1. 创建题目 - 多选题
+# 预期响应：{"code": 200, "message": "题目创建成功", "data": 题目ID}
+
+POST http://localhost:8084/api/learning/question
+Content-Type: application/json
+X-User-Id: 1001
+
+{
+  "type": "multiplechoice",
+  "content": "以下哪些是Java的基本数据类型？",
+  "optionsList": ["int", "String", "double", "boolean"],
+  "answer": "int,double,boolean",
+  "analysis": "int、double、boolean是Java基本数据类型，String是引用类型",
+  "courseId": 1,
+  "sectionId": 1
+}
+
+### 2.2. 创建题目 - 另一个单选题
+# 预期响应：{"code": 200, "message": "题目创建成功", "data": 题目ID}
+POST http://localhost:8084/api/learning/question
+Content-Type: application/json
+X-User-Id: 1001
+
+{
+  "type": "singlechoice",
+  "content": "以下哪个是Java的基本数据类型？",
+  "optionsList": ["int", "String", "ArrayList", "HashMap"],
+  "answer": "int",
+  "analysis": "int是Java的基本数据类型，其他都是引用类型",
+  "courseId": 1,
+  "sectionId": 1
+}
+
+### 3. 创建题目 - 判断题
+POST http://localhost:8084/api/learning/question
+Content-Type: application/json
+X-User-Id: 1001
+
+{
+  "type": "judge",
+  "content": "Java是一种面向对象的编程语言",
+  "answer": "true",
+  "analysis": "Java确实是面向对象的编程语言",
+  "courseId": 1,
+  "sectionId": 1
+}
+
+### 4. 创建题目 - 填空题
+POST http://localhost:8084/api/learning/question
+Content-Type: application/json
+X-User-Id: 1001
+
+{
+  "type": "fillblank",
+  "content": "Java程序的入口方法是____",
+  "answer": "main",
+  "analysis": "Java程序的入口方法是main方法",
+  "courseId": 1,
+  "sectionId": 1
+}
+
+### 5. 获取所有题目列表 (调试：检查是否有数据返回)
+# 预期响应：{"code": 200, "message": "获取题目列表成功", "data": [题目列表]}
+# 如果返回data为null或空数组，说明数据库中没有题目或查询有问题
+GET http://localhost:8084/api/learning/question/list
+
+### 6. 根据课程ID获取题目列表
+# 预期响应：{"code": 200, "message": "获取题目列表成功", "data": [课程相关题目列表]}
+GET http://localhost:8084/api/learning/question/list?courseId=1
+
+### 7. 获取题目详情
+# 预期响应：{"code": 200, "message": "获取题目详情成功", "data": 题目详情对象}
+GET http://localhost:8084/api/learning/question/1
+
+### 8. 更新题目
+PUT http://localhost:8084/api/learning/question/1
+Content-Type: application/json
+
+{
+  "type": "singlechoice",
+  "content": "以下哪个关键字用于定义Java类？（更新版）",
+  "optionsList": ["class", "interface", "abstract", "public"],
+  "answer": "class",
+  "analysis": "class关键字用于定义Java类（更新版说明）",
+  "courseId": 1,
+  "sectionId": 1
+}
+
+### 练习管理测试 (PracticeController)
+
+### 9. 创建练习
+POST http://localhost:8084/api/learning/practice
+Content-Type: application/json
+X-User-Id: 1001
+
+{
+  "courseId": 1,
+  "classId": 1,
+  "title": "Java基础语法练习",
+  "startTime": "2024-08-30T09:00:00",
+  "endTime": "2024-08-30T11:00:00",
+  "allowMultipleSubmission": true
+}
+
+### 10. 获取班级练习列表
+GET http://localhost:8084/api/learning/practice/class/1
+
+### 11. 获取练习详情
+GET http://localhost:8084/api/learning/practice/1
+
+### 12. 更新练习
+PUT http://localhost:8084/api/learning/practice/1
+Content-Type: application/json
+
+{
+  "courseId": 1,
+  "classId": 1,
+  "title": "Java基础语法练习（更新版）",
+  "startTime": "2024-08-30T09:30:00",
+  "endTime": "2024-08-30T11:30:00",
+  "allowMultipleSubmission": false
+}
+
+### 13. 添加题目到练习
+POST http://localhost:8084/api/learning/practice/1/questions/1?score=10
+
+### 14. 添加多个题目到练习
+POST http://localhost:8084/api/learning/practice/1/questions/2?score=15
+
+### 15. 添加更多题目到练习
+POST http://localhost:8084/api/learning/practice/1/questions/4?score=5
+
+### 16. 获取练习的题目列表
+GET http://localhost:8084/api/learning/practice/1/questions
+
+### 17. 从练习中移除题目
+DELETE http://localhost:8084/api/learning/practice/1/questions/4
+
+### 18. 批量导入题目到练习
+POST http://localhost:8084/api/learning/question/import-to-practice
+Content-Type: application/json
+
+{
+  "practiceId": 1,
+  "questionIds": [1, 2, 3],
+  "scores": [10, 15, 8]
+}
+
+### 题目收藏和错题管理测试
+
+### 19. 收藏题目
+POST http://localhost:8084/api/learning/practice/questions/1/favorite
+X-User-Id: 1002
+
+### 20. 收藏更多题目
+POST http://localhost:8084/api/learning/practice/questions/2/favorite
+X-User-Id: 1002
+
+### 21. 获取收藏题目列表
+GET http://localhost:8084/api/learning/practice/favorites
+X-User-Id: 1002
+
+### 22. 取消收藏题目
+DELETE http://localhost:8084/api/learning/practice/questions/2/favorite
+X-User-Id: 1002
+
+### 23. 获取错题列表
+GET http://localhost:8084/api/learning/practice/wrong-questions
+X-User-Id: 1002
+
+### 学生视角测试
+
+### 24. 获取学生练习列表
+GET http://localhost:8084/api/learning/practice/student/list?classId=1
+X-User-Id: 1002
+
+### 删除测试（谨慎使用）
+
+### 25. 删除题目
+DELETE http://localhost:8084/api/learning/question/6
+
+### 26. 删除练习
+DELETE http://localhost:8084/api/learning/practice/1
+
+### 健康检查
+
+### 27. 检查服务健康状态
+GET http://localhost:8084/actuator/health
+
+### 错误场景测试
+
+### 28. 创建题目 - 缺少必要字段（应该返回错误）
+# 预期响应：{"code": 500, "message": "错误信息", "data": null}
+POST http://localhost:8084/api/learning/question
+Content-Type: application/json
+X-User-Id: 1001
+
+{
+  "type": "singlechoice"
+}
+
+### 28.1. 创建题目 - 无效的题目类型（应该返回错误）
+# 预期响应：{"code": 500, "message": "错误信息", "data": null}
+POST http://localhost:8084/api/learning/question
+Content-Type: application/json
+X-User-Id: 1001
+
+{
+  "type": "INVALID_TYPE",
+  "content": "这是一个无效类型的题目",
+  "answer": "test",
+  "courseId": 1,
+  "sectionId": 1
+}
+
+### 29. 获取不存在的题目（应该返回错误）
+GET http://localhost:8084/api/learning/question/9999
+
+### 30. 获取不存在的练习（应该返回错误）
+GET http://localhost:8084/api/learning/practice/9999
+
+### 31. 添加题目到不存在的练习（应该返回错误）
+POST http://localhost:8084/api/learning/practice/9999/questions/1?score=10
+
+### 32. 收藏不存在的题目（应该返回错误）
+POST http://localhost:8084/api/learning/practice/questions/9999/favorite
+X-User-Id: 1002
