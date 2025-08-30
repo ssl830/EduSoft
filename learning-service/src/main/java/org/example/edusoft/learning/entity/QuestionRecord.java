@@ -2,11 +2,9 @@ package org.example.edusoft.learning.entity;
 import lombok.Data;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
-import javax.persistence.*;
 
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
 @Data
 public class QuestionRecord {
     private Long id;
