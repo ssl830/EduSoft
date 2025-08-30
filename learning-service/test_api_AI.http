@@ -16,7 +16,7 @@ X-User-Id: 201
   "context": "Java Web开发"
 }
 
-### 2. 测试练习生成功能
+### 2. 测试练习生成功能 faillllllllllllllllllllllllllllllllllllllllllllllllll
 POST http://localhost:8084/api/learning/ai/rag/generate_exercise
 Content-Type: application/json
 X-User-Id: 201
@@ -25,7 +25,7 @@ X-User-Id: 201
   "prompt": "生成5道关于Java基础的单选题，包含选项、答案和解析"
 }
 
-### 3. 测试主观题AI评分
+### 3. 测试主观题AI评分 faillllllllllllllllllllllllllllllllllllllllllllllllll
 POST http://localhost:8084/api/learning/ai/evaluate-subjective
 Content-Type: application/json
 X-User-Id: 201
@@ -36,7 +36,7 @@ X-User-Id: 201
   "reference_answer": "Spring框架的主要优点包括：1.依赖注入(IoC)降低组件耦合度；2.面向切面编程(AOP)实现横切关注点分离；3.轻量级框架，非侵入性；4.丰富的生态系统；5.良好的测试支持。"
 }
 
-### 4. 测试自测练习生成（SelfPractice功能）
+### 4. 测试自测练习生成（SelfPractice功能） faillllllllllllllllllllllllllllllllllllllllllllllllll
 POST http://localhost:8084/api/learning/self-practice/generate
 Content-Type: application/json
 X-User-Id: 201
@@ -63,7 +63,7 @@ Content-Disposition: form-data; name="course_id"
 CS101
 ------WebKitFormBoundary--
 
-### 6. 测试教学内容生成
+### 6. 测试教学内容生成 faillllllllllllllllllllllllllllllllllllllllllllllllll
 POST http://localhost:8084/api/learning/ai/rag/generate
 Content-Type: application/json
 X-User-Id: 201
@@ -74,7 +74,7 @@ X-User-Id: 201
   "expectedHours": 4
 }
 
-### 7. 测试AI服务通用调用接口
+### 7. 测试AI服务通用调用接口 faillllllllllllllllllllllllllllllllllllllllllllllllll
 POST http://localhost:8084/api/learning/ai/call-service
 Content-Type: application/json
 X-User-Id: 201
@@ -84,7 +84,7 @@ X-User-Id: 201
   "request": {}
 }
 
-### 8. 测试自测练习提交与AI评分
+### 8. 测试自测练习提交与AI评分 faillllllllllllllllllllllllllllllllllllllllllllllllll
 POST http://localhost:8084/api/learning/self-practice/submit
 Content-Type: application/json
 X-User-Id: 201
@@ -110,7 +110,7 @@ X-User-Id: 201
   ]
 }
 
-### 9. 测试练习历史查询
+### 9. 测试练习历史查询 faillllllllllllllllllllllllllllllllllllllllllllllllll
 GET http://localhost:8084/api/learning/self-practice/history
 X-User-Id: 201
 
@@ -129,7 +129,7 @@ Content-Type: application/json
   "question": "什么是机器学习？"
 }
 
-### 13. 测试Python AI服务练习生成（直连）
+### 13. 测试Python AI服务练习生成（直连） faillllllllllllllllllllllllllllllllllllllllllllllllll
 POST http://localhost:8000/rag/generate_exercise
 Content-Type: application/json
 
@@ -137,7 +137,7 @@ Content-Type: application/json
   "prompt": "生成2道关于Python基础的选择题"
 }
 
-### 14. 测试Python AI服务主观题评分（直连）
+### 14. 测试Python AI服务主观题评分（直连） faillllllllllllllllllllllllllllllllllllllllllllllllll
 POST http://localhost:8000/rag/evaluate_subjective
 Content-Type: application/json
 
@@ -153,7 +153,7 @@ Content-Type: application/json
 # 3. 测试11-14验证Python AI微服务的直接连接
 # 4. 如果某个测试失败，请检查：
 #    - 服务是否正常启动
-#    - 端口配置是否正确  
+#    - 端口配置是否正确
 #    - 数据库连接是否正常
 #    - Python AI服务依赖是否安装完整
 
