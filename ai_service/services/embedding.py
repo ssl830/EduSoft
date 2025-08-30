@@ -20,7 +20,7 @@ class EmbeddingService:
         self.api_key = os.getenv("DASHSCOPE_API_KEY")
         self.base_url = os.getenv("QWEN_EMBEDDING_URL", "https://dashscope.aliyuncs.com/compatible-mode/v1")
         self.model = os.getenv("QWEN_EMBEDDING_MODEL", "text-embedding-v4")
-
+        logger.info(self.api_key)
         # 根据模型自动适配合法的dimension
         v3_dims = [64, 128, 256, 512, 768, 1024]
         v4_dims = [1024, 1536, 2048, 3072, 4096]

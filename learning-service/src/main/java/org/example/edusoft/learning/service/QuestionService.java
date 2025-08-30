@@ -13,6 +13,8 @@ public interface QuestionService {
     List<Question> getQuestionList(Long courseId, Integer page, Integer size);
 
     Question getQuestionDetail(Long id);
+    
+    Question getQuestionById(Long id);
 
     void deleteQuestion(Long id);
 

@@ -181,16 +181,100 @@ CREATE TABLE progress (
 -- 错题表
 CREATE TABLE wrong_question (
   id bigint NOT NULL AUTO_INCREMENT,
-  student_id bigint NOT NULL,  -- 引用用户服务
+  student_id bigint NOT NULL,
   question_id bigint NOT NULL,
-  wrong_answer text,
-  correct_answer text,
-  wrong_count int DEFAULT '1',
-  last_wrong_time timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  created_at timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  practice_id bigint DEFAULT NULL,
+  submission_id bigint DEFAULT NULL,
+  mistake_count int DEFAULT 1,
+  first_mistake_time timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  last_mistake_time timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  is_resolved tinyint(1) DEFAULT 0,
+  notes text,
   PRIMARY KEY (id),
   KEY student_id (student_id),
-  KEY question_id (question_id)
+  KEY question_id (question_id),
+  KEY practice_id (practice_id),
+  UNIQUE KEY uk_student_question (student_id, question_id),
+  CONSTRAINT wrong_question_ibfk_1 FOREIGN KEY (question_id) REFERENCES question (id) ON DELETE CASCADE,
+  CONSTRAINT wrong_question_ibfk_2 FOREIGN KEY (practice_id) REFERENCES practice (id) ON DELETE SET NULL,
+  CONSTRAINT wrong_question_ibfk_3 FOREIGN KEY (submission_id) REFERENCES submission (id) ON DELETE SET NULL
+);
+
+-- 收藏题目表
+CREATE TABLE favorite_question (
+  id bigint NOT NULL AUTO_INCREMENT,
+  student_id bigint NOT NULL,
+  question_id bigint NOT NULL,
+  created_time timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  notes text,
+  PRIMARY KEY (id),
+  KEY student_id (student_id),
+  KEY question_id (question_id),
+  UNIQUE KEY uk_student_question (student_id, question_id),
+  CONSTRAINT favorite_question_ibfk_1 FOREIGN KEY (question_id) REFERENCES question (id) ON DELETE CASCADE
+);
+
+-- AI服务调用日志表
+CREATE TABLE ai_service_call_log (
+  id bigint NOT NULL AUTO_INCREMENT,
+  user_id bigint DEFAULT NULL,
+  endpoint varchar(255) NOT NULL,
+  duration_ms bigint NOT NULL,
+  call_time timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  status varchar(50) DEFAULT NULL,
+  error_message text,
+  PRIMARY KEY (id),
+  KEY user_id (user_id)
+);
+
+-- 聊天会话表
+CREATE TABLE chat_session (
+  id bigint NOT NULL AUTO_INCREMENT,
+  user_id bigint NOT NULL,
+  session_title varchar(255) DEFAULT 'New Chat',
+  course_id bigint DEFAULT NULL,
+  course_name varchar(255) DEFAULT NULL,
+  created_at timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  is_active tinyint(1) DEFAULT 1,
+  PRIMARY KEY (id),
+  KEY user_id (user_id),
+  KEY course_id (course_id),
+  KEY idx_user_active (user_id, is_active),
+  KEY idx_updated_at (updated_at)
+);
+
+-- 聊天消息表
+CREATE TABLE chat_message (
+  id bigint NOT NULL AUTO_INCREMENT,
+  session_id bigint NOT NULL,
+  role enum('user','assistant') NOT NULL,
+  content text NOT NULL,
+  `references` json DEFAULT NULL,
+  knowledge_points json DEFAULT NULL,
+  message_order int NOT NULL,
+  created_at timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  token_count int DEFAULT 0,
+  PRIMARY KEY (id),
+  KEY session_id (session_id),
+  KEY idx_session_order (session_id, message_order),
+  KEY idx_created_at (created_at),
+  CONSTRAINT chat_message_ibfk_1 FOREIGN KEY (session_id) REFERENCES chat_session (id) ON DELETE CASCADE
+);
+
+-- 聊天记忆摘要表
+CREATE TABLE chat_memory_summary (
+  id bigint NOT NULL AUTO_INCREMENT,
+  session_id bigint NOT NULL,
+  summary_content text NOT NULL,
+  message_range_start bigint NOT NULL,
+  message_range_end bigint NOT NULL,
+  created_at timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  token_count int DEFAULT 0,
+  PRIMARY KEY (id),
+  KEY session_id (session_id),
+  KEY idx_session_range (session_id, message_range_start, message_range_end),
+  CONSTRAINT chat_memory_summary_ibfk_1 FOREIGN KEY (session_id) REFERENCES chat_session (id) ON DELETE CASCADE
 );
 
 -- 收藏题目表

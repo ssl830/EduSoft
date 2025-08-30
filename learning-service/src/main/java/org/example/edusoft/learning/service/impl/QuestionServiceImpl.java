@@ -129,6 +129,11 @@ public class QuestionServiceImpl implements QuestionService {
     }
 
     @Override
+    public Question getQuestionById(Long id) {
+        return questionMapper.getQuestionById(id);
+    }
+
+    @Override
     @Transactional
     public void deleteQuestion(Long id) {
         Question question = questionMapper.getQuestionById(id);

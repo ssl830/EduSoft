@@ -1,4 +1,5 @@
 -- 学习服务数据库
+drop database if exists learning_db;
 CREATE DATABASE learning_db;
 USE learning_db;
 
@@ -112,6 +113,7 @@ CREATE TABLE self_practice (
                                id bigint NOT NULL AUTO_INCREMENT,
                                student_id bigint NOT NULL,  -- 引用用户服务
                                title varchar(200) NOT NULL,
+                               prompt text DEFAULT NULL,  -- AI生成提示词
                                created_at timestamp NULL DEFAULT CURRENT_TIMESTAMP,
                                PRIMARY KEY (id),
                                KEY student_id (student_id)
@@ -315,3 +317,65 @@ INSERT INTO favorite_question (student_id, question_id) VALUES
                                                             (202, 3),
                                                             (203, 5),
                                                             (202, 1);
+
+-- AI相关表结构
+
+-- AI服务调用日志表
+CREATE TABLE ai_service_call_log (
+    id bigint NOT NULL AUTO_INCREMENT,
+    user_id bigint NOT NULL,
+    endpoint varchar(255) NOT NULL,
+    request_data json DEFAULT NULL,
+    response_data json DEFAULT NULL,
+    status varchar(50) DEFAULT 'SUCCESS',
+    error_message text DEFAULT NULL,
+    execution_time_ms int DEFAULT NULL,
+    created_at timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    KEY idx_user_id (user_id),
+    KEY idx_endpoint (endpoint),
+    KEY idx_created_at (created_at)
+);
+
+-- 聊天会话表
+CREATE TABLE chat_session (
+    id bigint NOT NULL AUTO_INCREMENT,
+    user_id bigint NOT NULL,
+    session_name varchar(255) DEFAULT '新对话',
+    created_at timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    KEY idx_user_id (user_id),
+    KEY idx_created_at (created_at)
+);
+
+-- 聊天记录表
+CREATE TABLE chat_memory (
+    id bigint NOT NULL AUTO_INCREMENT,
+    session_id bigint NOT NULL,
+    user_id bigint NOT NULL,
+    role enum('user','assistant') NOT NULL,
+    content text NOT NULL,
+    created_at timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    KEY idx_session_id (session_id),
+    KEY idx_user_id (user_id),
+    KEY idx_created_at (created_at),
+    CONSTRAINT chat_memory_ibfk_1 FOREIGN KEY (session_id) REFERENCES chat_session (id) ON DELETE CASCADE
+);
+
+-- 视频摘要表
+CREATE TABLE video_summary (
+    id bigint NOT NULL AUTO_INCREMENT,
+    video_id bigint NOT NULL,
+    user_id bigint NOT NULL,
+    summary_content text NOT NULL,
+    key_points json DEFAULT NULL,
+    summary_type varchar(50) DEFAULT 'AUTO',
+    created_at timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    KEY idx_video_id (video_id),
+    KEY idx_user_id (user_id),
+    KEY idx_created_at (created_at)
+);

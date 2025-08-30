@@ -1,0 +1,164 @@
+### AI微服务功能测试
+### 测试learning-service中的AI功能与Python AI微服务的连接
+
+# 前置条件：
+# 1. Learning Service运行在 http://localhost:8084
+# 2. Python AI Service运行在 http://localhost:8000
+# 3. 请确保两个服务都已启动
+
+### 1. 测试AI助手功能 - RAG问答
+POST http://localhost:8084/api/learning/ai/rag/assistant
+Content-Type: application/json
+X-User-Id: 201
+
+{
+  "question": "什么是Spring Boot？",
+  "context": "Java Web开发"
+}
+
+### 2. 测试练习生成功能
+POST http://localhost:8084/api/learning/ai/rag/generate_exercise
+Content-Type: application/json
+X-User-Id: 201
+
+{
+  "prompt": "生成5道关于Java基础的单选题，包含选项、答案和解析"
+}
+
+### 3. 测试主观题AI评分
+POST http://localhost:8084/api/learning/ai/evaluate-subjective
+Content-Type: application/json
+X-User-Id: 201
+
+{
+  "question": "请简述Spring框架的优点",
+  "student_answer": "Spring框架具有依赖注入、面向切面编程、轻量级等特点，能够简化Java企业级应用开发。",
+  "reference_answer": "Spring框架的主要优点包括：1.依赖注入(IoC)降低组件耦合度；2.面向切面编程(AOP)实现横切关注点分离；3.轻量级框架，非侵入性；4.丰富的生态系统；5.良好的测试支持。"
+}
+
+### 4. 测试自测练习生成（SelfPractice功能）
+POST http://localhost:8084/api/learning/self-practice/generate
+Content-Type: application/json
+X-User-Id: 201
+
+{
+  "prompt": "生成3道关于数据库的练习题，包含单选题和填空题"
+}
+
+### 5. 测试文件上传与知识库构建
+POST http://localhost:8084/api/learning/ai/embedding/upload
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary
+X-User-Id: 201
+
+------WebKitFormBoundary
+Content-Disposition: form-data; name="file"; filename="test.txt"
+Content-Type: text/plain
+
+这是一个测试文档，包含Java Spring Boot相关知识。
+Spring Boot是一个用于简化Spring应用开发的框架。
+它提供了自动配置、起步依赖等特性。
+------WebKitFormBoundary
+Content-Disposition: form-data; name="course_id"
+
+CS101
+------WebKitFormBoundary--
+
+### 6. 测试教学内容生成
+POST http://localhost:8084/api/learning/ai/rag/generate
+Content-Type: application/json
+X-User-Id: 201
+
+{
+  "courseOutline": "Java面向对象编程：类与对象、继承、多态、封装",
+  "courseName": "Java程序设计",
+  "expectedHours": 4
+}
+
+### 7. 测试AI服务通用调用接口
+POST http://localhost:8084/api/learning/ai/call-service
+Content-Type: application/json
+X-User-Id: 201
+
+{
+  "endpoint": "/health",
+  "request": {}
+}
+
+### 8. 测试自测练习提交与AI评分
+POST http://localhost:8084/api/learning/self-practice/submit
+Content-Type: application/json
+X-User-Id: 201
+
+{
+  "practiceId": 1,
+  "answers": [
+    {
+      "questionId": 1,
+      "answer": "A",
+      "type": "singlechoice",
+      "correctAnswer": "A",
+      "score": 10
+    },
+    {
+      "questionId": 2,
+      "answer": "Spring是一个轻量级的Java开发框架",
+      "type": "fillblank",
+      "question": "请简述Spring框架的特点",
+      "correctAnswer": "Spring是一个轻量级、非侵入性的Java开发框架",
+      "score": 20
+    }
+  ]
+}
+
+### 9. 测试练习历史查询
+GET http://localhost:8084/api/learning/self-practice/history
+X-User-Id: 201
+
+### 10. 测试练习详情查看
+GET http://localhost:8084/api/learning/self-practice/detail/1
+X-User-Id: 201
+
+### 11. 测试Python AI服务直连（调试用）
+GET http://localhost:8000/health
+
+### 12. 测试Python AI服务RAG问答（直连）
+POST http://localhost:8000/rag/assistant
+Content-Type: application/json
+
+{
+  "question": "什么是机器学习？"
+}
+
+### 13. 测试Python AI服务练习生成（直连）
+POST http://localhost:8000/rag/generate_exercise
+Content-Type: application/json
+
+{
+  "prompt": "生成2道关于Python基础的选择题"
+}
+
+### 14. 测试Python AI服务主观题评分（直连）
+POST http://localhost:8000/rag/evaluate_subjective
+Content-Type: application/json
+
+{
+  "question": "请解释Python中的装饰器概念",
+  "student_answer": "装饰器是一种设计模式，可以在不修改原函数的情况下增加功能",
+  "reference_answer": "装饰器是Python中的一种语法糖，允许在不修改原函数代码的情况下，为函数添加额外的功能。它本质上是一个返回函数的高阶函数。"
+}
+
+### 测试说明：
+# 1. 请按顺序执行测试，确保服务连接正常
+# 2. 测试1-10验证learning-service的AI功能集成
+# 3. 测试11-14验证Python AI微服务的直接连接
+# 4. 如果某个测试失败，请检查：
+#    - 服务是否正常启动
+#    - 端口配置是否正确  
+#    - 数据库连接是否正常
+#    - Python AI服务依赖是否安装完整
+
+### 预期结果：
+# - 所有测试应返回JSON格式响应
+# - 状态码应为200
+# - AI功能应正常生成内容/评分
+# - 数据库应正确保存相关记录
