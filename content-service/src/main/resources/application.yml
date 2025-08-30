@@ -27,12 +27,6 @@ logging:
   level:
     org.example.edusoft.content: DEBUG
 
-management:
-  endpoints:
-    web:
-      exposure:
-        include: "*"
-
 # MyBatis 配置
 mybatis:
   configuration:
@@ -48,4 +42,9 @@ course:
   service:
     url: http://localhost:8082
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
 

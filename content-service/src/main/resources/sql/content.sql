@@ -193,3 +193,56 @@ INSERT INTO discussion_reply (discussion_id, user_id, user_num, content, is_teac
 INSERT INTO learning_progress (resource_id, student_id, progress, last_position, watch_count) VALUES
 (1, 2, 300.00, 300, 1),
 (1, 3, 120.00, 120, 1);
+
+-- 作业表
+CREATE TABLE IF NOT EXISTS `homework` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '作业标题',
+  `description` text COLLATE utf8mb4_unicode_ci COMMENT '作业描述',
+  `course_id` bigint DEFAULT NULL COMMENT '课程ID',
+  `chapter_id` bigint DEFAULT NULL COMMENT '章节ID',
+  `chapter_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '章节名称',
+  `class_id` bigint NOT NULL COMMENT '班级ID',
+  `created_by` bigint NOT NULL COMMENT '创建者ID',
+  `created_by_name` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '创建者姓名',
+  `attachment_url` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '附件URL',
+  `object_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '对象存储路径',
+  `file_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '文件名',
+  `deadline` datetime NOT NULL COMMENT '截止时间',
+  `status` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT 'published' COMMENT '状态',
+  `submission_count` int DEFAULT 0 COMMENT '提交数量',
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_class_id` (`class_id`),
+  KEY `idx_course_id` (`course_id`),
+  KEY `idx_created_by` (`created_by`),
+  KEY `idx_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT '作业表';
+
+-- 作业提交表
+CREATE TABLE IF NOT EXISTS `homeworksubmission` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `homework_id` bigint NOT NULL COMMENT '作业ID',
+  `student_id` bigint NOT NULL COMMENT '学生ID',
+  `student_name` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '学生姓名',
+  `file_url` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '文件URL',
+  `object_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '对象存储路径',
+  `submitted_at` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '提交时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_homework_id` (`homework_id`),
+  KEY `idx_student_id` (`student_id`),
+  KEY `idx_homework_student` (`homework_id`, `student_id`),
+  CONSTRAINT `homeworksubmission_ibfk_1` FOREIGN KEY (`homework_id`) REFERENCES `homework` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT '作业提交表';
+
+-- 插入作业相关测试数据
+INSERT INTO homework (title, description, course_id, chapter_id, chapter_name, class_id, created_by, created_by_name, attachment_url, object_name, file_name, deadline, status, submission_count) VALUES
+('第一次作业 - ER图设计', '请完成ER图设计，要求包含至少3个实体，2个关系，每个实体至少3个属性', 1, 1, '第一章 数据库基础', 1, 1, '张老师', '/uploads/homework/hw1.pdf', 'homework/1/hw1.pdf', 'hw1.pdf', '2025-12-31 23:59:59', 'published', 2),
+('TensorFlow.js实践作业', '使用TensorFlow.js实现简单的线性回归模型，并提交代码和运行结果截图', 2, 3, 'cp07-TensorFlow.js应用开发', 2, 4, 'Teacher2', '/uploads/homework/tfjs_hw.pdf', 'homework/2/tfjs_hw.pdf', 'tfjs_hw.pdf', '2025-12-25 23:59:59', 'published', 1),
+('数据库查询练习', '完成以下SQL查询练习：1. 基本查询 2. 连接查询 3. 聚合查询', 1, 2, '第二章 SQL基础', 1, 1, '张老师', '/uploads/homework/sql_practice.pdf', 'homework/1/sql_practice.pdf', 'sql_practice.pdf', '2025-12-20 23:59:59', 'published', 0);
+
+INSERT INTO homeworksubmission (homework_id, student_id, student_name, file_url, object_name, submitted_at) VALUES
+(1, 2, '学生张三', '/uploads/submission/hw1_student2.pdf', 'homework/submission/1/2_hw1_student2.pdf', '2025-12-15 14:30:00'),
+(1, 3, '学生李四', '/uploads/submission/hw1_student3.pdf', 'homework/submission/1/3_hw1_student3.pdf', '2025-12-16 16:45:00'),
+(2, 5, '学生王五', '/uploads/submission/tfjs_hw_student5.zip', 'homework/submission/2/5_tfjs_hw_student5.zip', '2025-12-20 10:15:00');

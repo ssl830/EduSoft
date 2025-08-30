@@ -51,3 +51,4 @@ GROUP BY role;
 -- DROP TABLE IF EXISTS `courseplatform`.`user`;
 
 
+
