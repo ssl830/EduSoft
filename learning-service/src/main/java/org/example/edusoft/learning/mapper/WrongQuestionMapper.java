@@ -42,17 +42,13 @@ public interface WrongQuestionMapper {
                 q.type,
                 q.options,
                 q.answer,
+                q.course_id,
+                q.section_id,
                 wq.wrong_answer,
                 wq.last_wrong_time,
-                c.name as course_name,
-                cs.title as section_title,
-                p.title as practice_title
+                wq.wrong_count
             FROM wrong_question wq
             JOIN question q ON wq.question_id = q.id
-            LEFT JOIN course c ON q.course_id = c.id
-            LEFT JOIN coursesection cs ON q.section_id = cs.id
-            LEFT JOIN practicequestion pq ON q.id = pq.question_id
-            LEFT JOIN practice p ON pq.practice_id = p.id
             WHERE wq.student_id = #{studentId}
             ORDER BY wq.last_wrong_time DESC
             """)

@@ -80,4 +80,10 @@ public interface QuestionMapper {
 
     @Update("UPDATE practice_question SET score = #{score} WHERE practice_id = #{practiceId} AND question_id = #{questionId}")
     void updatePracticeQuestionScore(@Param("practiceId") Long practiceId, @Param("questionId") Long questionId, @Param("score") Integer score);
+
+    @Select("SELECT * FROM question ORDER BY created_at DESC")
+    List<Question> getAllQuestions();
+
+    @Select("SELECT * FROM question WHERE course_id = #{courseId} ORDER BY created_at DESC")
+    List<Question> getQuestionsByCourseId(@Param("courseId") Long courseId);
 }
