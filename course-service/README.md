@@ -1,169 +1,347 @@
-# 课程班级管理微服务
+# 课程微服务 (Course Service)
 
-## 项目简介
-课程班级管理微服务，负责处理课程、班级、学生等相关的业务逻辑。
+**服务端口**: 8082  
+**技术栈**: Spring Boot 3.4.5 + MyBatis + MySQL
 
-## 主要功能
-- 课程管理（增删改查）
-- 班级管理（增删改查、学生加入/退出）
-- 课程章节管理
-- 学生导入管理
-- 用户认证集成
+## 功能模块
 
-## 技术栈
-- Spring Boot 3.1.0
-- MyBatis Plus 3.5.7
-- MySQL 8.0
-- Spring Cloud (已禁用)
+### 1. 课程管理
+- 创建、查询、更新、删除课程
+- 课程信息管理（课程名称、代码、大纲、目标、评估方式）
+- 教师课程列表查询
 
-## 快速开始
+### 2. 班级管理
+- 班级创建和管理
+- 班级成员管理（加入、离开班级）
+- 班级代码管理
+- 教师/学生班级列表查询
 
-### 1. 环境要求
-- Java 21
-- MySQL 8.0+
-- Maven 3.6+
+### 3. 课程章节管理
+- 课程章节的增删改查
+- 章节排序管理
 
-### 2. 数据库配置
-确保MySQL中已创建 `course_db` 数据库，并导入相应的表结构。
+### 4. 学生导入管理
+- 批量导入学生到班级
+- 导入记录管理
+- 导入历史查询
 
-### 3. 配置文件
-修改 `src/main/resources/application.yml` 中的数据库连接信息。
+## API接口文档
 
-### 4. 启动服务
-```bash
-mvn spring-boot:run
+### 认证说明
+所有接口都需要在请求头中包含 `satoken` 进行身份验证：
+```http
+satoken: your_token_here
 ```
 
-服务将在 `http://localhost:8082` 启动。
+### 课程管理接口
 
-## 微服务通信
+#### 1. 创建课程
+```http
+POST /api/courses
+Content-Type: application/json
+satoken: {token}
 
-### 用户服务集成
-本微服务与用户微服务集成，用于：
-- 用户身份验证
-- 获取用户信息
-- 权限控制
-
-### 认证方式
-支持以下认证头格式：
-
-1. **Authorization头（推荐）**：
-   ```
-   Authorization: Bearer {token}
-   X-User-Id: {userId}
-   ```
-
-2. **satoken头**：
-   ```
-   satoken: {token}
-   X-User-Id: {userId}
-   ```
-
-3. **Cookie方式**：
-   ```
-   Cookie: satoken={token}
-   X-User-Id: {userId}
-   ```
-
-### 测试认证
-在测试API时，请确保：
-
-1. 先在用户微服务登录获取token
-2. 在请求头中包含：
-   - `Authorization: Bearer {你的token}`
-   - `X-User-Id: {你的用户ID}`
-
-### 绕过认证（仅用于测试）
-如需跳过认证进行测试，可以：
-
-1. **临时方式**：在请求头添加 `X-Bypass-Auth: true`
-2. **全局方式**：在 `application.yml` 中设置 `auth.required: false`
-
-## API文档
-
-### 课程管理
-- `POST /api/courses` - 创建课程
-- `GET /api/courses/list` - 获取所有课程
-- `GET /api/courses/{id}` - 获取课程详情
-- `PUT /api/courses/{id}` - 更新课程
-- `DELETE /api/courses/{id}` - 删除课程
-
-### 班级管理
-- `POST /api/classes` - 创建班级
-- `GET /api/classes/{id}` - 获取班级详情
-- `PUT /api/classes/{id}` - 更新班级
-- `DELETE /api/classes/{id}` - 删除班级
-- `POST /api/classes/{id}/join/{userId}` - 加入班级
-- `DELETE /api/classes/{id}/leave/{userId}` - 离开班级
-
-### 课程章节
-- `POST /api/course-sections` - 创建章节
-- `GET /api/course-sections/course/{courseId}` - 获取课程章节
-- `PUT /api/course-sections/{id}` - 更新章节
-- `DELETE /api/course-sections/{id}` - 删除章节
-
-### 学生导入
-- `POST /api/imports/students` - 批量导入学生
-- `GET /api/imports/records/{classId}` - 获取导入记录
-
-## 数据库表结构
-
-### 主要表
-- `course` - 课程信息
-- `class` - 班级信息
-- `courseclass` - 课程班级关联
-- `coursesection` - 课程章节
-- `classuser` - 班级用户关联
-- `import_record` - 导入记录
-
-## 部署
-
-### Docker部署
-```bash
-docker build -t course-service .
-docker run -p 8082:8082 course-service
+{
+  "teacherId": 4,
+  "name": "计算机科学导论",
+  "code": "CS103",
+  "outline": "计算机科学基础课程",
+  "objective": "了解计算机科学的基本概念",
+  "assessment": "期末考试 + 平时作业"
+}
 ```
 
-### Kubernetes部署
-参考 `kubernetes/course-service.yaml` 配置文件。
-
-## 监控
-
-### 健康检查
-- `GET /actuator/health` - 服务健康状态
-
-### 日志
-日志级别可在 `application.yml` 中配置，支持DEBUG、INFO、WARN、ERROR级别。
-
-## 故障排除
-
-### 常见问题
-
-1. **401 Unauthorized**
-   - 检查认证头是否正确
-   - 确认token是否有效
-   - 验证用户ID是否存在
-
-2. **数据库连接失败**
-   - 检查MySQL服务是否启动
-   - 验证数据库连接参数
-   - 确认数据库是否存在
-
-3. **用户服务通信失败**
-   - 检查用户服务是否启动
-   - 验证 `services.user.base-url` 配置
-   - 确认网络连通性
-
-### 调试模式
-启用DEBUG日志：
-```yaml
-logging:
-  level:
-    org.example.edusoft: DEBUG
+**响应示例**:
+```json
+{
+  "code": 200,
+  "message": "课程创建成功",
+  "data": {
+    "id": 1,
+    "teacherId": 4,
+    "name": "计算机科学导论",
+    "code": "CS103",
+    "outline": "计算机科学基础课程",
+    "objective": "了解计算机科学的基本概念",
+    "assessment": "期末考试 + 平时作业",
+    "createTime": "2024-01-01T10:00:00"
+  }
+}
 ```
 
-## 贡献
-欢迎提交Issue和Pull Request。
+#### 2. 获取所有课程列表
+```http
+GET /api/courses/list
+satoken: {token}
+```
 
-## 许可证
-本项目采用MIT许可证。
+#### 3. 获取用户课程列表
+```http
+GET /api/courses/user/{userId}
+satoken: {token}
+```
+
+#### 4. 获取课程详情
+```http
+GET /api/courses/{courseId}
+satoken: {token}
+```
+
+#### 5. 更新课程
+```http
+PUT /api/courses/{courseId}
+Content-Type: application/json
+satoken: {token}
+
+{
+  "teacherId": 4,
+  "name": "计算机科学导论（更新版）",
+  "code": "CS101",
+  "outline": "计算机科学基础课程 - 更新版",
+  "objective": "了解计算机科学的基本概念和最新发展",
+  "assessment": "期末考试 + 平时作业 + 项目实践"
+}
+```
+
+#### 6. 删除课程
+```http
+DELETE /api/courses/{courseId}
+satoken: {token}
+```
+
+### 班级管理接口
+
+#### 1. 创建班级
+```http
+POST /api/classes
+Content-Type: application/json
+satoken: {token}
+
+{
+  "courseId": 2,
+  "name": "CS101-2024春季班",
+  "classCode": "CS101_2024_SPRING"
+}
+```
+
+#### 2. 获取教师班级列表
+```http
+GET /api/classes/teacher/{teacherId}
+satoken: {token}
+```
+
+#### 3. 获取学生班级列表
+```http
+GET /api/classes/student/{studentId}
+satoken: {token}
+```
+
+#### 4. 获取班级详情
+```http
+GET /api/classes/{classId}
+satoken: {token}
+```
+
+#### 5. 更新班级
+```http
+PUT /api/classes/{classId}
+Content-Type: application/json
+satoken: {token}
+
+{
+  "courseId": 2,
+  "name": "CS101-2024春季班（更新版）",
+  "classCode": "CS101_2024_V2"
+}
+```
+
+#### 6. 删除班级
+```http
+DELETE /api/classes/{classId}
+satoken: {token}
+```
+
+### 班级成员管理接口
+
+#### 1. 加入班级
+```http
+POST /api/classes/{classId}/join/{studentId}
+satoken: {token}
+```
+
+#### 2. 离开班级
+```http
+DELETE /api/classes/{classId}/leave/{studentId}
+satoken: {token}
+```
+
+#### 3. 获取班级成员
+```http
+GET /api/classes/{classId}/users
+satoken: {token}
+```
+
+#### 4. 通过班级代码加入班级
+```http
+POST /api/classes/join?classCode={classCode}&studentId={studentId}
+Content-Type: application/json
+satoken: {token}
+```
+
+#### 5. 添加学生到班级
+```http
+POST /api/classes/{classId}/students?studentId={studentId}
+satoken: {token}
+```
+
+#### 6. 从班级移除学生
+```http
+DELETE /api/classes/{classId}/students/{studentId}
+satoken: {token}
+```
+
+#### 7. 获取班级学生数量
+```http
+GET /api/classes/{classId}/student-count
+satoken: {token}
+```
+
+#### 8. 获取教师简化班级列表
+```http
+GET /api/classes/teacher/simple/{teacherId}
+satoken: {token}
+```
+
+#### 9. 获取用户课程表
+```http
+GET /api/classes/schedule/user/{userId}
+satoken: {token}
+```
+
+### 课程章节管理接口
+
+#### 1. 创建课程章节
+```http
+POST /api/course-sections
+Content-Type: application/json
+satoken: {token}
+
+{
+  "courseId": 9,
+  "title": "第一章：计算机基础",
+  "sortOrder": 1
+}
+```
+
+#### 2. 获取课程章节列表
+```http
+GET /api/course-sections/course/{courseId}
+satoken: {token}
+```
+
+#### 3. 更新课程章节
+```http
+PUT /api/course-sections/{sectionId}
+Content-Type: application/json
+satoken: {token}
+
+{
+  "courseId": 9,
+  "title": "第一章：计算机基础（更新版）",
+  "sortOrder": 1
+}
+```
+
+#### 4. 删除课程章节
+```http
+DELETE /api/course-sections/{sectionId}
+satoken: {token}
+```
+
+### 学生导入管理接口
+
+#### 1. 导入学生
+```http
+POST /api/imports/students
+Content-Type: application/json
+satoken: {token}
+
+{
+  "classId": 6,
+  "operatorId": 4,
+  "fileName": "students_import.csv",
+  "importType": "BATCH_IMPORT",
+  "studentData": [
+    {
+      "studentId": 10,
+      "studentName": "王五"
+    },
+    {
+      "studentId": 12,
+      "studentName": "赵六"
+    }
+  ]
+}
+```
+
+#### 2. 获取导入记录
+```http
+GET /api/imports/records/{classId}
+satoken: {token}
+```
+
+#### 3. 获取特定导入记录
+```http
+GET /api/imports/record/{recordId}
+satoken: {token}
+```
+
+## 测试接口
+
+项目提供了完整的测试接口文件 `test-all-interfaces-fixed.http`，包含所有接口的测试用例。
+
+### 测试步骤
+1. 首先获取有效token（通过用户服务登录）
+2. 使用token测试各个功能模块
+3. 按照测试文件中的顺序执行测试用例
+
+
+## 错误处理
+
+### 常见错误码
+- `200`: 请求成功
+- `400`: 请求参数错误
+- `401`: 未授权访问
+- `403`: 权限不足
+- `404`: 资源不存在
+- `500`: 服务器内部错误
+
+### 错误响应格式
+```json
+{
+  "code": 400,
+  "message": "错误描述",
+  "data": null
+}
+```
+
+## 开发说明
+
+### 项目结构
+```
+src/main/java/
+├── com.example.courseservice
+│   ├── controller/    # 控制器层
+│   ├── service/       # 服务层
+│   ├── mapper/        # 数据访问层
+│   ├── entity/        # 实体类
+│   ├── dto/           # 数据传输对象
+│   └── config/        # 配置类
+```
+
+### 开发规范
+1. 遵循RESTful API设计规范
+2. 使用统一的响应格式
+3. 所有接口都需要进行权限验证
+4. 数据库操作使用MyBatis
+5. 异常处理统一在全局异常处理器中处理

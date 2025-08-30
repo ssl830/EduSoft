@@ -68,22 +68,16 @@ public class ClassServiceImpl implements ClassService {
         System.out.println("fetchUsernameByUserId: 用户微服务地址=" + userServiceBaseUrl);
     
         try {
-            // 最外层 Map：{code=200, msg=..., data={...}}
-            Map<String, Object> resp = userServiceClient.fetchUserById(
+            // fetchUserById 已经处理了 SaResult 格式，直接返回用户数据
+            Map<String, Object> userData = userServiceClient.fetchUserById(
                     userServiceBaseUrl, token, String.valueOf(userId));
-            System.out.println("fetchUsernameByUserId: 用户微服务返回数据=" + resp);
+            System.out.println("fetchUsernameByUserId: 用户微服务返回数据=" + userData);
     
-            if (resp != null) {
-                // 取出 data 节点
-                Map<String, Object> data = (Map<String, Object>) resp.get("data");
-                if (data != null) {
-                    Object name = data.get("username");
-                    String result = name == null ? null : String.valueOf(name);
-                    System.out.println("fetchUsernameByUserId: 提取的用户名=" + result);
-                    return result;
-                } else {
-                    System.out.println("fetchUsernameByUserId: data节点为空");
-                }
+            if (userData != null) {
+                Object name = userData.get("username");
+                String result = name == null ? null : String.valueOf(name);
+                System.out.println("fetchUsernameByUserId: 提取的用户名=" + result);
+                return result;
             } else {
                 System.out.println("fetchUsernameByUserId: 用户微服务返回null");
             }
@@ -248,8 +242,49 @@ public class ClassServiceImpl implements ClassService {
         if (classId == null) {
             throw new IllegalArgumentException("班级ID不能为空");
         }
-        // 原返回里 studentName 可能为空，这里可按需补充。
-        return classUserMapper.getClassUsers(classId);
+        
+        // 获取班级成员基本信息
+        List<ClassUser> classUsers = classUserMapper.getClassUsers(classId);
+        
+        // 获取当前请求的token
+        String token = resolveOutboundToken();
+        
+        // 为每个班级成员获取用户信息
+        for (ClassUser classUser : classUsers) {
+            try {
+                // 调用用户微服务获取用户信息
+                Map<String, Object> userData = userServiceClient.fetchUserById(
+                        userServiceBaseUrl, token, String.valueOf(classUser.getUserId()));
+                
+                if (userData != null) {
+                    // 设置学生姓名和学号
+                    Object username = userData.get("username");
+                    Object userId = userData.get("userId");
+                    
+                    if (username != null) {
+                        classUser.setStudentName(String.valueOf(username));
+                    } else {
+                        classUser.setStudentName("用户" + classUser.getUserId());
+                    }
+                    if (userId != null) {
+                        classUser.setStudentId(String.valueOf(userId));
+                    } else {
+                        classUser.setStudentId("ID" + classUser.getUserId());
+                    }
+                } else {
+                    // 用户微服务返回null，设置默认值
+                    classUser.setStudentName("用户" + classUser.getUserId());
+                    classUser.setStudentId("ID" + classUser.getUserId());
+                }
+            } catch (Exception e) {
+                System.err.println("获取用户信息失败: userId=" + classUser.getUserId() + ", 错误: " + e.getMessage());
+                // 如果获取用户信息失败，设置默认值
+                classUser.setStudentName("用户" + classUser.getUserId());
+                classUser.setStudentId("ID" + classUser.getUserId());
+            }
+        }
+        
+        return classUsers;
     }
 
     @Override

@@ -29,21 +29,21 @@ public class AuthInterceptor implements HandlerInterceptor {
 
 	/**
 	 * 从请求中提取认证token
-	 * 优先级：Authorization > satoken > Cookie
+	 * 优先级：satoken > Authorization > Cookie
 	 */
 	private String extractToken(HttpServletRequest request) {
-		// 优先使用Authorization头
-		String authHeader = request.getHeader("Authorization");
-		if (authHeader != null && !authHeader.trim().isEmpty()) {
-			logger.debug("从Authorization头获取token: {}", authHeader);
-			return authHeader;
-		}
-
-		// 其次使用satoken头
+		// 优先使用satoken头（符合Sa-Token框架）
 		String satoken = request.getHeader("satoken");
 		if (satoken != null && !satoken.trim().isEmpty()) {
 			logger.debug("从satoken头获取token: {}", satoken);
 			return satoken;
+		}
+
+		// 其次使用Authorization头
+		String authHeader = request.getHeader("Authorization");
+		if (authHeader != null && !authHeader.trim().isEmpty()) {
+			logger.debug("从Authorization头获取token: {}", authHeader);
+			return authHeader;
 		}
 
 		// 最后尝试从Cookie中获取
@@ -80,15 +80,8 @@ public class AuthInterceptor implements HandlerInterceptor {
 			return true;
 		}
 
-		// 提取认证信息
+		// 提取认证token
 		String token = extractToken(request);
-		String userId = request.getHeader("X-User-Id");
-		
-		if (userId == null || userId.trim().isEmpty()) {
-			logger.warn("请求缺少X-User-Id头: {}", requestPath);
-			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-			return false;
-		}
 		
 		if (token == null || token.trim().isEmpty()) {
 			logger.warn("请求缺少认证token: {}", requestPath);
@@ -97,18 +90,31 @@ public class AuthInterceptor implements HandlerInterceptor {
 		}
 
 		try {
-			logger.debug("验证用户: {}, Token: {}", userId, token);
-			Map<String, Object> user = userServiceClient.fetchUserById(userServiceBaseUrl, token, userId);
+			// 通过token获取当前用户信息
+			logger.debug("验证token: {}", token);
+			Map<String, Object> user = userServiceClient.fetchCurrentUser(userServiceBaseUrl, token);
 			
 			if (user == null || user.isEmpty()) {
-				logger.warn("用户验证失败，用户ID: {}", userId);
+				logger.warn("token验证失败，用户信息为空");
+				response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+				return false;
+			}
+
+			// 验证用户信息完整性
+			Object userId = user.get("id");
+			Object username = user.get("username");
+			
+			logger.debug("获取到用户信息: id={}, username={}, 完整信息={}", userId, username, user);
+			
+			if (userId == null) {
+				logger.warn("用户信息中缺少id字段: {}", user);
 				response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 				return false;
 			}
 
 			// 将用户信息存储到请求属性中，供后续使用
 			request.setAttribute("currentUser", user);
-			logger.debug("用户验证成功: {}", userId);
+			logger.debug("用户验证成功: id={}, username={}", userId, username);
 			return true;
 			
 		} catch (Exception ex) {

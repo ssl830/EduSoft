@@ -61,22 +61,16 @@ public class CourseServiceImpl implements CourseService {
         System.out.println("fetchUsernameByUserId: 用户微服务地址=" + userServiceBaseUrl);
     
         try {
-            // 最外层 Map：{code=200, msg=..., data={...}}
-            Map<String, Object> resp = userServiceClient.fetchUserById(
+            // fetchUserById 已经处理了 SaResult 格式，直接返回用户数据
+            Map<String, Object> userData = userServiceClient.fetchUserById(
                     userServiceBaseUrl, token, String.valueOf(userId));
-            System.out.println("fetchUsernameByUserId: 用户微服务返回数据=" + resp);
+            System.out.println("fetchUsernameByUserId: 用户微服务返回数据=" + userData);
     
-            if (resp != null) {
-                // 取出 data 节点
-                Map<String, Object> data = (Map<String, Object>) resp.get("data");
-                if (data != null) {
-                    Object name = data.get("username");
-                    String result = name == null ? null : String.valueOf(name);
-                    System.out.println("fetchUsernameByUserId: 提取的用户名=" + result);
-                    return result;
-                } else {
-                    System.out.println("fetchUsernameByUserId: data节点为空");
-                }
+            if (userData != null) {
+                Object name = userData.get("username");
+                String result = name == null ? null : String.valueOf(name);
+                System.out.println("fetchUsernameByUserId: 提取的用户名=" + result);
+                return result;
             } else {
                 System.out.println("fetchUsernameByUserId: 用户微服务返回null");
             }
@@ -171,14 +165,8 @@ public class CourseServiceImpl implements CourseService {
             throw new IllegalArgumentException("课程不存在");
         }
         
-        // 清理没有外键约束的关联数据
-        // 1. 删除课程相关的题库题目
-        courseMapper.deleteQuestionsByCourseId(id);
-        
-        // 2. 删除课程相关的练习
-        courseMapper.deletePracticesByCourseId(id);
-        
-        // 3. 删除课程（会自动级联删除：coursesection, courseclass, discussion, progress等）
+        // 删除课程（会自动级联删除：coursesection, courseclass, discussion, progress等）
+        // 注意：question、practice、submission等表由其他微服务负责，不在此处删除
         return courseMapper.deleteById(id) > 0;
     }
     

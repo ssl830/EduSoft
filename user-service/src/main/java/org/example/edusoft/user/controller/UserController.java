@@ -181,6 +181,40 @@ public class UserController {
         }
     }
 
+    // 微服务间token验证接口 - 专门为其他微服务提供
+    @SaIgnore
+    @GetMapping("/validate")
+    public SaResult validateToken(@RequestHeader("satoken") String token) {
+        try {
+            // 手动设置token到当前会话
+            StpUtil.setTokenValue(token);
+            
+            // 检查是否登录
+            if (!StpUtil.isLogin()) {
+                return SaResult.error("token无效");
+            }
+            
+            // 获取用户ID并转换为Long类型
+            String loginIdStr = StpUtil.getLoginId().toString();
+            Long userId = Long.parseLong(loginIdStr);
+            
+            // 获取用户信息
+            User user = userService.findById(userId);
+            if (user == null) {
+                return SaResult.error("用户不存在");
+            }
+            
+            // 返回用户信息，但不返回密码
+            user.setPasswordHash(null);
+            return SaResult.ok("验证成功").setData(user);
+        } catch (NumberFormatException e) {
+            return SaResult.error("用户ID格式错误");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return SaResult.error("token验证失败：" + e.getMessage());
+        }
+    }
+
     // 更新用户信息 - 修改为PUT方法，符合README规范
     @PutMapping("/{userId}")
     public SaResult updateUserInfo(@PathVariable String userId, @Valid @RequestBody UserUpdate updateDTO) {

@@ -60,7 +60,24 @@ public class UserServiceClient {
 				
 				if (response.getBody() != null) {
 					logger.debug("成功获取用户信息: {}", response.getBody());
-					return response.getBody();
+					
+					// 处理SaResult格式的响应
+					Map<String, Object> result = response.getBody();
+					Integer code = (Integer) result.get("code");
+					
+					if (code != null && code == 200) {
+						// 成功响应，返回data部分
+						Object data = result.get("data");
+						if (data instanceof Map) {
+							return (Map<String, Object>) data;
+						} else {
+							logger.warn("响应data不是Map类型: {}", data);
+							continue; // 尝试下一个端点
+						}
+					} else {
+						logger.debug("用户服务返回错误: {}", result);
+						continue; // 尝试下一个端点
+					}
 				}
 			} catch (HttpStatusCodeException ex) {
 				logger.debug("尝试URL {} 失败: {} {}", url, ex.getStatusCode(), ex.getResponseBodyAsString());
@@ -72,10 +89,67 @@ public class UserServiceClient {
 
 		// 所有端点都失败了
 		if (lastEx != null) {
-			logger.error("用户服务请求失败，状态码: {}, 响应: {}", 
-				lastEx.getStatusCode(), lastEx.getResponseBodyAsString());
-		} else {
-			logger.error("用户服务不可用，所有端点都无法访问");
+			logger.warn("所有用户服务端点都失败，最后错误: {} {}", lastEx.getStatusCode(), lastEx.getResponseBodyAsString());
+		}
+		return null;
+	}
+
+	/**
+	 * 通过token获取当前用户信息
+	 * @param baseUrl 用户服务基础URL
+	 * @param token 认证token（支持Bearer前缀或原始token）
+	 * @return 用户信息Map，如果失败返回null
+	 */
+	public Map<String, Object> fetchCurrentUser(String baseUrl, String token) {
+		if (token == null || token.trim().isEmpty()) {
+			logger.warn("Token为空，无法获取用户信息");
+			return null;
+		}
+
+		// 提取纯token（去掉Bearer前缀）
+		String pureToken = token.replace("Bearer ", "");
+		
+		try {
+			HttpHeaders headers = new HttpHeaders();
+			
+			// 使用satoken头调用验证接口
+			headers.set("satoken", pureToken);
+			
+			logger.debug("尝试获取当前用户信息，URL: {}, Token: {}", baseUrl + "/api/user/validate", pureToken);
+
+			HttpEntity<Void> entity = new HttpEntity<>(headers);
+			ResponseEntity<Map> response = restTemplate.exchange(
+				baseUrl + "/api/user/validate", 
+				HttpMethod.GET, 
+				entity, 
+				Map.class
+			);
+			
+			if (response.getBody() != null) {
+				logger.debug("成功获取当前用户信息: {}", response.getBody());
+				
+				// 处理SaResult格式的响应
+				Map<String, Object> result = response.getBody();
+				Integer code = (Integer) result.get("code");
+				
+				if (code != null && code == 200) {
+					// 成功响应，返回data部分
+					Object data = result.get("data");
+					if (data instanceof Map) {
+						return (Map<String, Object>) data;
+					} else {
+						logger.warn("响应data不是Map类型: {}", data);
+						return null;
+					}
+				} else {
+					logger.warn("用户服务返回错误: {}", result);
+					return null;
+				}
+			}
+		} catch (HttpStatusCodeException ex) {
+			logger.warn("获取当前用户信息失败: {} {}", ex.getStatusCode(), ex.getResponseBodyAsString());
+		} catch (Exception ex) {
+			logger.error("获取当前用户信息时发生异常: {}", ex.getMessage(), ex);
 		}
 		
 		return null;
