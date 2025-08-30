@@ -49,7 +49,7 @@ public class Class {
 关键代码：
 ```java
 @Data
-@TableName("classUser")
+@TableName("classuser")
 public class ClassUser {
     private Long classId;
     private Long userId;

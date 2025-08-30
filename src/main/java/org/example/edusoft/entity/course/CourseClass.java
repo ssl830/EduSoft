@@ -5,7 +5,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Data
-@TableName("courseClass")
+@TableName("courseclass")
 public class CourseClass {
     private Long courseId;
     private Long classId;

@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 @Data
-@TableName("selfPracticeQuestion")
+@TableName("selfpracticeQuestion")
 public class SelfPracticeQuestion {
     private Long selfPracticeId;
     private Long questionId;

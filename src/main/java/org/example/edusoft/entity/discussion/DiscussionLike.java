@@ -15,7 +15,7 @@ import javax.persistence.*;
 @AllArgsConstructor
 @Entity
 @Data
-@TableName("discussionLike")
+@TableName("discussionlike")
 public class DiscussionLike {
     @TableId(type = IdType.AUTO)
     private Long id;
