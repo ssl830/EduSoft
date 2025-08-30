@@ -34,6 +34,12 @@ public interface HomeworkMapper {
     List<Homework> selectByClassId(Long classId);
 
     /**
+     * 根据课程ID统计作业总数
+     */
+    @Select("SELECT COUNT(*) FROM homework WHERE course_id = #{courseId}")
+    int countByCourseId(Long courseId);
+
+    /**
      * 更新作业信息
      */
     @Update({

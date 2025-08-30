@@ -258,4 +258,12 @@ public class HomeworkServiceImpl implements HomeworkService {
         // 删除作业
         homeworkMapper.deleteById(homeworkId);
     }
+
+    @Override
+    public int getHomeworkCountByCourse(Long courseId) {
+        if (courseId == null) {
+            throw new RuntimeException("课程ID不能为空");
+        }
+        return homeworkMapper.countByCourseId(courseId);
+    }
 }

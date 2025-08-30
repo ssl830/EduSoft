@@ -20,6 +20,8 @@ import java.util.Map;
 
 // 用户服务客户端
 import org.example.edusoft.client.UserServiceClient;
+// 内容服务客户端
+import org.example.edusoft.client.ContentServiceClient;
 
 @Service
 public class CourseServiceImpl implements CourseService {
@@ -29,6 +31,9 @@ public class CourseServiceImpl implements CourseService {
 
     @Autowired
     private UserServiceClient userServiceClient;
+
+    @Autowired
+    private ContentServiceClient contentServiceClient;
 
     @Value("${services.user.base-url:http://localhost:8081}")
     private String userServiceBaseUrl;
@@ -79,6 +84,47 @@ public class CourseServiceImpl implements CourseService {
             e.printStackTrace();
         }
         return null;
+    }
+
+    /**
+     * 从内容服务获取课程作业总数
+     * @param courseId 课程ID
+     * @return 作业总数，如果获取失败返回0
+     */
+    private Integer fetchHomeworkCountByCourseId(Long courseId) {
+        if (courseId == null) {
+            return 0;
+        }
+
+        try {
+            System.out.println("fetchHomeworkCountByCourseId: 开始调用内容微服务，courseId=" + courseId);
+            
+            Map<String, Object> response = contentServiceClient.getHomeworkCountByCourse(courseId);
+            System.out.println("fetchHomeworkCountByCourseId: 内容微服务返回数据=" + response);
+
+            if (response != null) {
+                Integer code = (Integer) response.get("code");
+                if (code != null && code == 200) {
+                    Object data = response.get("data");
+                    if (data instanceof Integer) {
+                        Integer count = (Integer) data;
+                        System.out.println("fetchHomeworkCountByCourseId: 获取到作业总数=" + count);
+                        return count;
+                    } else if (data instanceof Number) {
+                        Integer count = ((Number) data).intValue();
+                        System.out.println("fetchHomeworkCountByCourseId: 获取到作业总数=" + count);
+                        return count;
+                    }
+                }
+                System.out.println("fetchHomeworkCountByCourseId: 内容微服务返回错误，code=" + code);
+            }
+        } catch (Exception e) {
+            System.out.println("fetchHomeworkCountByCourseId: 调用内容微服务异常=" + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        System.out.println("fetchHomeworkCountByCourseId: 返回默认值0");
+        return 0;
     }
 
     @Override
@@ -192,6 +238,9 @@ public class CourseServiceImpl implements CourseService {
             // 获取并设置班级信息
             List<CourseDetailDTO.ClassInfo> classes = courseMapper.getClassesByCourseId(courseId);
             courseDetail.setClasses(classes);
+            // 从内容服务获取作业总数
+            Integer homeworkCount = fetchHomeworkCountByCourseId(courseId);
+            courseDetail.setHomeworkCount(homeworkCount);
         }
         return courseDetail;
     }
@@ -211,6 +260,9 @@ public class CourseServiceImpl implements CourseService {
             course.setSections(sections);
             List<CourseDetailDTO.ClassInfo> classes = courseMapper.getClassesByCourseId(course.getId());
             course.setClasses(classes);
+            // 从内容服务获取作业总数
+            Integer homeworkCount = fetchHomeworkCountByCourseId(course.getId());
+            course.setHomeworkCount(homeworkCount);
         }
         return courses;
     }
@@ -239,6 +291,9 @@ public class CourseServiceImpl implements CourseService {
             if (totalStudents > 0) {
                 dto.setStudentCount(totalStudents);
             }
+            // 从内容服务获取作业总数
+            Integer homeworkCount = fetchHomeworkCountByCourseId(dto.getId());
+            dto.setHomeworkCount(homeworkCount);
         }
         return list;
     }

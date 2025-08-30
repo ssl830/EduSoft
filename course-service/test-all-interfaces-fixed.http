@@ -11,7 +11,7 @@ userId=T002&password=123456
 ### 1. 创建课程
 POST http://localhost:8082/api/courses
 Content-Type: application/json
-satoken: b6532ffa-54b2-444e-a7fd-da7fec1bea89
+satoken: aa2cc2bd-15ba-4652-8b9a-e5ae233007f7
 
 {
   "teacherId": 4,
@@ -24,15 +24,15 @@ satoken: b6532ffa-54b2-444e-a7fd-da7fec1bea89
 
 ### 2. 获取所有课程列表
 GET http://localhost:8082/api/courses/list
-satoken: e0ebdfc6-799d-4159-ae5a-40531e413385
+satoken: aa2cc2bd-15ba-4652-8b9a-e5ae233007f7
 
 ### 3. 获取用户课程列表
 GET http://localhost:8082/api/courses/user/4
-satoken: b6532ffa-54b2-444e-a7fd-da7fec1bea89
+satoken: aa2cc2bd-15ba-4652-8b9a-e5ae233007f7
 
 ### 4. 获取课程详情
 GET http://localhost:8082/api/courses/2
-satoken: b6532ffa-54b2-444e-a7fd-da7fec1bea89
+satoken: aa2cc2bd-15ba-4652-8b9a-e5ae233007f7
 
 ### 5. 更新课程
 PUT http://localhost:8082/api/courses/1

@@ -80,4 +80,11 @@ public interface HomeworkService {
      * @param homeworkId 作业ID
      */
     void deleteHomework(Long homeworkId);
+
+    /**
+     * 根据课程ID统计作业总数
+     * @param courseId 课程ID
+     * @return 作业总数
+     */
+    int getHomeworkCountByCourse(Long courseId);
 } 

@@ -198,4 +198,19 @@ public class HomeworkController {
             return Result.error("作业删除失败：" + e.getMessage());
         }
     }
+
+    /**
+     * 根据课程ID统计作业总数
+     * @param courseId 课程ID
+     * @return 作业总数
+     */
+    @GetMapping("/count/course/{courseId}")
+    public Result<Integer> getHomeworkCountByCourse(@PathVariable Long courseId) {
+        try {
+            int count = homeworkService.getHomeworkCountByCourse(courseId);
+            return Result.ok(count, "获取作业总数成功");
+        } catch (Exception e) {
+            return Result.error("获取作业总数失败：" + e.getMessage());
+        }
+    }
 } 
