@@ -1,5 +1,5 @@
 server:
-  port: 8082
+  port: 8084
 spring:
   application:
     name: learning-service
@@ -22,9 +22,9 @@ service:
   user:
     url: http://localhost:8081 # user-service的地址
   course:
-    url: http://localhost:8083 # course-service的地址
+    url: http://localhost:8082 # course-service的地址
   content:
-    url: http://localhost:8084 # content-service的地址
+    url: http://localhost:8083 # content-service的地址
 
 # HTTP客户端配置
 http:
