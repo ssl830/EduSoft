@@ -1,10 +1,10 @@
-package org.example.edusoft.learning.entity.practice;
+package org.example.edusoft.learning.entity;
 
 import lombok.Data;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
@@ -19,8 +19,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "Question")
-@TableName("Question")
+@Table(name = "question")
+@TableName("question")
 public class Question {
     @TableId(type = IdType.AUTO)
     @Id
@@ -70,14 +70,13 @@ public class Question {
 
     public List<String> getOptionsList() {
         if (this.options != null) {
-            return Arrays.asList(this.options.split("\\|\\|\\|"));
+            return Arrays.asList(this.options.split("\\\\|\\\\|\\\\|"));
         }
         return null;
     }
 
     public enum QuestionType {
         singlechoice,
-        multiplechoice,
         program,
         fillblank,
         judge

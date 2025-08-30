@@ -261,3 +261,4 @@ class TeachingResourceServiceTest {
 
         assertThrows(BusinessException.class, () -> teachingResourceService.getSignedResourceUrl(1L));
     }
+}

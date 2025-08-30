@@ -1,16 +1,17 @@
-package org.example.edusoft.learning.entity.practice;
+package org.example.edusoft.learning.entity;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "Practice")
+@Table(name = "practice")
 public class Practice {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -41,5 +42,5 @@ public class Practice {
     private LocalDateTime createdAt;
 
     @Transient
-    private java.util.List<Question> questions;
+    private List<Question> questions;
 }
