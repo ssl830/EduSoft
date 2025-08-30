@@ -25,10 +25,11 @@ public class ImportServiceImpl implements ImportService {
 
     @Override
     @Transactional
-    public ImportRecord importStudents(Long classId, Long operatorId, String importType, List<Map<String, Object>> studentData) {
+    public ImportRecord importStudents(Long classId, Long operatorId, String importType, String fileName, List<Map<String, Object>> studentData) {
         ImportRecord record = new ImportRecord();
         record.setClassId(classId);
         record.setOperatorId(operatorId);
+        record.setFileName(fileName);  // 设置文件名
         record.setImportTime(LocalDateTime.now());
         record.setImportType(importType);
 

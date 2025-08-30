@@ -24,6 +24,7 @@ public class ImportController {
                 request.getClassId(),
                 request.getOperatorId(),
                 request.getImportType(),
+                request.getFileName(),
                 request.getStudentData()
             );
             

@@ -15,13 +15,13 @@ public interface CourseService {
     Course getCourseById(Long id);
     
     // 获取课程详细信息（包含教师信息、学生数量等）
-    CourseDetailDTO getCourseDetailById(Long id);
+    CourseDetailDTO getCourseDetailById(Long id, String token);
     
     // 获取用户的课程详细信息列表
-    List<CourseDetailDTO> getCourseDetailsByUserId(Long userId);
+    List<CourseDetailDTO> getCourseDetailsByUserId(Long userId, String token);
     
     // 获取所有课程的详细信息列表
-    List<CourseDetailDTO> getAllCourses();
+    List<CourseDetailDTO> getAllCourses(String token);
     
     // 更新课程信息
     Course updateCourse(Course course);

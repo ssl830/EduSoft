@@ -41,30 +41,49 @@ public class ClassServiceImpl implements ClassService {
         RequestAttributes attrs = RequestContextHolder.getRequestAttributes();
         if (attrs instanceof ServletRequestAttributes servlet) {
             String satoken = servlet.getRequest().getHeader("satoken");
-            if (satoken != null && !satoken.isEmpty()) return satoken;
+            if (satoken != null && !satoken.isEmpty())
+                return satoken;
             String cookie = servlet.getRequest().getHeader("Cookie");
             if (cookie != null) {
                 for (String part : cookie.split(";")) {
                     String p = part.trim();
-                    if (p.startsWith("satoken=")) return p.substring("satoken=".length());
+                    if (p.startsWith("satoken="))
+                        return p.substring("satoken=".length());
                 }
             }
             String auth = servlet.getRequest().getHeader("Authorization");
-            if (auth != null && !auth.isEmpty()) return auth;
+            if (auth != null && !auth.isEmpty())
+                return auth;
         }
         return null;
     }
 
-    private String fetchUsernameByUserId(Long userId) {
-        if (userId == null) return null;
-        String token = resolveOutboundToken();
+    private String fetchUsernameByUserId(Long userId, String token) {
+        if (userId == null || token == null) {
+            System.out.println("fetchUsernameByUserId: userId=" + userId + ", token=" + token + " - 参数无效");
+            return null;
+        }
+    
+        System.out.println("fetchUsernameByUserId: 开始调用用户微服务，userId=" + userId + ", token=" + token);
+        System.out.println("fetchUsernameByUserId: 用户微服务地址=" + userServiceBaseUrl);
+    
         try {
-            Map<String, Object> user = userServiceClient.fetchUserById(userServiceBaseUrl, token, String.valueOf(userId));
-            if (user != null) {
-                Object name = user.get("username");
-                return name == null ? null : String.valueOf(name);
+            // fetchUserById 已经处理了 SaResult 格式，直接返回用户数据
+            Map<String, Object> userData = userServiceClient.fetchUserById(
+                    userServiceBaseUrl, token, String.valueOf(userId));
+            System.out.println("fetchUsernameByUserId: 用户微服务返回数据=" + userData);
+    
+            if (userData != null) {
+                Object name = userData.get("username");
+                String result = name == null ? null : String.valueOf(name);
+                System.out.println("fetchUsernameByUserId: 提取的用户名=" + result);
+                return result;
+            } else {
+                System.out.println("fetchUsernameByUserId: 用户微服务返回null");
             }
-        } catch (Exception ignore) {
+        } catch (Exception e) {
+            System.out.println("fetchUsernameByUserId: 调用用户微服务异常=" + e.getMessage());
+            e.printStackTrace();
         }
         return null;
     }
@@ -84,8 +103,15 @@ public class ClassServiceImpl implements ClassService {
         if (clazz.getCourseId() == null) {
             throw new IllegalArgumentException("课程ID不能为空");
         }
+
+        // 插入班级
         classMapper.insert(clazz);
-        return clazz;
+
+        // 在courseclass表中创建课程班级关联记录
+        classMapper.insertCourseClassRelation(clazz.getCourseId(), clazz.getId());
+
+        // 重新查询获取完整的对象
+        return classMapper.selectById(clazz.getId());
     }
 
     @Override
@@ -123,7 +149,8 @@ public class ClassServiceImpl implements ClassService {
         }
         ClassDetailDTO detail = classMapper.getClassDetailById(id);
         if (detail != null) {
-            String teacherName = fetchUsernameByUserId(detail.getTeacherId());
+            String token = resolveOutboundToken();
+            String teacherName = fetchUsernameByUserId(detail.getTeacherId(), token);
             if (teacherName != null) {
                 detail.setTeacherName(teacherName);
             }
@@ -143,12 +170,24 @@ public class ClassServiceImpl implements ClassService {
             throw new IllegalArgumentException("班级不存在");
         }
         // 如果修改了班级代码，需要检查唯一性
-        if (!existingClass.getClassCode().equals(clazz.getClassCode()) 
-            && isClassCodeExists(clazz.getClassCode())) {
+        if (!existingClass.getClassCode().equals(clazz.getClassCode())
+                && isClassCodeExists(clazz.getClassCode())) {
             throw new IllegalArgumentException("班级代码已存在");
         }
+
+        // 如果课程ID发生了变化，需要更新courseclass关联表
+        if (!existingClass.getCourseId().equals(clazz.getCourseId())) {
+            // 删除旧的关联记录
+            classMapper.deleteCourseClassRelation(existingClass.getCourseId(), clazz.getId());
+            // 创建新的关联记录
+            classMapper.insertCourseClassRelation(clazz.getCourseId(), clazz.getId());
+        }
+
+        // 更新班级
         classMapper.updateById(clazz);
-        return clazz;
+
+        // 重新查询获取完整的对象
+        return classMapper.selectById(clazz.getId());
     }
 
     @Override
@@ -162,6 +201,12 @@ public class ClassServiceImpl implements ClassService {
         if (clazz == null) {
             throw new IllegalArgumentException("班级不存在");
         }
+
+        // 删除courseclass关联记录（由于外键约束，删除班级时会自动删除关联记录）
+        // 但为了明确性，我们也可以手动删除
+        classMapper.deleteCourseClassRelationByClassId(id);
+
+        // 删除班级
         return classMapper.deleteById(id) > 0;
     }
 
@@ -197,8 +242,49 @@ public class ClassServiceImpl implements ClassService {
         if (classId == null) {
             throw new IllegalArgumentException("班级ID不能为空");
         }
-        // 原返回里 studentName 可能为空，这里可按需补充。
-        return classUserMapper.getClassUsers(classId);
+        
+        // 获取班级成员基本信息
+        List<ClassUser> classUsers = classUserMapper.getClassUsers(classId);
+        
+        // 获取当前请求的token
+        String token = resolveOutboundToken();
+        
+        // 为每个班级成员获取用户信息
+        for (ClassUser classUser : classUsers) {
+            try {
+                // 调用用户微服务获取用户信息
+                Map<String, Object> userData = userServiceClient.fetchUserById(
+                        userServiceBaseUrl, token, String.valueOf(classUser.getUserId()));
+                
+                if (userData != null) {
+                    // 设置学生姓名和学号
+                    Object username = userData.get("username");
+                    Object userId = userData.get("userId");
+                    
+                    if (username != null) {
+                        classUser.setStudentName(String.valueOf(username));
+                    } else {
+                        classUser.setStudentName("用户" + classUser.getUserId());
+                    }
+                    if (userId != null) {
+                        classUser.setStudentId(String.valueOf(userId));
+                    } else {
+                        classUser.setStudentId("ID" + classUser.getUserId());
+                    }
+                } else {
+                    // 用户微服务返回null，设置默认值
+                    classUser.setStudentName("用户" + classUser.getUserId());
+                    classUser.setStudentId("ID" + classUser.getUserId());
+                }
+            } catch (Exception e) {
+                System.err.println("获取用户信息失败: userId=" + classUser.getUserId() + ", 错误: " + e.getMessage());
+                // 如果获取用户信息失败，设置默认值
+                classUser.setStudentName("用户" + classUser.getUserId());
+                classUser.setStudentId("ID" + classUser.getUserId());
+            }
+        }
+        
+        return classUsers;
     }
 
     @Override
@@ -303,8 +389,9 @@ public class ClassServiceImpl implements ClassService {
             throw new IllegalArgumentException("用户ID不能为空");
         }
         List<ClassDetailDTO> list = classMapper.getClassesByUserId(userId);
+        String token = resolveOutboundToken();
         for (ClassDetailDTO dto : list) {
-            String teacherName = fetchUsernameByUserId(dto.getTeacherId());
+            String teacherName = fetchUsernameByUserId(dto.getTeacherId(), token);
             if (teacherName != null) {
                 dto.setTeacherName(teacherName);
             }
@@ -319,12 +406,11 @@ public class ClassServiceImpl implements ClassService {
         }
         return classMapper.getClassStudentCount(classId);
     }
-    
+
     // 检查班级代码是否存在
     private boolean isClassCodeExists(String classCode) {
         return classMapper.selectCount(
-            new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<Class>()
-                .eq("class_code", classCode)
-        ) > 0;
+                new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<Class>()
+                        .eq("class_code", classCode)) > 0;
     }
 }
