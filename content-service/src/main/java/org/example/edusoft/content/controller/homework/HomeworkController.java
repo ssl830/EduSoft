@@ -106,10 +106,10 @@ public class HomeworkController {
     @PostMapping("/submit/{homeworkId}")
     public Result<Long> submitHomework(
             @PathVariable Long homeworkId,
-            @RequestParam Long student_id,
-            @RequestPart("file") MultipartFile file) {
+            @RequestParam Long studentId,
+            @RequestParam("file") MultipartFile file) {
         try {
-            Long submissionId = homeworkService.submitHomework(homeworkId, student_id, file);
+            Long submissionId = homeworkService.submitHomework(homeworkId, studentId, file);
             return Result.ok(submissionId, "作业提交成功");
         } catch (Exception e) {
             return Result.error("作业提交失败：" + e.getMessage());

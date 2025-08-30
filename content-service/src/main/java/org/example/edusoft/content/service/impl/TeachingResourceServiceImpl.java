@@ -72,8 +72,56 @@ public class TeachingResourceServiceImpl implements TeachingResourceService {
 
     @Override
     public TeachingResource updateResource(TeachingResource resource) {
-        teachingResourceMapper.update(resource);
-        return resource;
+        // 先获取现有资源
+        TeachingResource existingResource = teachingResourceMapper.findById(resource.getId());
+        if (existingResource == null) {
+            throw new RuntimeException("教学资源不存在，ID: " + resource.getId());
+        }
+        
+        // 只更新非null字段，保留原有值
+        if (resource.getTitle() != null) {
+            existingResource.setTitle(resource.getTitle());
+        }
+        if (resource.getDescription() != null) {
+            existingResource.setDescription(resource.getDescription());
+        }
+        if (resource.getContent() != null) {
+            existingResource.setContent(resource.getContent());
+        }
+        if (resource.getCourseId() != null) {
+            existingResource.setCourseId(resource.getCourseId());
+        }
+        if (resource.getChapterId() != null) {
+            existingResource.setChapterId(resource.getChapterId());
+        }
+        if (resource.getChapterName() != null) {
+            existingResource.setChapterName(resource.getChapterName());
+        }
+        if (resource.getResourceType() != null) {
+            existingResource.setResourceType(resource.getResourceType());
+        }
+        if (resource.getFileUrl() != null) {
+            existingResource.setFileUrl(resource.getFileUrl());
+        }
+        if (resource.getObjectName() != null) {
+            existingResource.setObjectName(resource.getObjectName());
+        }
+        if (resource.getDuration() != null) {
+            existingResource.setDuration(resource.getDuration());
+        }
+        if (resource.getTags() != null) {
+            existingResource.setTags(resource.getTags());
+        }
+        if (resource.getStatus() != null) {
+            existingResource.setStatus(resource.getStatus());
+        }
+        
+        // 设置更新时间
+        existingResource.setUpdatedAt(java.time.LocalDateTime.now());
+        
+        // 执行更新
+        teachingResourceMapper.update(existingResource);
+        return existingResource;
     }
 
     @Override
