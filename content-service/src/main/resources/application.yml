@@ -25,10 +25,14 @@ file:
 # 日志配置
 logging:
   level:
-    org.example.edusoft.content: DEBUG
+    '[org.example.edusoft.content]': DEBUG
 
+# Actuator 健康检查配置
 management:
   endpoints:
     web:
       exposure:
-        include: "*"
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized

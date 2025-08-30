@@ -15,9 +15,31 @@ mybatis:
 logging:
   level:
     '[org.example.edusoft.learning.mapper]': debug
+    '[org.example.edusoft.learning.client]': debug
 
+# 微服务地址配置
 service:
   user:
     url: http://localhost:8081 # user-service的地址
   course:
     url: http://localhost:8083 # course-service的地址
+  content:
+    url: http://localhost:8084 # content-service的地址
+
+# HTTP客户端配置
+http:
+  client:
+    connect-timeout: 5000 # 连接超时时间(ms)
+    read-timeout: 10000   # 读取超时时间(ms)
+    max-connections: 100  # 最大连接数
+    max-connections-per-route: 20 # 每个路由的最大连接数
+
+# Actuator 健康检查配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
