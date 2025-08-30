@@ -13,7 +13,7 @@ import java.util.Map;
 @Component
 public class ContentClient extends BaseServiceClient {
     
-    @Value("${service.content.url:http://localhost:8084}")
+    @Value("${service.content.url:http://localhost:8083}")
     private String contentServiceUrl;
     
     @Override

@@ -29,7 +29,7 @@ public class UserClient extends BaseServiceClient {
     /**
      * 根据用户ID获取用户信息
      */
-    public Map<String, Object> getUserById(Long userId) {
+    public Map<String, Object>  getUserById(Long userId) {
         if (userId == null) {
             throw new IllegalArgumentException("用户ID不能为空");
         }

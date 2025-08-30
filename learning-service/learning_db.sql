@@ -200,3 +200,118 @@ CREATE TABLE favorite_question (
                                    PRIMARY KEY (student_id, question_id),
                                    KEY question_id (question_id)
 );
+
+-- 插入示例数据
+-- 1. 插入作业数据
+INSERT INTO homework (title, description, class_id, created_by, attachment_url, object_name, deadline) VALUES
+                                                                                                           ('Java基础作业', '完成Java基础语法练习', 1, 101, 'https://example.com/files/java_basic.pdf', 'java_basic.pdf', '2025-09-10 23:59:59'),
+                                                                                                           ('数据库设计作业', '设计一个学生信息管理系统数据库', 2, 102, 'https://example.com/files/db_design.pdf', 'db_design.pdf', '2025-09-15 23:59:59'),
+                                                                                                           ('Web开发作业', '使用Spring Boot开发一个简单的REST API', 1, 101, 'https://example.com/files/web_dev.zip', 'web_dev.zip', '2025-09-20 23:59:59'),
+                                                                                                           ('算法作业', '实现排序算法并分析时间复杂度', 3, 103, NULL, NULL, '2025-09-12 23:59:59');
+
+-- 2. 插入作业提交数据
+INSERT INTO homework_submission (homework_id, student_id, file_url, object_name, submitted_at) VALUES
+                                                                                                   (1, 201, 'https://example.com/submissions/java_hw1.pdf', 'java_hw1.pdf', '2025-09-09 14:30:25'),
+                                                                                                   (1, 202, 'https://example.com/submissions/java_hw2.zip', 'java_hw2.zip', '2025-09-10 10:15:40'),
+                                                                                                   (2, 201, 'https://example.com/submissions/db_design.sql', 'db_design.sql', '2025-09-14 16:45:30'),
+                                                                                                   (3, 203, 'https://example.com/submissions/web_api.zip', 'web_api.zip', '2025-09-19 20:30:15'),
+                                                                                                   (4, 202, 'https://example.com/submissions/algorithms.java', 'algorithms.java', '2025-09-11 09:20:50');
+
+-- 3. 插入练习数据
+INSERT INTO practice (course_id, class_id, title, start_time, end_time, allow_multiple_submission, created_by) VALUES
+                                                                                                                   (1, 101, 'Java基础测验', '2025-09-01 00:00:00', '2025-09-07 23:59:59', 1, 101),
+                                                                                                                   (1, 101, '面向对象编程练习', '2025-09-08 00:00:00', '2025-09-14 23:59:59', 0, 101),
+                                                                                                                   (2, 102, 'SQL查询练习', '2025-09-05 00:00:00', '2025-09-12 23:59:59', 1, 102),
+                                                                                                                   (3, 103, '算法复杂度分析', '2025-09-10 00:00:00', '2025-09-17 23:59:59', 0, 103);
+
+-- 4. 插入题目数据
+INSERT INTO question (creator_id, type, content, analysis, options, answer, course_id, section_id) VALUES
+                                                                                                       (101, 'singlechoice', 'Java中哪个关键字用于定义类？', 'class是Java中定义类的关键字', '["interface", "class", "struct", "object"]', 'class', 1, 1),
+                                                                                                       (101, 'judge', 'Java中所有类都继承自Object类', '是的，Java中所有类都直接或间接继承自Object类', NULL, 'true', 1, 1),
+                                                                                                       (102, 'fillblank', 'SQL中用于查询数据的关键字是____', 'SELECT是SQL中用于查询数据的关键字', NULL, 'SELECT', 2, 2),
+                                                                                                       (103, 'singlechoice', '以下哪种排序算法的时间复杂度是O(n log n)？', '快速排序和归并排序的时间复杂度都是O(n log n)', '["冒泡排序", "选择排序", "快速排序", "插入排序"]', '快速排序', 3, 3),
+                                                                                                       (101, 'program', '编写一个Java方法，计算两个整数的和', '这是一个简单的加法实现', NULL, 'public int add(int a, int b) { return a + b; }', 1, 1);
+
+-- 5. 插入练习题目关联数据
+INSERT INTO practice_question (practice_id, question_id, sort_order, score, score_rate) VALUES
+                                                                                            (1, 1, 1, 10, 1.0),
+                                                                                            (1, 2, 2, 10, 1.0),
+                                                                                            (2, 5, 1, 20, 1.0),
+                                                                                            (3, 3, 1, 15, 1.0),
+                                                                                            (4, 4, 1, 15, 1.0);
+
+-- 6. 插入练习提交数据
+INSERT INTO submission (practice_id, student_id, submitted_at, score, is_judged, feedback) VALUES
+                                                                                               (1, 201, '2025-09-05 14:30:25', 18, 1, '做得很好，但第二题需要更仔细阅读题目'),
+                                                                                               (1, 202, '2025-09-06 10:15:40', 20, 1, '完美！所有答案都正确'),
+                                                                                               (2, 201, '2025-09-10 16:45:30', 15, 1, '代码可以进一步优化'),
+                                                                                               (3, 203, '2025-09-08 20:30:15', 12, 1, '基本正确，但有一个查询语句有误'),
+                                                                                               (4, 202, '2025-09-15 09:20:50', 15, 1, '分析得很透彻');
+
+-- 7. 插入答案数据
+INSERT INTO answer (submission_id, question_id, answer_text, is_judged, correct, score, sort_order) VALUES
+                                                                                                        (1, 1, 'class', 1, 1, 10, 1),
+                                                                                                        (1, 2, 'true', 1, 1, 8, 2),
+                                                                                                        (2, 1, 'class', 1, 1, 10, 1),
+                                                                                                        (2, 2, 'true', 1, 1, 10, 2),
+                                                                                                        (3, 5, 'public int add(int a, int b) { return a + b; }', 1, 1, 15, 1),
+                                                                                                        (4, 3, 'SELECT', 1, 1, 12, 1),
+                                                                                                        (5, 4, '快速排序', 1, 1, 15, 1);
+
+-- 8. 插入自主练习数据
+INSERT INTO self_practice (student_id, title, created_at) VALUES
+                                                              (201, 'Java基础复习', '2025-09-01 10:30:25'),
+                                                              (202, 'SQL查询练习', '2025-09-02 14:20:15'),
+                                                              (203, '算法练习题', '2025-09-03 16:45:30'),
+                                                              (201, 'Web开发练习', '2025-09-04 09:15:40');
+
+-- 9. 插入自主练习提交数据
+INSERT INTO self_submission (self_practice_id, student_id, submitted_at, score, is_judged, feedback) VALUES
+                                                                                                         (1, 201, '2025-09-01 11:30:25', 45, 1, '{"correct": 3, "total": 5, "comment": "需要加强基础知识"}'),
+                                                                                                         (2, 202, '2025-09-02 15:20:15', 40, 1, '{"correct": 4, "total": 5, "comment": "做得很好"}'),
+                                                                                                         (3, 203, '2025-09-03 17:45:30', 35, 1, '{"correct": 3, "total": 5, "comment": "算法理解有待提高"}'),
+                                                                                                         (4, 201, '2025-09-04 10:15:40', 50, 1, '{"correct": 5, "total": 5, "comment": "完美！"}');
+
+-- 10. 插入自主练习答案数据
+INSERT INTO self_answer (submission_id, question_id, answer_text, is_judged, correct, score, sort_order) VALUES
+                                                                                                             (1, 1, 'class', 1, 1, 10, 1),
+                                                                                                             (1, 2, 'true', 1, 1, 10, 2),
+                                                                                                             (1, 4, '快速排序', 1, 1, 10, 3),
+                                                                                                             (1, 3, 'SELECT', 1, 0, 5, 4),
+                                                                                                             (1, 5, 'public int sum(int a, int b) { return a + b; }', 1, 1, 10, 5),
+                                                                                                             (2, 1, 'class', 1, 1, 10, 1),
+                                                                                                             (2, 3, 'SELECT', 1, 1, 10, 2),
+                                                                                                             (2, 4, '快速排序', 1, 1, 10, 3),
+                                                                                                             (2, 2, 'false', 1, 0, 0, 4),
+                                                                                                             (2, 5, 'public int add(int a, int b) { return a + b; }', 1, 1, 10, 5);
+
+-- 11. 插入学习记录数据
+INSERT INTO learning_progress (resource_id, student_id, progress, last_position, watch_count, last_watch_time) VALUES
+                                                                                                                   (1001, 201, 85.50, 1200, 3, '2025-09-05 14:30:25'),
+                                                                                                                   (1002, 201, 45.25, 850, 2, '2025-09-04 10:15:40'),
+                                                                                                                   (1001, 202, 92.75, 1350, 4, '2025-09-06 16:45:30'),
+                                                                                                                   (1003, 203, 78.00, 1100, 3, '2025-09-07 20:30:15'),
+                                                                                                                   (1002, 202, 65.50, 950, 2, '2025-09-05 09:20:50');
+
+-- 12. 插入课程进度数据
+INSERT INTO progress (student_id, course_id, section_id, completed, completed_at) VALUES
+                                                                                      (201, 1, 1, 1, '2025-09-05 14:30:25'),
+                                                                                      (201, 1, 2, 1, '2025-09-06 10:15:40'),
+                                                                                      (202, 1, 1, 1, '2025-09-04 16:45:30'),
+                                                                                      (203, 2, 1, 1, '2025-09-07 20:30:15'),
+                                                                                      (202, 2, 1, 0, NULL);
+
+-- 13. 插入错题数据
+INSERT INTO wrong_question (student_id, question_id, wrong_answer, correct_answer, wrong_count, last_wrong_time) VALUES
+                                                                                                                     (201, 3, 'FROM', 'SELECT', 2, '2025-09-05 14:30:25'),
+                                                                                                                     (202, 2, 'false', 'true', 1, '2025-09-06 10:15:40'),
+                                                                                                                     (203, 4, '冒泡排序', '快速排序', 3, '2025-09-07 20:30:15'),
+                                                                                                                     (201, 5, 'public void add(int a, int b) { a + b; }', 'public int add(int a, int b) { return a + b; }', 1, '2025-09-08 09:20:50');
+
+-- 14. 插入收藏题目数据
+INSERT INTO favorite_question (student_id, question_id) VALUES
+                                                            (201, 1),
+                                                            (201, 4),
+                                                            (202, 3),
+                                                            (203, 5),
+                                                            (202, 1);

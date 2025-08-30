@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -27,6 +28,7 @@ public class ManualJudgeServiceImpl implements ManualJudgeService {
     private final QuestionMapper questionMapper;
     private final PracticeMapper practiceMapper;
     private final UserClient userClient; // 使用RestTemplate实现
+    private final PracticeQuestionMapper practiceQuestionMapper;
 
     // 可根据实际情况注入baseUrl和token
     private final String userServiceBaseUrl = "http://localhost:8081"; // 示例
@@ -48,9 +50,7 @@ public class ManualJudgeServiceImpl implements ManualJudgeService {
             Practice practice = practiceMapper.getPracticeById(submission.getPracticeId());
             String studentName = "Unknown";
             try {
-                // 这里token可从上下文获取，如SecurityContextHolder等
-                String token = null; // TODO: 获取当前请求token
-                Map<String, Object> userMap = userClient.fetchUserById(userServiceBaseUrl, token, submission.getStudentId());
+                Map<String, Object> userMap = userClient.getUserById(submission.getStudentId());
                 if (userMap != null && userMap.get("username") != null) {
                     studentName = userMap.get("username").toString();
                 }
@@ -74,8 +74,7 @@ public class ManualJudgeServiceImpl implements ManualJudgeService {
             return Result.error("提交不存在");
         }
 
-        // String studentName = userClient.getUserById(submission.getStudentId()).getData().getUsername();
-        String studentName = "Unknown"; // Placeholder
+        String studentName = "Unknown";
         try {
             String token = null; // TODO: 获取当前请求token
             Map<String, Object> userMap = userClient.fetchUserById(userServiceBaseUrl, token, submission.getStudentId());
@@ -91,12 +90,19 @@ public class ManualJudgeServiceImpl implements ManualJudgeService {
 
         for (Answer answer : answers) {
             Question question = questionMapper.selectById(answer.getQuestionId());
+            // 获取分值
+            Integer maxScore = practiceQuestionMapper.getScoreByPracticeIdAndQuestionId(submission.getPracticeId(), answer.getQuestionId());
+//            try {
+//                maxScore = practiceQuestionMapper.getScoreByPracticeIdAndQuestionId(submission.getPracticeId(), question.getId());
+//            } catch (Exception e) {
+//                maxScore = question.getScore(); // 兜底
+//            }
             if (question.getType() != Question.QuestionType.singlechoice && question.getType() != Question.QuestionType.judge
                     && question.getType() != Question.QuestionType.fillblank) {
                 result.add(new SubmissionDetailDTO(
                         question.getContent(),
                         answer.getAnswer(),
-                        question.getScore(),
+                        maxScore,
                         studentName,
                         answer.getSortOrder()
                 ));
@@ -120,7 +126,7 @@ public class ManualJudgeServiceImpl implements ManualJudgeService {
             Answer answer = answerMapper.findBySubmissionIdAndSortOrder(request.getSubmissionId(), judge.getSortOrder().longValue());
             if (answer != null) {
                 answer.setScore(judge.getScore());
-                answer.setCorrect(judge.getScore() > 0); // Simple logic
+                answer.setCorrect(Objects.equals(judge.getScore(), judge.getMaxScore())); // Simple logic
                 answer.setIsJudged(true);
                 answerMapper.update(answer);
                 totalScore += judge.getScore();
