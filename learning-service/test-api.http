@@ -1,4 +1,4 @@
-### 健康检查测试
+# 健康检查测试
 
 ### 1. 检查学习微服务健康状态
 GET http://localhost:8084/actuator/health
@@ -12,11 +12,18 @@ GET http://localhost:8082/actuator/health
 ### 4. 检查内容服务健康状态
 GET http://localhost:8083/actuator/health
 
-### 人工判题测试
+### 第一步：获取有效token
+POST http://localhost:8081/api/user/login
+Content-Type: application/x-www-form-urlencoded
+
+userId=T002&password=123456
+
+# 人工判题测试
 
 ### 1. 获取待判列表
 POST http://localhost:8084/api/learning/judge/pending-list
 Content-Type: application/json
+satoken: e139b55a-1a41-4a35-b50d-5dc23c2339b9
 
 {
   "practiceId": 1,
@@ -26,6 +33,7 @@ Content-Type: application/json
 ### 1.2 获取待判列表
 POST http://localhost:8084/api/learning/judge/pending-list
 Content-Type: application/json
+satoken: e139b55a-1a41-4a35-b50d-5dc23c2339b9
 
 {
   "practiceId": null,
@@ -34,10 +42,12 @@ Content-Type: application/json
 
 ### 2. 获取提交详情
 GET http://localhost:8084/api/learning/judge/submission/3
+satoken: e139b55a-1a41-4a35-b50d-5dc23c2339b9
 
 ### 3. 判题操作
 POST http://localhost:8084/api/learning/judge/submission
 Content-Type: application/json
+satoken: e139b55a-1a41-4a35-b50d-5dc23c2339b9
 
 {
   "submissionId": 1,
@@ -63,6 +73,7 @@ Content-Type: application/json
 POST http://localhost:8084/api/learning/submission/submit
 Content-Type: application/json
 X-User-Id: 1
+satoken: e139b55a-1a41-4a35-b50d-5dc23c2339b9
 
 {
   "practiceId": 1,

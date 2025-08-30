@@ -12,6 +12,9 @@ import org.example.edusoft.learning.mapper.*;
 import org.example.edusoft.learning.service.ManualJudgeService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,11 +33,34 @@ public class ManualJudgeServiceImpl implements ManualJudgeService {
     private final UserClient userClient; // 使用RestTemplate实现
     private final PracticeQuestionMapper practiceQuestionMapper;
 
-    // 可根据实际情况注入baseUrl和token
-    private final String userServiceBaseUrl = "http://localhost:8081"; // 示例
+    // 建议将baseUrl通过@Value注入
+    @org.springframework.beans.factory.annotation.Value("${services.user.base-url:http://localhost:8081}")
+    private String userServiceBaseUrl;
+
+    private String resolveOutboundToken() {
+        RequestAttributes attrs = RequestContextHolder.getRequestAttributes();
+        if (attrs instanceof ServletRequestAttributes servlet) {
+            String satoken = servlet.getRequest().getHeader("satoken");
+            if (satoken != null && !satoken.isEmpty())
+                return satoken;
+            String cookie = servlet.getRequest().getHeader("Cookie");
+            if (cookie != null) {
+                for (String part : cookie.split(";")) {
+                    String p = part.trim();
+                    if (p.startsWith("satoken="))
+                        return p.substring("satoken=".length());
+                }
+            }
+            String auth = servlet.getRequest().getHeader("Authorization");
+            if (auth != null && !auth.isEmpty())
+                return auth;
+        }
+        return null;
+    }
 
     @Override
     public Result<List<PendingSubmissionDTO>> getPendingSubmissionList(Long practiceId, Long classId) {
+        System.out.println("test");
         List<PracticeSubmission> submissions;
         if (practiceId != null) {
             submissions = submissionMapper.findByPracticeIdWithUnjudgedAnswers(practiceId);
@@ -50,12 +76,16 @@ public class ManualJudgeServiceImpl implements ManualJudgeService {
             Practice practice = practiceMapper.getPracticeById(submission.getPracticeId());
             String studentName = "Unknown";
             try {
-                Map<String, Object> userMap = userClient.getUserById(submission.getStudentId());
+                String token = resolveOutboundToken();
+                Map<String, Object> userMap = userClient.fetchUserById(userServiceBaseUrl, token, String.valueOf(submission.getStudentId()));
+                System.out.println("wronggggggggggggggggggggggggggggggggg");
                 if (userMap != null && userMap.get("username") != null) {
-                    studentName = userMap.get("username").toString();
+                    Object name = userMap.get("username");
+                    studentName = name == null ? null : String.valueOf(name);
                 }
             } catch (Exception e) {
-                // Log the exception, but continue with a placeholder name
+                System.out.println("wronggggggggggggggggggggggggggggggggggggggggggggggg");
+                studentName = "异常:" + e.getMessage();
             }
             return new PendingSubmissionDTO(
                 studentName,
@@ -76,13 +106,13 @@ public class ManualJudgeServiceImpl implements ManualJudgeService {
 
         String studentName = "Unknown";
         try {
-            String token = null; // TODO: 获取当前请求token
-            Map<String, Object> userMap = userClient.fetchUserById(userServiceBaseUrl, token, submission.getStudentId());
+            String token = resolveOutboundToken();
+            Map<String, Object> userMap = userClient.fetchUserById(userServiceBaseUrl, token, String.valueOf(submission.getStudentId()));
             if (userMap != null && userMap.get("username") != null) {
                 studentName = userMap.get("username").toString();
             }
         } catch (Exception e) {
-            // Log the exception, but continue with a placeholder name
+            studentName = "异常:" + e.getMessage();
         }
 
         List<Answer> answers = answerMapper.findBySubmissionId(submissionId);
