@@ -30,7 +30,113 @@
 - 观看次数统计
 - 进度更新
 
+UserClient 接口方法
+validateUser(Long userId)           // 验证用户身份
+getUserInfo(Long userId)            // 获取用户信息
+checkUserPermission(Long userId, String permission)  // 检查用户权限
+getBatchUserInfo(Map request)       // 批量获取用户信息
+isTeacher(Long userId)              // 检查是否为教师
+isStudent(Long userId)              // 检查是否为学生
+getUserBasicInfo(Long userId)       // 获取用户基本信息
+verifyUserToken(Long userId, String token)  // 验证用户登录状态
+
+🔧 CourseClient 接口方法
+getCourseInfo(Long courseId)        // 获取课程信息
+checkCoursePermission(Long courseId, Long userId)  // 检查课程权限
+getCourseMembers(Long courseId)     // 获取课程成员
+getChapterInfo(Long courseId, Long chapterId)  // 验证章节
+isCourseTeacher(Long courseId, Long userId)  // 检查是否为课程教师
+isCourseStudent(Long courseId, Long userId)  // 检查是否为课程学生
+getClassInfo(Long classId)          // 获取班级信息
+isClassMember(Long classId, Long userId)  // 检查是否为班级成员
+getCourseChapters(Long courseId)    // 获取课程章节列表
+getCourseStatus(Long courseId)      // 验证课程是否激活
+getUserCourses(Long userId)         // 获取用户参与的课程列表
+getUserTeachingCourses(Long userId) // 获取用户教授的课程列表
+
 ## API 接口
+
+
+### 1. 创建作业
+```
+POST /api/content/homework/create
+Content-Type: multipart/form-data
+
+参数：
+- class_id: 班级ID（必选）
+- title: 作业标题（必选）
+- description: 作业描述（可选）
+- end_time: 截止时间，格式：yyyy-MM-dd HH:mm:ss（可选）
+- file: 附件文件（可选）
+```
+
+### 2. 获取作业详情
+```
+GET /api/content/homework/{id}
+
+参数：
+- id: 作业ID
+```
+
+### 3. 获取班级作业列表
+```
+GET /api/content/homework/list?classId={classId}
+
+参数：
+- classId: 班级ID
+```
+
+### 4. 提交作业
+```
+POST /api/content/homework/submit/{homeworkId}
+Content-Type: multipart/form-data
+
+参数：
+- homeworkId: 作业ID（路径参数）
+- student_id: 学生ID（必选）
+- file: 提交的文件（必选）
+```
+
+### 5. 获取作业提交列表
+```
+GET /api/content/homework/submissions/{homeworkId}
+
+参数：
+- homeworkId: 作业ID
+```
+
+### 6. 获取学生提交记录
+```
+GET /api/content/homework/submission?homeworkId={homeworkId}&studentId={studentId}
+
+参数：
+- homeworkId: 作业ID
+- studentId: 学生ID
+```
+
+### 7. 下载作业附件
+```
+GET /api/content/homework/file/{homeworkId}
+
+参数：
+- homeworkId: 作业ID
+```
+
+### 8. 下载提交的作业文件
+```
+GET /api/content/homework/submission/file/{submissionId}
+
+参数：
+- submissionId: 提交记录ID
+```
+
+### 9. 删除作业
+```
+DELETE /api/content/homework/{homeworkId}
+
+参数：
+- homeworkId: 作业ID
+```
 
 ### 文件管理接口
 

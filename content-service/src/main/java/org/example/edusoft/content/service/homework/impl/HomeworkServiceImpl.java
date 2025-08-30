@@ -1,0 +1,261 @@
+package org.example.edusoft.content.service.homework.impl;
+
+import lombok.extern.slf4j.Slf4j;
+import org.example.edusoft.content.dto.homework.HomeworkDTO;
+import org.example.edusoft.content.dto.homework.HomeworkSubmissionDTO;
+import org.example.edusoft.content.entity.homework.Homework;
+import org.example.edusoft.content.entity.homework.HomeworkSubmission;
+import org.example.edusoft.content.mapper.homework.HomeworkMapper;
+import org.example.edusoft.content.mapper.homework.HomeworkSubmissionMapper;
+import org.example.edusoft.content.service.homework.HomeworkService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import jakarta.servlet.http.HttpServletResponse;
+
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.stream.Collectors;
+
+/**
+ * 作业服务实现类
+ */
+@Slf4j
+@Service
+public class HomeworkServiceImpl implements HomeworkService {
+
+    @Autowired
+    private HomeworkMapper homeworkMapper;
+    
+    @Autowired
+    private HomeworkSubmissionMapper submissionMapper;
+
+    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+    @Override
+    @Transactional
+    public Long createHomework(Long classId, String title, String description,
+                             String endTime, MultipartFile file) {
+        // 参数校验
+        if (classId == null || title == null || title.trim().isEmpty()) {
+            throw new RuntimeException("班级ID和作业标题不能为空");
+        }
+
+        // 创建作业实体
+        Homework homework = new Homework();
+        homework.setClassId(classId);
+        homework.setTitle(title);
+        homework.setDescription(description);
+        homework.setCreatedBy(1L);
+        homework.setCreatedByName("张老师"); // 简化处理
+        homework.setStatus("published");
+
+        // 设置截止时间
+        if (endTime != null && !endTime.trim().isEmpty()) {
+            homework.setDeadline(LocalDateTime.parse(endTime, DATE_TIME_FORMATTER));
+        }
+
+        // 设置创建时间和更新时间
+        LocalDateTime now = LocalDateTime.now();
+        homework.setCreatedAt(now);
+        homework.setUpdatedAt(now);
+
+        // 上传附件（如果有）
+        if (file != null && !file.isEmpty()) {
+            // 简化的文件处理逻辑
+            String fileName = file.getOriginalFilename();
+            homework.setObjectName("homework/" + classId + "/" + fileName);
+            homework.setAttachmentUrl("/uploads/homework/" + fileName);
+            homework.setFileName(fileName);
+        }
+
+        // 保存作业信息
+        homeworkMapper.insert(homework);
+        return homework.getId();
+    }
+
+    @Override
+    public HomeworkDTO getHomework(Long id) {
+        Homework homework = homeworkMapper.selectById(id);
+        if (homework == null) {
+            return null;
+        }
+        
+        HomeworkDTO dto = new HomeworkDTO();
+        dto.setHomeworkId(homework.getId());
+        dto.setTitle(homework.getTitle());
+        dto.setDescription(homework.getDescription());
+        dto.setClassId(homework.getClassId());
+        dto.setCreatedBy(homework.getCreatedBy());
+        dto.setFileUrl(homework.getAttachmentUrl());
+        dto.setFileName(homework.getObjectName());
+        dto.setEndTime(homework.getDeadline());
+        dto.setCreatedAt(homework.getCreatedAt());
+        dto.setUpdatedAt(homework.getUpdatedAt());
+        
+        return dto;
+    }
+
+    @Override
+    public List<HomeworkDTO> getHomeworkList(Long classId) {
+        List<Homework> homeworkList = homeworkMapper.selectByClassId(classId);
+        return homeworkList.stream().map(homework -> {
+            HomeworkDTO dto = new HomeworkDTO();
+            dto.setHomeworkId(homework.getId());
+            dto.setTitle(homework.getTitle());
+            dto.setDescription(homework.getDescription());
+            dto.setClassId(homework.getClassId());
+            dto.setCreatedBy(homework.getCreatedBy());
+            dto.setFileUrl(homework.getAttachmentUrl());
+            dto.setFileName(homework.getObjectName());
+            dto.setEndTime(homework.getDeadline());
+            dto.setCreatedAt(homework.getCreatedAt());
+            dto.setUpdatedAt(homework.getUpdatedAt());
+            return dto;
+        }).collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public Long submitHomework(Long homeworkId, Long studentId, MultipartFile file) {
+        // 参数校验
+        if (file == null || file.isEmpty()) {
+            throw new RuntimeException("提交的文件不能为空");
+        }
+
+        // 检查作业是否存在
+        Homework homework = homeworkMapper.selectById(homeworkId);
+        if (homework == null) {
+            throw new RuntimeException("作业不存在");
+        }
+
+        // 检查是否已过截止时间
+        if (homework.getDeadline() != null && LocalDateTime.now().isAfter(homework.getDeadline())) {
+            throw new RuntimeException("作业已过截止时间");
+        }
+
+        // 检查是否已经提交过
+        HomeworkSubmission existingSubmission = submissionMapper.selectByHomeworkAndStudent(homeworkId, studentId);
+        if (existingSubmission != null) {
+            throw new RuntimeException("您已经提交过该作业");
+        }
+
+        // 创建提交记录
+        HomeworkSubmission submission = new HomeworkSubmission();
+        submission.setHomeworkId(homeworkId);
+        submission.setStudentId(studentId);
+        submission.setStudentName("学生" + studentId); // 简化处理
+
+        // 处理文件上传
+        String fileName = file.getOriginalFilename();
+        submission.setObjectName("homework/submission/" + homeworkId + "/" + studentId + "_" + fileName);
+        submission.setFileUrl("/uploads/submission/" + fileName);
+        submission.setSubmittedAt(LocalDateTime.now());
+
+        // 保存提交记录
+        submissionMapper.insert(submission);
+        return submission.getId();
+    }
+
+    @Override
+    public List<HomeworkSubmissionDTO> getSubmissionList(Long homeworkId) {
+        List<HomeworkSubmission> submissions = submissionMapper.selectByHomeworkId(homeworkId);
+        return submissions.stream().map(submission -> {
+            HomeworkSubmissionDTO dto = new HomeworkSubmissionDTO();
+            dto.setSubmissionId(submission.getId());
+            dto.setHomeworkId(submission.getHomeworkId());
+            dto.setStudentId(submission.getStudentId());
+            dto.setStudentName(submission.getStudentName());
+            dto.setFileUrl(submission.getFileUrl());
+            dto.setObjectName(submission.getObjectName());
+            dto.setSubmitTime(submission.getSubmittedAt());
+            return dto;
+        }).collect(Collectors.toList());
+    }
+
+    @Override
+    public HomeworkSubmissionDTO getStudentSubmission(Long homeworkId, Long studentId) {
+        HomeworkSubmission submission = submissionMapper.selectByHomeworkAndStudent(homeworkId, studentId);
+        if (submission == null) {
+            return null;
+        }
+        
+        HomeworkSubmissionDTO dto = new HomeworkSubmissionDTO();
+        dto.setSubmissionId(submission.getId());
+        dto.setHomeworkId(submission.getHomeworkId());
+        dto.setStudentId(submission.getStudentId());
+        dto.setStudentName(submission.getStudentName());
+        dto.setFileUrl(submission.getFileUrl());
+        dto.setObjectName(submission.getObjectName());
+        dto.setSubmitTime(submission.getSubmittedAt());
+        
+        return dto;
+    }
+
+    @Override
+    public void downloadHomeworkFile(Long homeworkId, HttpServletResponse response) {
+        Homework homework = homeworkMapper.selectById(homeworkId);
+        if (homework == null) {
+            throw new RuntimeException("作业不存在");
+        }
+        
+        // 简化的文件下载逻辑
+        try {
+            String fileName = homework.getFileName() != null ? homework.getFileName() : "homework_" + homeworkId + ".txt";
+            response.setContentType("text/plain; charset=UTF-8");
+            response.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
+            
+            // 生成作业内容
+            String content = String.format("作业标题: %s\n作业描述: %s\n截止时间: %s\n创建时间: %s\n\n这是一个模拟的作业文件内容。",
+                homework.getTitle(),
+                homework.getDescription() != null ? homework.getDescription() : "无描述",
+                homework.getDeadline() != null ? homework.getDeadline().toString() : "无截止时间",
+                homework.getCreatedAt() != null ? homework.getCreatedAt().toString() : "未知"
+            );
+            
+            response.getWriter().write(content);
+        } catch (IOException e) {
+            throw new RuntimeException("文件下载失败", e);
+        }
+    }
+
+    @Override
+    public void downloadSubmissionFile(Long submissionId, HttpServletResponse response) {
+        HomeworkSubmission submission = submissionMapper.selectById(submissionId);
+        if (submission == null) {
+            throw new RuntimeException("提交记录不存在");
+        }
+        
+        // 简化的文件下载逻辑
+        try {
+            String fileName = "submission_" + submissionId + ".txt";
+            response.setContentType("text/plain; charset=UTF-8");
+            response.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
+            
+            // 生成提交内容
+            String content = String.format("提交记录ID: %d\n作业ID: %d\n学生ID: %d\n学生姓名: %s\n提交时间: %s\n\n这是一个模拟的作业提交文件内容。",
+                submission.getId(),
+                submission.getHomeworkId(),
+                submission.getStudentId(),
+                submission.getStudentName() != null ? submission.getStudentName() : "未知",
+                submission.getSubmittedAt() != null ? submission.getSubmittedAt().toString() : "未知"
+            );
+            
+            response.getWriter().write(content);
+        } catch (IOException e) {
+            throw new RuntimeException("文件下载失败", e);
+        }
+    }
+
+    @Override
+    @Transactional
+    public void deleteHomework(Long homeworkId) {
+        // 删除作业的所有提交记录
+        submissionMapper.deleteByHomeworkId(homeworkId);
+        // 删除作业
+        homeworkMapper.deleteById(homeworkId);
+    }
+}
