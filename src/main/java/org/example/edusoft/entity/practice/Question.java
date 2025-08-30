@@ -4,7 +4,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
@@ -13,7 +13,7 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Arrays;

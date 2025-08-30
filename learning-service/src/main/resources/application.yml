@@ -1,34 +1,45 @@
 server:
-  port: 8082
-
+  port: 8084
 spring:
   application:
     name: learning-service
   datasource:
-    url: jdbc:mysql://localhost:3306/edusoft?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
+    url: jdbc:mysql://localhost:3306/learning_db?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
     username: root
-    password: root
+    password: Fuchen20050420 # 请替换为你的数据库密码
     driver-class-name: com.mysql.cj.jdbc.Driver
-  jackson:
-    date-format: yyyy-MM-dd HH:mm:ss
-    time-zone: Asia/Shanghai
-
 mybatis:
-  mapper-locations: classpath:mapper/**/*.xml
-  type-aliases-package: org.example.edusoft.learning.entity
-
-feign:
-  hystrix:
-    enabled: true
-
-# eureka/注册中心配置（如使用）
-eureka:
-  client:
-    service-url:
-      defaultZone: http://localhost:8761/eureka/
-  instance:
-    prefer-ip-address: true
-
+  mapper-locations: classpath:mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
 logging:
   level:
-    org.example.edusoft: debug
+    '[org.example.edusoft.learning.mapper]': debug
+    '[org.example.edusoft.learning.client]': debug
+
+# 微服务地址配置
+service:
+  user:
+    url: http://localhost:8081 # user-service的地址
+  course:
+    url: http://localhost:8082 # course-service的地址
+  content:
+    url: http://localhost:8083 # content-service的地址
+
+# HTTP客户端配置
+http:
+  client:
+    connect-timeout: 5000 # 连接超时时间(ms)
+    read-timeout: 10000   # 读取超时时间(ms)
+    max-connections: 100  # 最大连接数
+    max-connections-per-route: 20 # 每个路由的最大连接数
+
+# Actuator 健康检查配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized

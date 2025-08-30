@@ -4,7 +4,7 @@ import java.util.List;
 import lombok.Data;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @NoArgsConstructor  // 添加无参构造函数
 @AllArgsConstructor // 添加全参构造函数

@@ -34,4 +34,4 @@ public class Result<T> {
         result.setMessage(message);
         return result;
     }
-} 
+}

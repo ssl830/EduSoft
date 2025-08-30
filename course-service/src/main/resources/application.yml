@@ -29,6 +29,16 @@ spring:
         dialect: org.hibernate.dialect.MySQL8Dialect
         format_sql: true
 
+# Actuator 健康检查配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+
 mybatis:
   mapper-locations: classpath:mapper/*.xml
   type-aliases-package: org.example.edusoft.entity
