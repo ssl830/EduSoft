@@ -8,6 +8,14 @@ import org.example.edusoft.entity.ImportRecord;
 import java.util.List;
 
 public interface ClassService {
+    /**
+     * 查询用户在指定课程下的所有班级（返回完整Class实体）
+     */
+    List<Class> getClassByUserIdAndCourseId(Long userId, Long courseId);
+    /**
+     * 根据用户ID和课程ID列表，获取用户在每个课程下的班级名（如有多个班级用逗号拼接），返回JSON字符串
+     */
+    String getClassesByUserIdAndCourseIds(Long userId, List<Long> courseIds);
     // 创建班级
     Class createClass(Class clazz);
     

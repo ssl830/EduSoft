@@ -20,7 +20,7 @@ public class TeachingResourceController {
     private TeachingResourceService teachingResourceService;
 
     /**
-     * 创建教学资源
+     * 创建教学资源 
      */
     @PostMapping
     public ResponseEntity<TeachingResource> createResource(
@@ -70,6 +70,30 @@ public class TeachingResourceController {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(resource);
+    }
+
+    /**
+     * 批量获取教学资源
+     */
+    @GetMapping("/batch")
+    public ResponseEntity<List<TeachingResource>> getResourcesByIds(@RequestParam("ids") String ids) {
+        if (ids == null || ids.trim().isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+        String[] idArr = ids.split(",");
+        List<TeachingResource> result = new java.util.ArrayList<>();
+        for (String idStr : idArr) {
+            try {
+                Long id = Long.valueOf(idStr.trim());
+                TeachingResource resource = teachingResourceService.getResourceById(id);
+                if (resource != null) {
+                    result.add(resource);
+                }
+            } catch (Exception e) {
+                // 忽略单个ID异常，继续处理其他ID
+            }
+        }
+        return ResponseEntity.ok(result);
     }
 
     /**

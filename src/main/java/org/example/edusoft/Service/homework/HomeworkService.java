@@ -76,7 +76,7 @@ public interface HomeworkService {
     void downloadSubmissionFile(Long submissionId, HttpServletResponse response);
 
     /**
-     * 删除作业
+     * 删除作业 
      * @param homeworkId 作业ID
      */
     void deleteHomework(Long homeworkId);

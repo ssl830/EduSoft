@@ -71,4 +71,12 @@ public class CourseSectionServiceImpl implements CourseSectionService {
         
         return courseSectionMapper.deleteById(id) > 0;
     }
+
+    @Override
+    public CourseSection getSectionById(Long id) {
+        if (id == null) {
+            throw new IllegalArgumentException("章节ID不能为空");
+        }
+        return courseSectionMapper.selectById(id);
+    }
 }
