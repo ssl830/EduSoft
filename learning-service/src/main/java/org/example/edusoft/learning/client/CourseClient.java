@@ -37,7 +37,7 @@ public class CourseClient extends BaseServiceClient {
         if (courseId == null) {
             throw new IllegalArgumentException("课程ID不能为空");
         }
-        return getForMap("/api/course/" + courseId);
+        return getForMap("/api/courses/" + courseId);
     }
 
     /**
@@ -47,17 +47,14 @@ public class CourseClient extends BaseServiceClient {
         if (classId == null) {
             throw new IllegalArgumentException("班级ID不能为空");
         }
-        return getForMap("/api/class/" + classId);
+        return getForMap("/api/classes/" + classId);
     }
 
     /**
-     * 根据章节ID获取章节信息
+     * 根据章节ID获取章节信息（暂时不可用，course-service没有此接口）
      */
     public Map<String, Object> getSectionById(Long sectionId) {
-        if (sectionId == null) {
-            throw new IllegalArgumentException("章节ID不能为空");
-        }
-        return getForMap("/api/section/" + sectionId);
+        throw new UnsupportedOperationException("course-service暂未提供按ID获取章节的接口");
     }
 
     /**
@@ -67,7 +64,7 @@ public class CourseClient extends BaseServiceClient {
         if (courseId == null) {
             throw new IllegalArgumentException("课程ID不能为空");
         }
-        return get("/api/course/" + courseId + "/sections", List.class);
+        return get("/api/course-sections/course/" + courseId, List.class);
     }
 
     /**
@@ -77,7 +74,7 @@ public class CourseClient extends BaseServiceClient {
         if (classId == null) {
             throw new IllegalArgumentException("班级ID不能为空");
         }
-        return get("/api/class/" + classId + "/students", List.class);
+        return get("/api/classes/" + classId + "/users", List.class);
     }
 
     /**
