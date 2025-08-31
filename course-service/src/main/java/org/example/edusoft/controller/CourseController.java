@@ -116,7 +116,7 @@ public class CourseController {
         }
     }
 
-        /**
+    /**
      * 批量获取课程信息
      */
     @GetMapping("/batch")

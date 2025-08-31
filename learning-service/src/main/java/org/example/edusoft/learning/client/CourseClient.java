@@ -45,7 +45,17 @@ public class CourseClient extends BaseServiceClient {
         }
         return getForMap("/api/class/" + classId);
     }
-    
+
+    /**
+     * 根据用户ID和课程ID获取班级信息，完成微服务化改造
+     */
+    public List<Map<String, Object>> getClassesByUserIdAndCourseIds(Long userId, List<Long> courseIds) {
+        if (userId == null || courseIds == null || courseIds.isEmpty()) {
+            throw new IllegalArgumentException("用户ID和课程ID列表不能为空");
+        }
+        return post("/api/classes/{userId}/{courseId}", Map.of("userId", userId, "courseIds", courseIds), List.class);
+    }
+
     /**
      * 根据章节ID获取章节信息 
      */
@@ -57,7 +67,7 @@ public class CourseClient extends BaseServiceClient {
     }
 
     /**
-     * 根据章节ID批量获取章节信息 
+     * 根据章节ID批量获取章节信息，完成微服务化改造
      */
     public List<Map<String, Object>> getSectionsByIds(String sectionIds) {
         if (sectionIds == null || sectionIds.trim().isEmpty()) {
@@ -135,4 +145,5 @@ public class CourseClient extends BaseServiceClient {
         }
         return get("/api/courses/batch?ids=" + courseIds, List.class);
     }
+
 }

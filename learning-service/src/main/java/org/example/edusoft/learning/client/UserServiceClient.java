@@ -95,7 +95,7 @@ public class UserServiceClient {
 	}
 
 	/**
-	 * 通过token获取当前用户信息
+	 * 通过token获取当前用户信息 
 	 * @param baseUrl 用户服务基础URL
 	 * @param token 认证token（支持Bearer前缀或原始token）
 	 * @return 用户信息Map，如果失败返回null

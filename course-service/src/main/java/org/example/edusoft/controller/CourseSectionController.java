@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/course-sections")
+@RequestMapping("/api/course-sections") //
 public class CourseSectionController {
 
     @Autowired
@@ -34,6 +34,41 @@ public class CourseSectionController {
         } catch (Exception e) {
             return Result.error(500, "创建章节失败：" + e.getMessage());
         }
+    }
+
+    @GetMapping("/{id}")
+    public Result<CourseSection> getSectionById(@PathVariable Long id) {
+        try {
+            CourseSection section = courseSectionService.getSectionById(id);
+            return Result.success(section);
+        } catch (Exception e) {
+            return Result.error(500, "获取章节失败：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 批量获取章节信息，完成微服务化改造
+     */
+    @GetMapping("/batch")
+    public Result<List<CourseSection>> getSectionsByIds(@RequestParam("ids") String ids, HttpServletRequest request) {
+        if (ids == null || ids.trim().isEmpty()) {
+            return Result.error(400, "章节ID列表不能为空");
+        }
+        String[] idArr = ids.split(",");
+        List<CourseSection> result = new java.util.ArrayList<>();
+        for (String idStr : idArr) {
+            try {
+                Long id = Long.valueOf(idStr.trim());
+                // 复用已有的getSectionById接口逻辑
+                Result<CourseSection> sectionResult = getSectionById(id);
+                if (sectionResult.getCode() == 200 && sectionResult.getData() != null) {
+                    result.add(sectionResult.getData());
+                }
+            } catch (Exception e) {
+                // 忽略单个ID异常，继续处理其他ID
+            }
+        }
+        return Result.success(result);
     }
 
     @PutMapping("/{id}")
