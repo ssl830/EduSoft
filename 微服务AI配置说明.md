@@ -5,7 +5,7 @@
 ```yaml
 # learning-service 配置
 server:
-  port: 8082
+  port: 8084
 
 spring:
   application:
@@ -25,9 +25,9 @@ services:
   user-service:
     url: http://localhost:8081
   course-service:
-    url: http://localhost:8083
+    url: http://localhost:8082
   content-service:
-    url: http://localhost:8084
+    url: http://localhost:8083
 ```
 
 ## course-service配置 (application.yml)
@@ -35,7 +35,7 @@ services:
 ```yaml
 # course-service 配置
 server:
-  port: 8083
+  port: 8082
 
 spring:
   application:

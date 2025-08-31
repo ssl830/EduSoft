@@ -277,10 +277,3 @@ CREATE TABLE chat_memory_summary (
   CONSTRAINT chat_memory_summary_ibfk_1 FOREIGN KEY (session_id) REFERENCES chat_session (id) ON DELETE CASCADE
 );
 
--- 收藏题目表
-CREATE TABLE favorite_question (
-  student_id bigint NOT NULL,  -- 引用用户服务
-  question_id bigint NOT NULL,
-  PRIMARY KEY (student_id, question_id),
-  KEY question_id (question_id)
-);

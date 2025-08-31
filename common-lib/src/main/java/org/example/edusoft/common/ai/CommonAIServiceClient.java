@@ -50,7 +50,7 @@ public class CommonAIServiceClient {
     }
 
     /**
-     * 调用AI生成练习题
+     * 调用AI生成练习题 - 简单版本
      * @param courseContent 课程内容
      * @return 生成的练习题
      */
@@ -60,8 +60,40 @@ public class CommonAIServiceClient {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         
-        Map<String, Object> request = Map.of("courseContent", courseContent);
+        // 构造符合AI微服务期望的格式
+        Map<String, Object> request = Map.of(
+            "course_name", "通用课程",
+            "lesson_content", courseContent,
+            "difficulty", "medium",
+            "choose_count", 5,
+            "fill_blank_count", 3,
+            "question_count", 2
+        );
         HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(request, headers);
+        
+        try {
+            ResponseEntity<Map> response = restTemplate.postForEntity(url, requestEntity, Map.class);
+            return response.getBody();
+        } catch (Exception e) {
+            return Map.of(
+                "status", "fail",
+                "message", "AI练习生成失败: " + e.getMessage()
+            );
+        }
+    }
+
+    /**
+     * 调用AI生成练习题 - 完整版本（用于题库页面）
+     * @param exerciseRequest 完整的练习生成请求
+     * @return 生成的练习题
+     */
+    public Map<String, Object> generateExercise(Map<String, Object> exerciseRequest) {
+        String url = learningServiceUrl + "/api/learning/ai/rag/generate_exercise";
+        
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        
+        HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(exerciseRequest, headers);
         
         try {
             ResponseEntity<Map> response = restTemplate.postForEntity(url, requestEntity, Map.class);
@@ -87,10 +119,12 @@ public class CommonAIServiceClient {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         
+        // 使用符合Python AI微服务期望的字段名
         Map<String, Object> request = Map.of(
             "question", question,
             "student_answer", answer,
-            "standard_answer", standardAnswer
+            "reference_answer", standardAnswer,
+            "max_score", 10.0  // 默认最大分数
         );
         
         HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(request, headers);

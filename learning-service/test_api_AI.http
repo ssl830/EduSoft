@@ -1,164 +1,356 @@
-### AI微服务功能测试
-### 测试learning-service中的AI功能与Python AI微服务的连接
+### AI功能全接口测试 - learning-service (8084端口) - 微服务增强版
+### 所有请求都发送到learning-service，由其转发给Python AI微服务
+### learning-service会自动从其他微服务获取课程、章节、用户等信息
+### Python AI微服务运行在8000端口，但前端只需要调用8084端口
 
-# 前置条件：
-# 1. Learning Service运行在 http://localhost:8084
-# 2. Python AI Service运行在 http://localhost:8000
-# 3. 请确保两个服务都已启动
+@baseUrl = http://localhost:8084
+@contentType = application/json
+@token = 63cc5d7d-b831-48ad-b3e7-f2e74e856ffe
+### 1. 上传知识库文件 - POST /embedding/upload
+### 前端: FormData格式，包含file和可选的course_id
+POST {{baseUrl}}/api/learning/ai/embedding/upload
+Content-Type: multipart/form-data; boundary=WebAppBoundary
 
-### 1. 测试AI助手功能 - RAG问答
-POST http://localhost:8084/api/learning/ai/rag/assistant
-Content-Type: application/json
-X-User-Id: 201
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="test.pdf"
+Content-Type: application/pdf
 
-{
-  "question": "什么是Spring Boot？",
-  "context": "Java Web开发"
-}
-
-### 2. 测试练习生成功能 faillllllllllllllllllllllllllllllllllllllllllllllllll
-POST http://localhost:8084/api/learning/ai/rag/generate_exercise
-Content-Type: application/json
-X-User-Id: 201
-
-{
-  "prompt": "生成5道关于Java基础的单选题，包含选项、答案和解析"
-}
-
-### 3. 测试主观题AI评分 faillllllllllllllllllllllllllllllllllllllllllllllllll
-POST http://localhost:8084/api/learning/ai/evaluate-subjective
-Content-Type: application/json
-X-User-Id: 201
-
-{
-  "question": "请简述Spring框架的优点",
-  "student_answer": "Spring框架具有依赖注入、面向切面编程、轻量级等特点，能够简化Java企业级应用开发。",
-  "reference_answer": "Spring框架的主要优点包括：1.依赖注入(IoC)降低组件耦合度；2.面向切面编程(AOP)实现横切关注点分离；3.轻量级框架，非侵入性；4.丰富的生态系统；5.良好的测试支持。"
-}
-
-### 4. 测试自测练习生成（SelfPractice功能） faillllllllllllllllllllllllllllllllllllllllllllllllll
-POST http://localhost:8084/api/learning/self-practice/generate
-Content-Type: application/json
-X-User-Id: 201
-
-{
-  "prompt": "生成3道关于数据库的练习题，包含单选题和填空题"
-}
-
-### 5. 测试文件上传与知识库构建
-POST http://localhost:8084/api/learning/ai/embedding/upload
-Content-Type: multipart/form-data; boundary=----WebKitFormBoundary
-X-User-Id: 201
-
-------WebKitFormBoundary
-Content-Disposition: form-data; name="file"; filename="test.txt"
-Content-Type: text/plain
-
-这是一个测试文档，包含Java Spring Boot相关知识。
-Spring Boot是一个用于简化Spring应用开发的框架。
-它提供了自动配置、起步依赖等特性。
-------WebKitFormBoundary
+< ./test-files/sample.pdf
+--WebAppBoundary
 Content-Disposition: form-data; name="course_id"
 
-CS101
-------WebKitFormBoundary--
+1
+--WebAppBoundary--
 
-### 6. 测试教学内容生成 faillllllllllllllllllllllllllllllllllllllllllllllllll
-POST http://localhost:8084/api/learning/ai/rag/generate
-Content-Type: application/json
-X-User-Id: 201
+### 2. 生成教学内容 - POST /rag/generate (自动获取课程信息)
+### 前端只需发送course_id，后端会自动从course-service获取课程详细信息
+POST {{baseUrl}}/api/learning/ai/rag/generate
+Content-Type: {{contentType}}
+satoken: {{token}}
 
 {
-  "courseOutline": "Java面向对象编程：类与对象、继承、多态、封装",
-  "courseName": "Java程序设计",
-  "expectedHours": 4
+  "course_id": 1,
+  "expected_hours": 2,
+  "constraints": "适合初学者，包含实例代码"
 }
 
-### 7. 测试AI服务通用调用接口 faillllllllllllllllllllllllllllllllllllllllllllllllll
-POST http://localhost:8084/api/learning/ai/call-service
-Content-Type: application/json
-X-User-Id: 201
+
+
+### 2.1 生成教学内容 - 完整参数版本（无需跨服务通信）
+POST {{baseUrl}}/api/learning/ai/rag/generate
+Content-Type: {{contentType}}
 
 {
-  "endpoint": "/health",
-  "request": {}
+  "course_outline": "Java程序设计基础：变量、数据类型、运算符",
+  "course_name": "Java程序设计",
+  "expected_hours": 2,
+  "constraints": "适合初学者，包含实例代码"
 }
-
-### 8. 测试自测练习提交与AI评分 faillllllllllllllllllllllllllllllllllllllllllllllllll
-POST http://localhost:8084/api/learning/self-practice/submit
-Content-Type: application/json
-X-User-Id: 201
+成功！！
+### 3. 生成教学内容细节 - POST /rag/detail
+### 前端发送教学内容细节生成请求 (需要正确的字段格式)
+POST {{baseUrl}}/api/learning/ai/rag/detail
+Content-Type: {{contentType}}
 
 {
-  "practiceId": 1,
-  "answers": [
+  "title": "第一章 Java基础语法",
+  "knowledgePoints": ["变量声明", "数据类型", "基本运算"],
+  "practiceContent": "编写简单的Java程序，声明不同类型的变量",
+  "teachingGuidance": "从基础概念入手，通过实例演示",
+  "timePlan": [
     {
-      "questionId": 1,
-      "answer": "A",
-      "type": "singlechoice",
-      "correctAnswer": "A",
-      "score": 10
+      "content": "理论讲解",
+      "minutes": 30,
+      "step": "导入"
     },
     {
-      "questionId": 2,
-      "answer": "Spring是一个轻量级的Java开发框架",
-      "type": "fillblank",
-      "question": "请简述Spring框架的特点",
-      "correctAnswer": "Spring是一个轻量级、非侵入性的Java开发框架",
-      "score": 20
+      "content": "实践练习",
+      "minutes": 20,
+      "step": "实践"
     }
   ]
 }
 
-### 9. 测试练习历史查询 faillllllllllllllllllllllllllllllllllllllllllllllllll
-GET http://localhost:8084/api/learning/self-practice/history
-X-User-Id: 201
 
-### 10. 测试练习详情查看
-GET http://localhost:8084/api/learning/self-practice/detail/1
-X-User-Id: 201
-
-### 11. 测试Python AI服务直连（调试用）
-GET http://localhost:8000/health
-
-### 12. 测试Python AI服务RAG问答（直连）
-POST http://localhost:8000/rag/assistant
-Content-Type: application/json
+### 4. 重新生成教学内容 - POST /rag/regenerate
+### 前端发送重新生成请求 (需要正确的字段格式)
+POST {{baseUrl}}/api/learning/ai/rag/regenerate
+Content-Type: {{contentType}}
 
 {
-  "question": "什么是机器学习？"
+  "title": "Java基础语法",
+  "knowledgePoints": ["变量声明", "数据类型", "运算符"],
+  "practiceContent": "之前的练习内容...",
+  "teachingGuidance": "之前的教学指导...",
+  "timePlan": [
+    {
+      "content": "理论讲解",
+      "minutes": 30,
+      "step": "导入"
+    }
+  ],
+  "constraints": "需要增加更多实例，减少理论部分"
 }
 
-### 13. 测试Python AI服务练习生成（直连） faillllllllllllllllllllllllllllllllllllllllllllllllll
-POST http://localhost:8000/rag/generate_exercise
-Content-Type: application/json
+### 5. 生成练习题 - POST /rag/generate_exercise (自动获取课程和章节信息)
+### 前端只需发送course_id和section_id，后端会自动从course-service获取详细信息
+### 目前没有实现根据章节id或者章节内容的接口（TODO)
+POST {{baseUrl}}/api/learning/ai/rag/generate_exercise
+Content-Type: {{contentType}}
+satoken: {{token}}
 
 {
-  "prompt": "生成2道关于Python基础的选择题"
+  "course_id": 1,
+  "section_id": 1,
+  "difficulty": "medium",
+  "choose_count": 3,
+  "fill_blank_count": 2,
+  "question_count": 1,
+  "custom_types": {
+    "程序设计题": 1,
+    "判断题": 1
+  }
 }
 
-### 14. 测试Python AI服务主观题评分（直连） faillllllllllllllllllllllllllllllllllllllllllllllllll
-POST http://localhost:8000/rag/evaluate_subjective
-Content-Type: application/json
+### 5.1 生成练习题 - POST /rag/generate_exercise (题库页面调用 - 完整参数)
+### 前端发送完整的练习生成请求，包含课程信息
+POST {{baseUrl}}/api/learning/ai/rag/generate_exercise
+Content-Type: {{contentType}}
 
 {
-  "question": "请解释Python中的装饰器概念",
-  "student_answer": "装饰器是一种设计模式，可以在不修改原函数的情况下增加功能",
-  "reference_answer": "装饰器是Python中的一种语法糖，允许在不修改原函数代码的情况下，为函数添加额外的功能。它本质上是一个返回函数的高阶函数。"
+  "course_name": "Java程序设计",
+  "lesson_content": "Java变量和数据类型：int、double、String、boolean的使用",
+  "difficulty": "medium",
+  "choose_count": 3,
+  "fill_blank_count": 2,
+  "question_count": 1,
+  "custom_types": {
+    "程序设计题": 1,
+    "判断题": 1
+  }
 }
 
-### 测试说明：
-# 1. 请按顺序执行测试，确保服务连接正常
-# 2. 测试1-10验证learning-service的AI功能集成
-# 3. 测试11-14验证Python AI微服务的直接连接
-# 4. 如果某个测试失败，请检查：
-#    - 服务是否正常启动
-#    - 端口配置是否正确
-#    - 数据库连接是否正常
-#    - Python AI服务依赖是否安装完整
+### 6. 主观题评估 - POST /evaluate-subjective (正确路径)
+### 前端发送主观题评估请求
+POST {{baseUrl}}/api/learning/ai/evaluate-subjective
+Content-Type: {{contentType}}
 
-### 预期结果：
-# - 所有测试应返回JSON格式响应
-# - 状态码应为200
-# - AI功能应正常生成内容/评分
-# - 数据库应正确保存相关记录
+{
+  "question": "请解释Java中的面向对象编程的三大特性",
+  "student_answer": "封装是把数据和方法包装在一起，继承是子类可以使用父类的属性和方法",
+  "reference_answer": "面向对象编程三大特性：1.封装：将数据和操作数据的方法绑定在一起，隐藏内部实现细节；2.继承：子类可以继承父类的属性和方法，实现代码复用；3.多态：同一个接口可以有不同的实现方式",
+  "max_score": 10
+}
+
+### 7. 练习学情分析 - POST /rag/analyze_exercise
+### 前端发送练习学情分析请求
+POST {{baseUrl}}/api/learning/ai/analyze-exercise
+Content-Type: {{contentType}}
+
+{
+  "practiceId": 1
+}
+
+### 8. 在线学习助手 - POST /rag/assistant
+### 前端发送在线助手请求（有会话记忆）
+POST {{baseUrl}}/api/learning/ai/rag/assistant
+Content-Type: {{contentType}}
+
+{
+  "question": "Java中ArrayList和LinkedList有什么区别？",
+  "course_context": "Java程序设计",
+  "session_id": "student_123_session_1",
+  "context": "我正在学习Java集合框架"
+}
+成功
+### 9. 生成学生自测练习 - POST /rag/generate_student_exercise
+### 前端发送学生自测练习生成请求
+POST {{baseUrl}}/api/learning/ai/rag/generate_student_exercise
+Content-Type: {{contentType}}
+
+{
+  "requirements": "选择题3道，填空题2道，难度medium",
+  "knowledge_preferences": "Java基础语法，变量声明",
+  "wrong_questions": []
+}
+成功
+### 10. 课程优化建议 - POST /rag/optimize_course
+### 前端发送课程优化请求 (需要正确的字段格式)
+POST {{baseUrl}}/api/learning/ai/rag/optimize_course
+Content-Type: {{contentType}}
+
+{
+  "courseName": "Java程序设计",
+  "sectionName": "第一章：基础语法",
+  "averageScore": 75.5,
+  "errorRate": 0.25,
+  "studentCount": 30
+}
+
+
+### 11. 教学内容反馈修改 - POST /rag/feedback
+### 前端发送教学内容反馈修改请求 (需要正确的字段格式)
+POST {{baseUrl}}/api/learning/ai/rag/feedback
+Content-Type: {{contentType}}
+
+{
+  "originalPlan": {
+    "title": "Java基础语法",
+    "content": "原始教学内容...",
+    "objectives": ["掌握变量声明", "理解数据类型"]
+  },
+  "feedback": "需要增加实践环节，减少理论描述"
+}
+
+### 12. 生成课时环节细节 - POST /rag/step_detail
+### 前端发送课时环节细节生成请求 (需要正确的字段格式)
+POST {{baseUrl}}/api/learning/ai/rag/step_detail
+Content-Type: {{contentType}}
+
+{
+  "lessonTitle": "变量和数据类型",
+  "stepName": "实践环节",
+  "currentContent": "当前环节内容描述"
+}
+
+
+### 13. 生成章节教学内容 - POST /rag/generate_section (文件上传，暂时先不测)
+### 前端发送章节教学内容生成请求（Multipart格式）
+POST {{baseUrl}}/api/learning/ai/rag/generate_section
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="course_material.pdf"
+Content-Type: application/pdf
+
+< ./test-files/java_chapter1.pdf
+--WebAppBoundary
+Content-Disposition: form-data; name="course_name"
+
+Java程序设计
+--WebAppBoundary
+Content-Disposition: form-data; name="section_title"
+
+第一章 Java基础语法
+--WebAppBoundary
+Content-Disposition: form-data; name="expected_hours"
+
+3
+--WebAppBoundary
+Content-Disposition: form-data; name="constraints"
+
+包含实例代码和练习题
+--WebAppBoundary--
+
+### 14. 根据选定题目生成自测练习 - POST /rag/generate_selected_student_exercise
+### 前端发送基于选定题目的自测练习生成请求 (需要正确的字段格式)
+POST {{baseUrl}}/api/learning/ai/rag/generate_selected_student_exercise
+Content-Type: {{contentType}}
+
+{
+  "selected_questions": [
+    {
+      "id": 1,
+      "content": "Java中int类型的取值范围是？",
+      "type": "选择题",
+      "difficulty": "medium"
+    },
+    {
+      "id": 3,
+      "content": "什么是面向对象编程？",
+      "type": "问答题",
+      "difficulty": "medium"
+    }
+  ],
+  "requirements": "基于这些题目生成相似的练习题",
+  "knowledge_preferences": "Java面向对象编程"
+}
+
+----------------
+由于视频摘要等还不确定位置，我们先不测试
+### 15. 视频摘要生成 - POST /video/summary
+### 前端发送视频摘要生成请求
+POST {{baseUrl}}/api/learning/ai/video/summary
+Content-Type: {{contentType}}
+
+{
+  "video_url": "http://example.com/java_lesson1.mp4",
+  "video_title": "Java基础语法讲解",
+  "summary_length": "medium",
+  "include_timestamps": true
+}
+
+### 16. 文本摘要生成 - POST /video/summary/text
+### 前端发送文本摘要生成请求
+POST {{baseUrl}}/api/learning/ai/video/summary/text
+Content-Type: {{contentType}}
+
+{
+  "text_content": "Java是一种面向对象的编程语言，具有跨平台、安全、可靠等特点...",
+  "summary_type": "key_points",
+  "max_length": 200
+}
+
+### 17. 存储路径管理 - POST /storage/base_path
+### 前端发送存储基础路径设置请求
+POST {{baseUrl}}/api/learning/ai/storage/base_path
+Content-Type: {{contentType}}
+
+{
+  "base_path": "/data/knowledge_base/java_course"
+}
+
+### 18. 设置存储路径（备用） - POST /embedding/base_path
+### 前端发送存储路径设置请求（备用接口）
+POST {{baseUrl}}/api/learning/ai/embedding/base_path
+Content-Type: {{contentType}}
+
+{
+  "base_path": "/data/private_kb/user_123"
+}
+
+### 19. 重置存储路径 - POST /storage/base_path/reset
+### 前端发送存储路径重置请求
+POST {{baseUrl}}/api/learning/ai/storage/base_path/reset
+Content-Type: {{contentType}}
+
+{}
+
+### 20. 重置存储路径（备用） - POST /embedding/base_path/reset
+### 前端发送存储路径重置请求（备用接口）
+POST {{baseUrl}}/api/learning/ai/embedding/base_path/reset
+Content-Type: {{contentType}}
+
+{}
+
+### 21. 检查文档是否存在 - GET /storage/document_exists
+### 前端检查指定文档是否存在
+GET {{baseUrl}}/api/learning/ai/storage/document_exists?filename=java_basics.pdf&course_id=1
+
+### 22. 获取存储路径列表 - GET /storage/list
+### 前端获取所有知识库路径列表
+GET {{baseUrl}}/api/learning/ai/storage/list
+
+### 23. 设置选定的知识库 - POST /storage/selected
+### 前端设置要使用的知识库路径
+POST {{baseUrl}}/api/learning/ai/storage/selected
+Content-Type: {{contentType}}
+
+[
+  "/data/knowledge_base/java_course",
+  "/data/knowledge_base/common"
+]
+
+### 24. 健康检查 - GET /health
+### 检查AI微服务健康状态
+GET {{baseUrl}}/api/learning/ai/health
+
+### ========================================
+### 注意事项:
+### 1. 所有请求都发送到 learning-service (8084端口)
+### 2. learning-service 负责转发请求到 Python AI微服务 (8000端口)
+### 3. 涉及课程、章节、班级信息的接口需要 learning-service 先查询其他微服务获取数据
+### 4. 需要登录状态的接口会自动获取用户信息
+### 5. 文件上传接口使用 multipart/form-data 格式
+### 6. JSON接口使用 application/json 格式
+### ========================================
