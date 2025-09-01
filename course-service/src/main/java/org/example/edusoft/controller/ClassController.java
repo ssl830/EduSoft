@@ -16,6 +16,9 @@ import java.util.List;
 import java.util.Map;
 import org.example.edusoft.dto.TeacherClassDTO;
 import org.example.edusoft.service.TeacherClassService;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
 
 @RestController
 @RequestMapping("/api/classes")
@@ -165,7 +168,7 @@ public class ClassController {
         return Result.success(teacherClassService.getClassesByTeacherId(teacherId));
     }
 
-    // 课表API，返回用户所有班级信息
+    // 课表API，返回用户所有班级信息 
     @GetMapping("/schedule/user/{userId}")
     public Result<List<ClassDetailDTO>> getScheduleByUserId(@PathVariable Long userId) {
         return Result.success(classService.getClassesByUserId(userId));
@@ -176,4 +179,10 @@ public class ClassController {
         int total = classService.getClassStudentCount(classId);
         return Result.success(Map.of("total", total));
     }
+
+    @GetMapping("/{userId}/{courseId}")
+    public String getClassesByUserIdAndCourseIds(@PathVariable Long userId, @PathVariable Long courseId) {
+        return classService.getClassesByUserIdAndCourseIds(userId, List.of(courseId));
+    }
+    
 }

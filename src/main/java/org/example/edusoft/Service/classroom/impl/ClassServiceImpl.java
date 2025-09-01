@@ -121,7 +121,7 @@ public class ClassServiceImpl implements ClassService {
             throw new BusinessException(400, "班级ID不能为空");
         }
         
-        // 先检查班级是否存在
+        // 先检查班级是否存在 
         Class clazz = classMapper.selectById(id);
         if (clazz == null) {
             throw new BusinessException(404, "班级不存在");

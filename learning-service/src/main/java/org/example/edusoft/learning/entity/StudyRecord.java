@@ -2,15 +2,9 @@ package org.example.edusoft.learning.entity;
 
 import java.time.LocalDateTime;
 import lombok.Data;
-import jakarta.persistence.*;
 
-@Entity
 @Data
-@Table(name = "learning_progress")
 public class StudyRecord {
-    
-    
-    @Id 
     private Long id;
     private Long resourceId;
     private Long studentId;

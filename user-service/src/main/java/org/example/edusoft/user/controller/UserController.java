@@ -181,7 +181,7 @@ public class UserController {
         }
     }
 
-    // 微服务间token验证接口 - 专门为其他微服务提供
+    // 微服务间token验证接口 - 专门为其他微服务提供 
     @SaIgnore
     @GetMapping("/validate")
     public SaResult validateToken(@RequestHeader("satoken") String token) {

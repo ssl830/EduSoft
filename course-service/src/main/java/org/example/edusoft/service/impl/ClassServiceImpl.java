@@ -25,6 +25,35 @@ import org.example.edusoft.client.UserServiceClient;
 @Service
 public class ClassServiceImpl implements ClassService {
 
+    @Override
+    public List<Class> getClassByUserIdAndCourseId(Long userId, Long courseId) {
+        if (userId == null || courseId == null) {
+            return java.util.Collections.emptyList();
+        }
+        return classMapper.getClassByUserIdAndCourseId(userId, courseId);
+    }
+    @Autowired
+    private com.fasterxml.jackson.databind.ObjectMapper objectMapper;
+    @Override
+    public String getClassesByUserIdAndCourseIds(Long userId, List<Long> courseIds) {
+        if (userId == null || courseIds == null || courseIds.isEmpty()) {
+            return "{}";
+        }
+        // 查询每个课程下该用户所在的所有班级（完整实体）
+        Map<Long, List<Class>> resultMap = new java.util.HashMap<>();
+        for (Long courseId : courseIds) {
+            List<Class> classList = classMapper.getClassByUserIdAndCourseId(userId, courseId);
+            if (classList != null && !classList.isEmpty()) {
+                resultMap.put(courseId, classList);
+            }
+        }
+        try {
+            return objectMapper.writeValueAsString(resultMap);
+        } catch (Exception e) {
+            return "{}";
+        }
+    }
+
     @Autowired
     private ClassMapper classMapper;
 

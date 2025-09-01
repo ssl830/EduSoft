@@ -6,7 +6,7 @@ spring:
   datasource:
     url: jdbc:mysql://localhost:3306/learning_db?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
     username: root
-    password: Fuchen20050420 # 请替换为你的数据库密码
+    password: 20240323 # 请替换为你的数据库密码
     driver-class-name: com.mysql.cj.jdbc.Driver
 mybatis:
   mapper-locations: classpath:mapper/*.xml
@@ -25,6 +25,11 @@ service:
     url: http://localhost:8082 # course-service的地址
   content:
     url: http://localhost:8083 # content-service的地址
+
+# AI服务配置
+ai:
+  service:
+    url: http://localhost:8000 # Python AI服务地址
 
 # HTTP客户端配置
 http:

@@ -2,20 +2,22 @@ package org.example.edusoft.learning.entity;
 import lombok.Data;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
+import jakarta.persistence.*;
 
-@NoArgsConstructor
-@AllArgsConstructor
+@NoArgsConstructor  // 添加无参构造函数
+@AllArgsConstructor // 添加全参构造函数
+@Entity
 @Data
 public class QuestionRecord {
     private Long id;
     private Long sectionId;
     private Long courseId;
-    private String content;
-    private String type;
+    private String content;          // 题目内容
+    private String type;            // 题目类型
     private String options; 
-    private String studentAnswer;
-    private String correctAnswer;
-    private Boolean isCorrect;
+    private String studentAnswer;    // 学生答案
+    private String correctAnswer;    // 正确答案
+    private Boolean isCorrect;       // 是否正确
     private String analysis;
-    private Integer score;
+    private Integer score;           // 得分
 }

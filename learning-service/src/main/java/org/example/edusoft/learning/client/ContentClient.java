@@ -95,13 +95,13 @@ public class ContentClient extends BaseServiceClient {
     }
     
     /**
-     * 批量获取资源信息
+     * 批量获取资源信息，完成微服务化改造
      */
     public List<Map<String, Object>> getResourcesByIds(String resourceIds) {
         if (resourceIds == null || resourceIds.trim().isEmpty()) {
             throw new IllegalArgumentException("资源ID列表不能为空");
         }
-        return get("/api/resource/batch?ids=" + resourceIds, List.class);
+        return get("/api/content/resource/batch?ids=" + resourceIds, List.class);
     }
     
     /**

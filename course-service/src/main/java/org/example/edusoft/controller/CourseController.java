@@ -116,6 +116,31 @@ public class CourseController {
         }
     }
 
+    /**
+     * 批量获取课程信息
+     */
+    @GetMapping("/batch")
+    public Result<List<CourseDetailDTO>> getCoursesByIds(@RequestParam("ids") String ids, HttpServletRequest request) {
+        if (ids == null || ids.trim().isEmpty()) {
+            return Result.error(400, "课程ID列表不能为空");
+        }
+        String[] idArr = ids.split(",");
+        List<CourseDetailDTO> result = new java.util.ArrayList<>();
+        for (String idStr : idArr) {
+            try {
+                Long id = Long.valueOf(idStr.trim());
+                // 复用已有的getCourseById接口逻辑
+                Result<CourseDetailDTO> courseResult = getCourseById(id, request);
+                if (courseResult.getCode() == 200 && courseResult.getData() != null) {
+                    result.add(courseResult.getData());
+                }
+            } catch (Exception e) {
+                // 忽略单个ID异常，继续处理其他ID
+            }
+        }
+        return Result.success(result);
+    }
+
     @PutMapping("/{id}")
     public Result<Course> updateCourse(@PathVariable Long id, @Valid @RequestBody Course course, HttpServletRequest request) {
         try {
