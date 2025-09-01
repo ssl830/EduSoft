@@ -90,7 +90,7 @@ public class CourseClient extends BaseServiceClient {
         if (sectionId == null) {
             throw new IllegalArgumentException("章节ID不能为空");
         }
-        return getForMap("/api/course-sections/section/" + sectionId);
+        return getForMap("/api/courses/section/" + sectionId);
 
     }
     
@@ -107,7 +107,7 @@ public class CourseClient extends BaseServiceClient {
             headers.set("satoken", token);
         }
         org.springframework.http.HttpEntity<Void> entity = new org.springframework.http.HttpEntity<>(headers);
-        String url = getBaseUrl() + "/api/course-sections/batch?ids=" + sectionIds;
+        String url = getBaseUrl() + "/api/courses/batch?ids=" + sectionIds;
         org.springframework.http.ResponseEntity<List> response = restTemplate.exchange(
             url, 
             org.springframework.http.HttpMethod.GET, 
@@ -132,7 +132,7 @@ public class CourseClient extends BaseServiceClient {
             headers.set("satoken", token);
         }
         org.springframework.http.HttpEntity<Void> entity = new org.springframework.http.HttpEntity<>(headers);
-        String url = getBaseUrl() + "/api/course-sections/course/" + courseId;
+        String url = getBaseUrl() + "/api/courses/course/" + courseId;
         
         try {
             logger.info("[CourseClient] 发送请求到: {}", url);

@@ -222,7 +222,7 @@ satoken: {token}
 
 #### 1. 创建课程章节
 ```http
-POST /api/course-sections
+POST /api/courses
 Content-Type: application/json
 satoken: {token}
 
@@ -235,13 +235,13 @@ satoken: {token}
 
 #### 2. 获取课程章节列表
 ```http
-GET /api/course-sections/course/{courseId}
+GET /api/courses/course/{courseId}
 satoken: {token}
 ```
 
 #### 3. 更新课程章节
 ```http
-PUT /api/course-sections/{sectionId}
+PUT /api/courses/{sectionId}
 Content-Type: application/json
 satoken: {token}
 
@@ -254,7 +254,7 @@ satoken: {token}
 
 #### 4. 删除课程章节
 ```http
-DELETE /api/course-sections/{sectionId}
+DELETE /api/courses/{sectionId}
 satoken: {token}
 ```
 
