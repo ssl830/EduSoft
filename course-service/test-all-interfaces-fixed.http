@@ -24,7 +24,7 @@ satoken: aa2cc2bd-15ba-4652-8b9a-e5ae233007f7
 
 ### 2. 获取所有课程列表
 GET http://localhost:8082/api/courses/list
-satoken: aa2cc2bd-15ba-4652-8b9a-e5ae233007f7
+satoken: 9a351971-897a-410b-b62b-d5bb4235b400
 
 ### 3. 获取用户课程列表
 GET http://localhost:8082/api/courses/user/4
@@ -137,8 +137,8 @@ satoken: a4154b98-4285-4561-a806-d2903ffde689
 }
 
 ### 21. 获取课程章节列表
-GET http://localhost:8082/api/course-sections/course/9
-satoken: a4154b98-4285-4561-a806-d2903ffde689
+GET http://localhost:8082/api/course-sections/course/2
+satoken: 5b561e2d-4db1-4c96-919d-73aee9223c7f
 
 ### 22. 更新课程章节
 PUT http://localhost:8082/api/course-sections/10
@@ -150,6 +150,10 @@ satoken: a4154b98-4285-4561-a806-d2903ffde689
   "title": "第一章：计算机基础（更新版）",
   "sortOrder": 1
 }
+
+### 23. 获取特定章节
+GET http://localhost:8082/api/course-sections/section/5
+satoken: 9a351971-897a-410b-b62b-d5bb4235b400
 
 ### 第六步：学生导入管理接口测试
 
