@@ -9,7 +9,7 @@ spring:
     # K8s环境中使用服务名连接数据库
     url: jdbc:mysql://${DB_HOST:mysql-user-service}:${DB_PORT:3306}/${DB_NAME:user-db}?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
     username: ${DB_USERNAME:user_service}
-    password: ${DB_PASSWORD:user_service_password}
+    password: ${DB_PASSWORD:EduSoft_UserServicePassword2025!}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
 # CORS配置
