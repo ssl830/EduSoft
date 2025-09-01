@@ -58,14 +58,6 @@ jobs:
           cd user-service
           mvn test
 
-      - name: 生成测试报告
-        uses: dorny/test-reporter@v1
-        if: success() || failure()
-        with:
-          name: User Service Test Results
-          path: user-service/target/surefire-reports/*.xml
-          reporter: java-junit
-
   # 构建服务
   build-service:
     name: 构建用户服务
