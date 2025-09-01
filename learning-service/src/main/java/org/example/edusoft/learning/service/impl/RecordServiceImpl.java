@@ -631,40 +631,118 @@ public class RecordServiceImpl implements RecordService {
     // 完成微服务化改造
     @Override
     public Map<String, Object> getSubmissionReport(Long submissionId, Long studentId) {
-        Map<String, Object> report = new HashMap<>();
-        // 获取提交基本信息（只查id、practice_id、student_id、submitted_at、score、feedback、practice_title、course_id、class_id）
-        PracticeRecord submission = practiceRecordMapper.findSubmissionDetail(submissionId, studentId);
-        if (submission == null) {
+        System.out.println("=== getSubmissionReport 开始 ===");
+        System.out.println("submissionId: " + submissionId);
+        System.out.println("studentId: " + studentId);
+        
+        try {
+            Map<String, Object> report = new HashMap<>();
+            
+            // 获取提交基本信息
+            System.out.println("正在调用 findSubmissionDetail...");
+            PracticeRecord submission = practiceRecordMapper.findSubmissionDetail(submissionId, studentId);
+            System.out.println("findSubmissionDetail 结果: " + (submission != null ? "找到" : "未找到"));
+            
+            if (submission == null) {
+                // 记录不存在，返回null
+                System.out.println("提交记录不存在，返回null");
+                return null;
+            }
+            
+            System.out.println("提交记录ID: " + submission.getId());
+            System.out.println("课程ID: " + submission.getCourseId());
+            System.out.println("班级ID: " + submission.getClassId());
+            
+            // 通过 courseId/classId 调用 client 获取 name 并补全
+            if (submission.getCourseId() != null) {
+                try {
+                    System.out.println("正在获取课程信息...");
+                    Map<String, Object> course = courseClient.getCourseById(submission.getCourseId());
+                    if (course != null && course.get("name") != null) {
+                        submission.setCourseName(course.get("name").toString());
+                        System.out.println("课程名称: " + submission.getCourseName());
+                    } else {
+                        submission.setCourseName("未知课程");
+                        System.out.println("课程名称: 未知课程");
+                    }
+                } catch (Exception e) {
+                    System.out.println("获取课程信息失败: " + e.getMessage());
+                    submission.setCourseName("未知课程");
+                }
+            } else {
+                submission.setCourseName("未知课程");
+                System.out.println("课程ID为空，设置课程名称为: 未知课程");
+            }
+            
+            if (submission.getClassId() != null) {
+                try {
+                    System.out.println("正在获取班级信息...");
+                    Map<String, Object> classInfo = courseClient.getClassById(submission.getClassId());
+                    if (classInfo != null && classInfo.get("name") != null) {
+                        submission.setClassName(classInfo.get("name").toString());
+                        System.out.println("班级名称: " + submission.getClassName());
+                    } else {
+                        submission.setClassName("未知班级");
+                        System.out.println("班级名称: 未知班级");
+                    }
+                } catch (Exception e) {
+                    System.out.println("获取班级信息失败: " + e.getMessage());
+                    submission.setClassName("未知班级");
+                }
+            } else {
+                submission.setClassName("未知班级");
+                System.out.println("班级ID为空，设置班级名称为: 未知班级");
+            }
+            
+            report.put("submissionInfo", submission);
+            
+            // 获取题目和答案信息
+            try {
+                System.out.println("正在获取题目信息...");
+                List<QuestionRecord> questions = practiceRecordMapper.findSubmissionQuestions(submissionId);
+                report.put("questions", questions != null ? questions : new ArrayList<>());
+                System.out.println("题目数量: " + (questions != null ? questions.size() : 0));
+            } catch (Exception e) {
+                System.out.println("获取题目信息失败: " + e.getMessage());
+                report.put("questions", new ArrayList<>());
+            }
+            
+            // 获取班级排名
+            try {
+                System.out.println("正在获取排名信息...");
+                int rank = practiceRecordMapper.getSubmissionRank(submissionId, studentId);
+                int totalStudents = practiceRecordMapper.getTotalStudentsInPractice(submission.getPracticeId());
+                report.put("rank", rank);
+                report.put("totalStudents", totalStudents);
+                report.put("percentile", totalStudents > 0 ? ((totalStudents - rank) * 100.0) / totalStudents : 0);
+                System.out.println("排名: " + rank + ", 总人数: " + totalStudents);
+            } catch (Exception e) {
+                System.out.println("获取排名信息失败: " + e.getMessage());
+                report.put("rank", 0);
+                report.put("totalStudents", 0);
+                report.put("percentile", 0.0);
+            }
+
+            // 获取得分分布
+            try {
+                System.out.println("正在获取得分分布...");
+                List<Map<String, Object>> scoreDistribution = practiceRecordMapper.getSubmissionScoreDistribution(submissionId);
+                report.put("scoreDistribution", scoreDistribution != null ? scoreDistribution : new ArrayList<>());
+                System.out.println("得分分布数量: " + (scoreDistribution != null ? scoreDistribution.size() : 0));
+            } catch (Exception e) {
+                System.out.println("获取得分分布失败: " + e.getMessage());
+                report.put("scoreDistribution", new ArrayList<>());
+            }
+            
+            System.out.println("=== getSubmissionReport 成功完成 ===");
+            return report;
+        } catch (Exception e) {
+            // 记录错误日志但不抛出异常，返回null让上层处理
+            System.out.println("=== getSubmissionReport 出现异常 ===");
+            System.out.println("异常信息: " + e.getMessage());
+            e.printStackTrace();
             return null;
         }
-        // 通过 courseId/classId 调用 client 获取 name 并补全
-        if (submission.getCourseId() != null) {
-            Map<String, Object> course = courseClient.getCourseById(submission.getCourseId());
-            if (course != null && course.get("name") != null) {
-                submission.setCourseName(course.get("name").toString());
-            }
-        }
-        if (submission.getClassId() != null) {
-            Map<String, Object> classInfo = courseClient.getClassById(submission.getClassId());
-            if (classInfo != null && classInfo.get("name") != null) {
-                submission.setClassName(classInfo.get("name").toString());
-            }
-        }
-        report.put("submissionInfo", submission);
-        // 获取题目和答案信息（不需要微服务处理）
-        List<QuestionRecord> questions = practiceRecordMapper.findSubmissionQuestions(submissionId);
-        report.put("questions", questions);
-        // 获取班级排名（不需要微服务处理）
-        int rank = practiceRecordMapper.getSubmissionRank(submissionId, studentId);
-        int totalStudents = practiceRecordMapper.getTotalStudentsInPractice(submission.getPracticeId());
-        report.put("rank", rank);
-        report.put("totalStudents", totalStudents);
-        report.put("percentile", ((totalStudents - rank) * 100.0) / totalStudents);
-
-        // 获取得分分布（不需要微服务处理）
-        List<Map<String, Object>> scoreDistribution = practiceRecordMapper.getSubmissionScoreDistribution(submissionId);
-        report.put("scoreDistribution", scoreDistribution);
-        return report;
     }
 
     // 完成微服务化改造

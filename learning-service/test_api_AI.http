@@ -5,7 +5,7 @@
 
 @baseUrl = http://localhost:8084
 @contentType = application/json
-@token = 63cc5d7d-b831-48ad-b3e7-f2e74e856ffe
+@token = 18d98164-1191-482e-b4e4-e57dae50e980
 ### 1. 上传知识库文件 - POST /embedding/upload
 ### 前端: FormData格式，包含file和可选的course_id
 POST {{baseUrl}}/api/learning/ai/embedding/upload
@@ -46,7 +46,7 @@ Content-Type: {{contentType}}
   "expected_hours": 2,
   "constraints": "适合初学者，包含实例代码"
 }
-成功！！
+
 ### 3. 生成教学内容细节 - POST /rag/detail
 ### 前端发送教学内容细节生成请求 (需要正确的字段格式)
 POST {{baseUrl}}/api/learning/ai/rag/detail
@@ -94,14 +94,14 @@ Content-Type: {{contentType}}
 
 ### 5. 生成练习题 - POST /rag/generate_exercise (自动获取课程和章节信息)
 ### 前端只需发送course_id和section_id，后端会自动从course-service获取详细信息
-### 目前没有实现根据章节id或者章节内容的接口（TODO)
+### 之前没有实现根据章节id或者章节内容的接口，现在实现了
 POST {{baseUrl}}/api/learning/ai/rag/generate_exercise
 Content-Type: {{contentType}}
 satoken: {{token}}
 
 {
   "course_id": 1,
-  "section_id": 1,
+  "section_id": 6,
   "difficulty": "medium",
   "choose_count": 3,
   "fill_blank_count": 2,

@@ -321,4 +321,58 @@ public interface PracticeRecordMapper {
         WHERE practice_id = #{practiceId}
     """)
     Map<String, Object> getSubmissionStatsByPracticeId(@Param("practiceId") Long practiceId);
+
+    // 调试方法：检查practice表数据
+    @Select("""
+        SELECT 
+            id,
+            title,
+            course_id,
+            class_id,
+            created_at
+        FROM practice
+        WHERE course_id = #{courseId}
+        ORDER BY created_at DESC
+    """)
+    List<Map<String, Object>> debugFindPractices(@Param("courseId") Long courseId);
+
+    // 调试方法：检查submission表数据
+    @Select("""
+        SELECT 
+            s.id,
+            s.practice_id,
+            s.student_id,
+            s.submitted_at,
+            s.score,
+            s.feedback,
+            p.title as practice_title,
+            p.course_id,
+            p.class_id
+        FROM submission s
+        LEFT JOIN practice p ON s.practice_id = p.id
+        WHERE s.student_id = #{studentId}
+        AND (p.course_id = #{courseId} OR p.course_id IS NULL)
+        ORDER BY s.submitted_at DESC
+    """)
+    List<Map<String, Object>> debugFindSubmissions(@Param("studentId") Long studentId, @Param("courseId") Long courseId);
+
+    // 调试方法：检查所有submission记录
+    @Select("""
+        SELECT 
+            s.id,
+            s.practice_id,
+            s.student_id,
+            s.submitted_at,
+            s.score,
+            s.feedback,
+            p.title as practice_title,
+            p.course_id,
+            p.class_id
+        FROM submission s
+        LEFT JOIN practice p ON s.practice_id = p.id
+        WHERE s.student_id = #{studentId}
+        ORDER BY s.submitted_at DESC
+        LIMIT 10
+    """)
+    List<Map<String, Object>> debugFindAllSubmissions(@Param("studentId") Long studentId);
 }

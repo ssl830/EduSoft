@@ -25,7 +25,7 @@ public class Result<T> {
     }
 
     public static <T> Result<T> error(String message) {
-        return error(500, message);
+        return error(400, message);  // 改为400，表示客户端错误
     }
 
     public static <T> Result<T> error(Integer code, String message) {

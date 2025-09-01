@@ -27,7 +27,7 @@ public interface StudyRecordMapper {
                     lp.watch_count,
                     lp.last_watch_time,
                     lp.created_at,
-                    lp.updated_at,           
+                    lp.updated_at
                 FROM learning_progress lp
                 WHERE lp.student_id = #{studentId}
                 ORDER BY lp.last_watch_time DESC
