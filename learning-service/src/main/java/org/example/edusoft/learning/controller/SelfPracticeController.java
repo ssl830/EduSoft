@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 @RestController
-@RequestMapping("/api/learning/self-practice")
+@RequestMapping("/api/selfpractice")
 @RequiredArgsConstructor
 public class SelfPracticeController {
 
