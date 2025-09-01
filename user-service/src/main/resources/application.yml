@@ -6,10 +6,10 @@ spring:
     name: user-service
   
   datasource:
-    url: jdbc:mysql://localhost:3306/user-db?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
-    username: root
-    password: 20240323
-
+    # K8s环境中使用服务名连接数据库
+    url: jdbc:mysql://${DB_HOST:mysql-user-service}:${DB_PORT:3306}/${DB_NAME:user-db}?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
+    username: ${DB_USERNAME:user_service}
+    password: ${DB_PASSWORD:user_service_password}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
 # CORS配置

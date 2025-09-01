@@ -35,9 +35,9 @@ data:
     
   init.sql: |
     -- 用户微服务数据库初始化脚本
-    CREATE DATABASE IF NOT EXISTS `user_db` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+    CREATE DATABASE IF NOT EXISTS `user-db` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
     
-    USE `user_db`;
+    USE `user-db`;
     
     -- 创建用户表
     CREATE TABLE IF NOT EXISTS `user` (
@@ -63,12 +63,13 @@ data:
     ('S002', '小红', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.', 'student', 'xiaohong@example.com');
     
     -- 创建应用用户
-    CREATE USER IF NOT EXISTS 'user_service'@'%' IDENTIFIED BY 'user_service_password';
-    GRANT SELECT, INSERT, UPDATE, DELETE ON user_db.* TO 'user_service'@'%';
+    CREATE USER IF NOT EXISTS 'user_service'@'%' IDENTIFIED BY 'EduSoft_UserServicePassword2025!';
+    GRANT SELECT, INSERT, UPDATE, DELETE ON `user-db`.* TO 'user_service'@'%';
     FLUSH PRIVILEGES;
 
 ---
 # MySQL用户数据库Secret
+# 注意：这些是示例密码，生产环境中请使用更安全的密码！
 apiVersion: v1
 kind: Secret
 metadata:
@@ -76,9 +77,13 @@ metadata:
   namespace: edusoft
 type: Opaque
 data:
-  mysql-root-password: cm9vdF9wYXNzd29yZA== # root_password base64编码
+  # 注意：以下密码需要根据您的实际需求修改
+  # root_password -> cm9vdF9wYXNzd29yZA==
+  mysql-root-password: RWR1U29mdF9Sb290UGFzc3dvcmQyMDI1IQ== # EduSoft_RootPassword2025! base64编码
+  # user_service -> dXNlcl9zZXJ2aWNl  
   mysql-user: dXNlcl9zZXJ2aWNl # user_service base64编码
-  mysql-password: dXNlcl9zZXJ2aWNlX3Bhc3N3b3Jk # user_service_password base64编码
+  # user_service_secure_password -> dXNlcl9zZXJ2aWNlX3NlY3VyZV9wYXNzd29yZA==
+  mysql-password: RWR1U29mdF9Vc2VyU2VydmljZVBhc3N3b3JkMjAyNSE= # EduSoft_UserServicePassword2025! base64编码
 
 ---
 # MySQL用户数据库PV
@@ -165,7 +170,7 @@ spec:
               name: mysql-user-secret
               key: mysql-root-password
         - name: MYSQL_DATABASE
-          value: user_db
+          value: user-db
         - name: MYSQL_USER
           valueFrom:
             secretKeyRef:
