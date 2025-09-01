@@ -21,12 +21,12 @@ public class CourseSectionServiceImpl implements CourseSectionService {
             throw new IllegalArgumentException("课程ID不能为空");
         }
         return courseSectionMapper.selectList(
-            new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<CourseSection>()
-                .eq("course_id", courseId)
-                .orderByAsc("sort_order")
+                new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<CourseSection>()
+                        .eq("course_id", courseId)
+                        .orderByAsc("sort_order")
         );
     }
-    
+
     @Override
     @Transactional
     public CourseSection createSection(CourseSection section) {
@@ -36,7 +36,7 @@ public class CourseSectionServiceImpl implements CourseSectionService {
         if (section.getTitle() == null || section.getTitle().trim().isEmpty()) {
             throw new IllegalArgumentException("章节标题不能为空");
         }
-        
+
         courseSectionMapper.insert(section);
         return section;
     }
@@ -47,12 +47,12 @@ public class CourseSectionServiceImpl implements CourseSectionService {
         if (section.getId() == null) {
             throw new IllegalArgumentException("章节ID不能为空");
         }
-        
+
         CourseSection existingSection = courseSectionMapper.selectById(section.getId());
         if (existingSection == null) {
             throw new IllegalArgumentException("章节不存在");
         }
-        
+
         courseSectionMapper.updateById(section);
         return section;
     }
@@ -63,12 +63,12 @@ public class CourseSectionServiceImpl implements CourseSectionService {
         if (id == null) {
             throw new IllegalArgumentException("章节ID不能为空");
         }
-        
+
         CourseSection section = courseSectionMapper.selectById(id);
         if (section == null) {
             throw new IllegalArgumentException("章节不存在");
         }
-        
+
         return courseSectionMapper.deleteById(id) > 0;
     }
 

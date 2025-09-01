@@ -7,7 +7,13 @@ import org.example.edusoft.learning.dto.PracticeDTO;
 import org.example.edusoft.learning.entity.Practice;
 import org.example.edusoft.learning.entity.Question;
 import org.example.edusoft.learning.service.PracticeService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.*;
+import org.example.edusoft.learning.client.UserServiceClient;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.util.HashMap;
 import java.util.List;
@@ -19,10 +25,33 @@ import java.util.Map;
 public class PracticeController {
 
     private final PracticeService practiceService;
-    private final UserServiceClient userServiceClient;
+
+    @Autowired
+    private UserServiceClient userServiceClient;
 
     @org.springframework.beans.factory.annotation.Value("${services.user.base-url:http://localhost:8081}")
     private String userServiceBaseUrl;
+
+    private String resolveOutboundToken() {
+        RequestAttributes attrs = RequestContextHolder.getRequestAttributes();
+        if (attrs instanceof ServletRequestAttributes servlet) {
+            String satoken = servlet.getRequest().getHeader("satoken");
+            if (satoken != null && !satoken.isEmpty())
+                return satoken;
+            String cookie = servlet.getRequest().getHeader("Cookie");
+            if (cookie != null) {
+                for (String part : cookie.split(";")) {
+                    String p = part.trim();
+                    if (p.startsWith("satoken="))
+                        return p.substring("satoken=".length());
+                }
+            }
+            String auth = servlet.getRequest().getHeader("Authorization");
+            if (auth != null && !auth.isEmpty())
+                return auth;
+        }
+        return null;
+    }
 
     @PostMapping("/create")
     public Result<Map<String, Object>> createPractice(@RequestBody Practice practice, @RequestHeader("satoken") String token) {
@@ -283,52 +312,53 @@ public class PracticeController {
 //        }
 //    }
 //
-//    /**
-//     * 获取教师相关的所有练习信息
-//     */
-//    @GetMapping("/teacher/practices")
-//    public Result<List<Map<String, Object>>> getTeacherPractices(@RequestHeader("Authorization") String token) {
-//        // 从user-service获取完整的用户信息
-//        Map<String, Object> userInfo = userServiceClient.fetchCurrentUser(userServiceBaseUrl, token);
-//        if (userInfo == null) {
-//            return Result.error("请先登录");
-//        }
-//        
-//        // 从用户信息中获取id
-//        Long teacherId = Long.valueOf(userInfo.get("id").toString());
-//        List<Map<String, Object>> practices = practiceService.getTeacherPractices(teacherId);
-//        return Result.success(practices, "获取教师练习信息成功");
-//    }
-//
-//    @GetMapping("/stats/{practiceId}")
-//    public Result<Map<String, Object>> getPracticeStats(@PathVariable Long practiceId) {
-//        Map<String, Object> stats = practiceService.getSubmissionStats(practiceId);
-//        return Result.success(stats);
-//    }
-//
-//    /**
-//     * 手动触发：统计并写入练习每题得分率
-//     */
-//    @PostMapping("/update-score-rate/{practiceId}")
-//    public Result<String> updateScoreRate(@PathVariable Long practiceId) {
-//        try {
-//            practiceService.updateScoreRateAfterDeadline(practiceId);
-//            return Result.success("OK", "得分率统计并写入成功");
-//        } catch (Exception e) {
-//            return Result.error(500, "得分率统计失败：" + e.getMessage());
-//        }
-//    }
-//
-//    /**
-//     * 自动定时任务：每天凌晨1点检查所有已截止练习，自动统计得分率
-//     * 需在主类加@EnableScheduling
-//     */
-//    @Scheduled(cron = "0 0 1 * * ?")
-//    public void autoUpdateScoreRateForAllPractices() {
-//        // 伪代码：实际应查找所有已截止且未统计的练习ID
-//        List<Long> practiceIds = practiceService.getAllEndedPracticeIds();
-//        for (Long pid : practiceIds) {
-//            practiceService.updateScoreRateAfterDeadline(pid);
-//        }
-//    }
+    /**
+     * 获取教师相关的所有练习信息
+     */
+    @GetMapping("/teacher/practices")
+    public Result<List<Map<String, Object>>> getTeacherPractices() {
+        String token = resolveOutboundToken();
+        System.out.println("27555555555555555555555555");
+        Map<String, Object> userInfo = userServiceClient.fetchCurrentUser(userServiceBaseUrl, token);
+        if (userInfo == null || userInfo.get("id") == null) {
+            return Result.error("请先登录");
+        }
+        Long teacherId = Long.valueOf(userInfo.get("id").toString());
+        System.out.println("teacherIdd===========================================================");
+        System.out.println(teacherId);
+        List<Map<String, Object>> practices = practiceService.getTeacherPractices(teacherId);
+        return Result.success(practices, "获取教师练习信息成功");
+    }
+
+    @GetMapping("/stats/{practiceId}")
+    public Result<Map<String, Object>> getPracticeStats(@PathVariable Long practiceId) {
+        Map<String, Object> stats = practiceService.getSubmissionStats(practiceId);
+        return Result.success(stats);
+    }
+
+    /**
+     * 手动触发：统计并写入练习每题得分率
+     */
+    @PostMapping("/update-score-rate/{practiceId}")
+    public Result<String> updateScoreRate(@PathVariable Long practiceId) {
+        try {
+            practiceService.updateScoreRateAfterDeadline(practiceId);
+            return Result.success("OK", "得分率统计并写入成功");
+        } catch (Exception e) {
+            return Result.error(500, "得分率统计失败：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 自动定时任务：每天凌晨1点检查所有已截止练习，自动统计得分率
+     * 需在主类加@EnableScheduling
+     */
+    @Scheduled(cron = "0 0 1 * * ?")
+    public void autoUpdateScoreRateForAllPractices() {
+        // 伪代码：实际应查找所有已截止且未统计的练习ID
+        List<Long> practiceIds = practiceService.getAllEndedPracticeIds();
+        for (Long pid : practiceIds) {
+            practiceService.updateScoreRateAfterDeadline(pid);
+        }
+    }
 }
