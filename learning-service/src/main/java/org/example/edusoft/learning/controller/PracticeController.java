@@ -7,7 +7,6 @@ import org.example.edusoft.learning.dto.PracticeDTO;
 import org.example.edusoft.learning.entity.Practice;
 import org.example.edusoft.learning.entity.Question;
 import org.example.edusoft.learning.service.PracticeService;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -22,7 +21,11 @@ public class PracticeController {
     private final PracticeService practiceService;
 
     @PostMapping("/create")
-    public Result<Map<String, Object>> createPractice(@RequestBody Practice practice, @RequestHeader("X-User-Id") Long userId) {
+    public Result<Map<String, Object>> createPractice(@RequestBody Practice practice) {
+        if (!StpUtil.isLogin()) {
+            return Result.error("请先登录");
+        }
+        Long userId = StpUtil.getLoginIdAsLong();
         try {
             practice.setCreatedBy(userId);
             Practice createdPractice = practiceService.createPractice(practice);
@@ -76,10 +79,7 @@ public class PracticeController {
     }
 
     @PostMapping("/{practiceId}/questions/{questionId}")
-    public Result<Void> addQuestionToPractice(
-            @PathVariable Long practiceId,
-            @PathVariable Long questionId,
-            @RequestParam Integer score) {
+    public Result<Void> addQuestionToPractice(@PathVariable Long practiceId, @PathVariable Long questionId, @RequestParam Integer score) {
         try {
             practiceService.addQuestionToPractice(practiceId, questionId, score);
             return Result.success(null, "添加题目成功");
@@ -89,9 +89,7 @@ public class PracticeController {
     }
 
     @DeleteMapping("/{practiceId}/questions/{questionId}")
-    public Result<Void> removeQuestionFromPractice(
-            @PathVariable Long practiceId,
-            @PathVariable Long questionId) {
+    public Result<Void> removeQuestionFromPractice(@PathVariable Long practiceId, @PathVariable Long questionId) {
         try {
             practiceService.removeQuestionFromPractice(practiceId, questionId);
             return Result.success(null, "移除题目成功");
@@ -111,7 +109,11 @@ public class PracticeController {
     }
 
     @PostMapping("/questions/{questionId}/favorite")
-    public Result<Void> favoriteQuestion(@PathVariable Long questionId, @RequestHeader("X-User-Id") Long studentId) {
+    public Result<Void> favoriteQuestion(@PathVariable Long questionId) {
+        if (!StpUtil.isLogin()) {
+            return Result.error("请先登录");
+        }
+        Long studentId = StpUtil.getLoginIdAsLong();
         try {
             practiceService.favoriteQuestion(studentId, questionId);
             return Result.success(null, "收藏成功");
@@ -121,7 +123,11 @@ public class PracticeController {
     }
 
     @DeleteMapping("/questions/{questionId}/favorite")
-    public Result<Void> unfavoriteQuestion(@PathVariable Long questionId, @RequestHeader("X-User-Id") Long studentId) {
+    public Result<Void> unfavoriteQuestion(@PathVariable Long questionId) {
+        if (!StpUtil.isLogin()) {
+            return Result.error("请先登录");
+        }
+        Long studentId = StpUtil.getLoginIdAsLong();
         try {
             practiceService.unfavoriteQuestion(studentId, questionId);
             return Result.success(null, "取消收藏成功");
@@ -131,20 +137,18 @@ public class PracticeController {
     }
 
     @GetMapping("/questions/favorites")
-    public Result<List<Map<String, Object>>> getFavoriteQuestions(@RequestHeader("X-User-Id") Long studentId) {
-        try {
-            List<Map<String, Object>> questions = practiceService.getFavoriteQuestions(studentId);
-            return Result.success(questions, "获取收藏列表成功");
-        } catch (Exception e) {
-            return Result.error("获取收藏列表失败：" + e.getMessage());
+    public Result<List<Map<String, Object>>> getFavoriteQuestions() {
+        if (!StpUtil.isLogin()) {
+            return Result.error("请先登录");
         }
+        Long studentId = StpUtil.getLoginIdAsLong();
+        List<Map<String, Object>> questions = practiceService.getFavoriteQuestions(studentId);
+        return Result.success(questions);
     }
 
     // 添加错题
     @PostMapping("/questions/{questionId}/wrong")
-    public Result<Boolean> addWrongQuestion(
-            @PathVariable Long questionId,
-            @RequestBody Map<String, String> data) {
+    public Result<Boolean> addWrongQuestion(@PathVariable Long questionId, @RequestBody Map<String, String> data) {
         if (!StpUtil.isLogin()) {
             return Result.error("请先登录");
         }
@@ -156,33 +160,25 @@ public class PracticeController {
 
     // 获取错题列表
     @GetMapping("/questions/wrong")
-    public Result<List<Map<String, Object>>> getWrongQuestions() {
-        if (!StpUtil.isLogin()) {
-            return Result.error("请先登录");
-        }
-        Long studentId = StpUtil.getLoginIdAsLong();
+    public Result<List<Map<String, Object>>> getWrongQuestions(@RequestHeader("X-User-Id") Long studentId) {
         List<Map<String, Object>> questions = practiceService.getWrongQuestions(studentId);
         return Result.success(questions);
     }
 
     // 获取某个课程的错题列表
     @GetMapping("/questions/wrong/course/{courseId}")
-    public Result<List<Map<String, Object>>> getWrongQuestionsByCourse(@PathVariable Long courseId) {
-        if (!StpUtil.isLogin()) {
-            return Result.error("请先登录");
-        }
-        Long studentId = StpUtil.getLoginIdAsLong();
+    public Result<List<Map<String, Object>>> getWrongQuestionsByCourse(
+            @RequestHeader("X-User-Id") Long studentId,
+            @PathVariable Long courseId) {
         List<Map<String, Object>> questions = practiceService.getWrongQuestionsByCourse(studentId, courseId);
         return Result.success(questions);
     }
 
     // 删除错题
     @DeleteMapping("/questions/{questionId}/wrong")
-    public Result<Boolean> removeWrongQuestion(@PathVariable Long questionId) {
-        if (!StpUtil.isLogin()) {
-            return Result.error("请先登录");
-        }
-        Long studentId = StpUtil.getLoginIdAsLong();
+    public Result<Boolean> removeWrongQuestion(
+            @RequestHeader("X-User-Id") Long studentId,
+            @PathVariable Long questionId) {
         practiceService.removeWrongQuestion(studentId, questionId);
         return Result.success(true);
     }
@@ -199,12 +195,16 @@ public class PracticeController {
 //    }
 
     @GetMapping("/student/list")
-    public Result<List<PracticeDTO>> getStudentPracticeList(@RequestHeader("X-User-Id") Long studentId, @RequestParam Long classId) {
+    public Result<List<PracticeDTO>> getStudentPracticeList(
+            @RequestParam Long studentId,
+            @RequestParam Long classId) {
         try {
             List<PracticeDTO> practiceList = practiceService.getStudentPracticeList(studentId, classId);
-            return Result.success(practiceList, "获取学生练习列表成功");
+            return Result.success(practiceList);
+        } catch (IllegalArgumentException e) {
+            return Result.error(400, e.getMessage());
         } catch (Exception e) {
-            return Result.error("获取学生练习列表失败：" + e.getMessage());
+            return Result.error(500, "获取练习列表失败：" + e.getMessage());
         }
     }
 
@@ -280,4 +280,3 @@ public class PracticeController {
 //        }
 //    }
 }
-
