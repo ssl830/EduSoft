@@ -47,11 +47,8 @@ public class UserServiceClient {
 			try {
 				HttpHeaders headers = new HttpHeaders();
 				
-				// 优先使用satoken头（符合Sa-Token框架）
+				// 只使用satoken头
 				headers.set("satoken", pureToken);
-				
-				// 同时设置Authorization头作为备选
-				headers.set("Authorization", "Bearer " + pureToken);
 				
 				logger.debug("尝试请求用户服务，URL: {}, UserId: {}, Token: {}", url, userId, pureToken);
 
@@ -112,7 +109,7 @@ public class UserServiceClient {
 		try {
 			HttpHeaders headers = new HttpHeaders();
 			
-			// 使用satoken头调用验证接口
+			// 只使用satoken头
 			headers.set("satoken", pureToken);
 			
 			logger.debug("尝试获取当前用户信息，URL: {}, Token: {}", baseUrl + "/api/user/validate", pureToken);
