@@ -8,4 +8,5 @@ public interface CourseSectionService {
     CourseSection createSection(CourseSection section);
     CourseSection updateSection(CourseSection section);
     boolean deleteSection(Long id);
+    CourseSection getSectionById(Long id);
 }

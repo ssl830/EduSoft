@@ -28,6 +28,14 @@ public class CourseSectionServiceImpl implements CourseSectionService {
     }
 
     @Override
+    public CourseSection getSectionById(Long id) {
+        if (id == null) {
+            throw new IllegalArgumentException("章节ID不能为空");
+        }
+        return courseSectionMapper.selectById(id);
+    }
+
+    @Override
     @Transactional
     public CourseSection createSection(CourseSection section) {
         if (section.getCourseId() == null) {

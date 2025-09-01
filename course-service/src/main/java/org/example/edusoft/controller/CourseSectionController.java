@@ -56,4 +56,20 @@ public class CourseSectionController {
             return Result.error(500, "删除章节失败：" + e.getMessage());
         }
     }
+
+    @GetMapping("/section/{id}")
+    public Result<CourseSection> getSectionDetail(
+            @PathVariable Long id,
+            @RequestHeader("satoken") String token) {
+        try {
+                CourseSection section = courseSectionService.getSectionById(id);
+                if (section == null) {
+                    return Result.error(404, "章节不存在");
+                }
+                return Result.success(section);
+            } catch (Exception e) {
+                return Result.error(500, "获取章节详情失败：" + e.getMessage());
+        }
+    }
+
 }
