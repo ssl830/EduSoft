@@ -1,6 +1,6 @@
 package org.example.edusoft.learning.service.example;
 
-import org.example.edusoft.learning.client.UserClient;
+import org.example.edusoft.learning.client.UserServiceClient;
 import org.example.edusoft.learning.client.CourseClient;
 import org.example.edusoft.learning.client.ContentClient;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +16,7 @@ import java.util.Map;
 public class MicroserviceExampleService {
     
     @Autowired
-    private UserClient userClient;
+    private UserServiceClient userClient;
     
     @Autowired
     private CourseClient courseClient;

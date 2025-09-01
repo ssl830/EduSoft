@@ -2,7 +2,7 @@ package org.example.edusoft.learning.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.example.edusoft.learning.Result;
-import org.example.edusoft.learning.client.UserClient;
+import org.example.edusoft.learning.client.UserServiceClient;
 import org.example.edusoft.learning.dto.JudgeQuestionRequest;
 import org.example.edusoft.learning.dto.JudgeSubmissionRequest;
 import org.example.edusoft.learning.dto.PendingSubmissionDTO;
@@ -30,7 +30,7 @@ public class ManualJudgeServiceImpl implements ManualJudgeService {
     private final SubmissionMapper submissionMapper;
     private final QuestionMapper questionMapper;
     private final PracticeMapper practiceMapper;
-    private final UserClient userClient; // 使用RestTemplate实现
+    private final UserServiceClient userClient; // 使用RestTemplate实现
     private final PracticeQuestionMapper practiceQuestionMapper;
 
     // 建议将baseUrl通过@Value注入

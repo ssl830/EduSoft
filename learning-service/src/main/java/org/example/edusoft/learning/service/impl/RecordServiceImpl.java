@@ -10,9 +10,9 @@ import java.util.List;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.format.DateTimeFormatter;
-import org.example.edusoft.service.record.RecordService;
-import org.example.edusoft.mapper.record.*;
-import org.example.edusoft.entity.record.*;
+import org.example.edusoft.learning.service.RecordService;
+import org.example.edusoft.learning.mapper.*;
+import org.example.edusoft.learning.entity.*;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -26,13 +26,18 @@ import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.element.Cell;
 import java.time.LocalDateTime;
-import com.itextpdf.io.font.PdfEncodings; // 添加这个导入
+import com.itextpdf.io.font.PdfEncodings;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.ArrayList;
 
 import org.example.edusoft.learning.client.UserServiceClient;
 import org.example.edusoft.learning.client.ContentClient;
 import org.example.edusoft.learning.client.CourseClient;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 @Service
 @Transactional(readOnly = true)
@@ -44,7 +49,7 @@ public class RecordServiceImpl implements RecordService {
     private PracticeRecordMapper practiceRecordMapper;
 
     @Autowired
-    private UserServiceClient userClient;
+    private UserServiceClient userServiceClient;
 
     @Autowired
     private ContentClient contentClient;
@@ -89,12 +94,12 @@ public class RecordServiceImpl implements RecordService {
         }
     
         System.out.println("fetchUsernameByUserId: 开始调用用户微服务，userId=" + userId + ", token=" + token);
-        System.out.println("fetchUsernameByUserId: 用户微服务地址=" + userServiceBaseUrl);
+        System.out.println("fetchUsernameByUserId: 用户微服务地址=" + userBaseUrl);
     
         try {
             // fetchUserById 已经处理了 SaResult 格式，直接返回用户数据
             Map<String, Object> userData = userServiceClient.fetchUserById(
-                    userServiceBaseUrl, token, String.valueOf(userId));
+                    userBaseUrl, token, String.valueOf(userId));
             System.out.println("fetchUsernameByUserId: 用户微服务返回数据=" + userData);
     
             if (userData != null) {
@@ -292,19 +297,26 @@ public class RecordServiceImpl implements RecordService {
         }
 
         // 4. 批量获取班级名
-        Map<Long, List<Class>> classMap = courseClient.getClassesByUserIdAndCourseIds(studentId, courseIds);
+        List<Map<String, Object>> classList = courseClient.getClassesByUserIdAndCourseIds(studentId, courseIds);
         // 组装Map<Long, String>，每个课程下的班级名用逗号拼接
         Map<Long, String> classNameMap = new HashMap<>();
-        for (Map.Entry<Long, List<Class>> entry : classMap.entrySet()) {
-            Long courseId = entry.getKey();
-            List<Class> classList = entry.getValue();
-            if (classList != null && !classList.isEmpty()) {
-                String names = classList.stream()
-                        .map(Class::getName)
-                        .filter(java.util.Objects::nonNull)
-                        .collect(Collectors.joining(","));
-                classNameMap.put(courseId, names);
+        
+        // 处理班级信息，按课程ID分组
+        Map<Long, List<String>> courseClassMap = new HashMap<>();
+        for (Map<String, Object> classInfo : classList) {
+            Object courseIdObj = classInfo.get("courseId");
+            Object classNameObj = classInfo.get("name");
+            if (courseIdObj != null && classNameObj != null) {
+                Long cId = Long.valueOf(courseIdObj.toString());
+                String className = classNameObj.toString();
+                courseClassMap.computeIfAbsent(cId, k -> new ArrayList<>()).add(className);
             }
+        }
+        
+        // 将班级名列表转换为逗号分隔的字符串
+        for (Map.Entry<Long, List<String>> entry : courseClassMap.entrySet()) {
+            String names = String.join(",", entry.getValue());
+            classNameMap.put(entry.getKey(), names);
         }
 
         // 5. 组装信息
@@ -343,18 +355,25 @@ public class RecordServiceImpl implements RecordService {
         }
 
         // 批量获取班级信息
-        Map<Long, List<Class>> classMap = courseClient.getClassesByUserIdAndCourseIds(studentId, courseIds);
+        List<Map<String, Object>> classList = courseClient.getClassesByUserIdAndCourseIds(studentId, courseIds);
         Map<Long, String> classNameMap = new HashMap<>();
-        for (Map.Entry<Long, List<Class>> entry : classMap.entrySet()) {
-            Long cId = entry.getKey();
-            List<Class> classList = entry.getValue();
-            if (classList != null && !classList.isEmpty()) {
-                String names = classList.stream()
-                        .map(Class::getName)
-                        .filter(java.util.Objects::nonNull)
-                        .collect(Collectors.joining(","));
-                classNameMap.put(cId, names);
+        
+        // 处理班级信息，按课程ID分组
+        Map<Long, List<String>> courseClassMap = new HashMap<>();
+        for (Map<String, Object> classInfo : classList) {
+            Object courseIdObj = classInfo.get("courseId");
+            Object classNameObj = classInfo.get("name");
+            if (courseIdObj != null && classNameObj != null) {
+                Long cId = Long.valueOf(courseIdObj.toString());
+                String className = classNameObj.toString();
+                courseClassMap.computeIfAbsent(cId, k -> new ArrayList<>()).add(className);
             }
+        }
+        
+        // 将班级名列表转换为逗号分隔的字符串
+        for (Map.Entry<Long, List<String>> entry : courseClassMap.entrySet()) {
+            String names = String.join(",", entry.getValue());
+            classNameMap.put(entry.getKey(), names);
         }
 
         // 组装信息
