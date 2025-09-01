@@ -1,8 +1,11 @@
 package org.example.edusoft.learning.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.example.edusoft.learning.entity.PracticeQuestion;
 import org.example.edusoft.learning.client.CourseClient;
 import org.example.edusoft.learning.client.ContentClient;
+import org.example.edusoft.learning.entity.Answer;
+import org.example.edusoft.learning.entity.PracticeSubmission;
 import org.example.edusoft.learning.exception.PracticeException;
 import org.example.edusoft.learning.other.BusinessException;
 import org.example.edusoft.learning.dto.PracticeDTO;
@@ -13,6 +16,7 @@ import org.example.edusoft.learning.service.PracticeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.example.edusoft.learning.mapper.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -28,6 +32,8 @@ public class PracticeServiceImpl implements PracticeService {
     private final FavoriteQuestionMapper favoriteQuestionMapper;
     private final WrongQuestionMapper wrongQuestionMapper;
     private final AnswerMapper answerMapper;
+    private final PracticeRecordMapper practiceRecordMapper;
+    private final PracticeQuestionMapper practiceQuestionMapper;
 
     @Autowired
     private CourseClient courseClient;
@@ -37,27 +43,27 @@ public class PracticeServiceImpl implements PracticeService {
     @Override
     @Transactional
     public Practice createPractice(Practice practice) {
-        // 验证练习时间
+        // 妤犲矁鐦夌紒鍐х瘎閺冨爼妫�
         if (practice.getStartTime() != null && practice.getEndTime() != null
                 && practice.getStartTime().isAfter(practice.getEndTime())) {
-            throw new PracticeException("PRACTICE_INVALID_TIME", "练习开始时间不能晚于结束时间");
+            throw new PracticeException("PRACTICE_INVALID_TIME", "缂佸啩绡勫鈧慨瀣闂傜繝绗夐懗鑺ユ珓娴滃海绮ㄩ弶鐔告闂傦拷");
         }
 
-        // 验证必填字段
+        // 妤犲矁鐦夎箛鍛綖鐎涙顔�
         if (practice.getTitle() == null || practice.getTitle().trim().isEmpty()) {
-            throw new PracticeException("PRACTICE_TITLE_REQUIRED", "练习标题不能为空");
+            throw new PracticeException("PRACTICE_TITLE_REQUIRED", "缂佸啩绡勯弽鍥暯娑撳秷鍏樻稉铏光敄");
         }
         if (practice.getCourseId() == null) {
-            throw new PracticeException("PRACTICE_COURSE_REQUIRED", "课程ID不能为空");
+            throw new PracticeException("PRACTICE_COURSE_REQUIRED", "鐠囧墽鈻糏D娑撳秷鍏樻稉铏光敄");
         }
         if (practice.getClassId() == null) {
-            throw new PracticeException("PRACTICE_CLASS_REQUIRED", "班级ID不能为空");
+            throw new PracticeException("PRACTICE_CLASS_REQUIRED", "閻濐厾楠嘔D娑撳秷鍏樻稉铏光敄");
         }
         if (practice.getCreatedBy() == null) {
-            throw new PracticeException("PRACTICE_CREATOR_REQUIRED", "创建者ID不能为空");
+            throw new PracticeException("PRACTICE_CREATOR_REQUIRED", "閸掓稑缂撻懓鍖娑撳秷鍏樻稉铏光敄");
         }
 
-        // 设置创建时间
+        // 鐠佸墽鐤嗛崚娑樼紦閺冨爼妫�
         practice.setCreatedAt(LocalDateTime.now());
 
         System.out.println("插入练习前，practice对象: " + practice);
@@ -85,19 +91,19 @@ public class PracticeServiceImpl implements PracticeService {
     @Override
     @Transactional
     public Practice updatePractice(Practice practice) {
-        // 验证练习是否存在
+        // 妤犲矁鐦夌紒鍐х瘎閺勵垰鎯佺€涙ê婀�
         Practice existingPractice = practiceMapper.getPracticeById(practice.getId());
         if (existingPractice == null) {
-            throw new PracticeException("PRACTICE_NOT_FOUND", "练习不存在");
+            throw new PracticeException("PRACTICE_NOT_FOUND", "缂佸啩绡勬稉宥呯摠閸︼拷");
         }
 
-        // 验证练习时间
+        // 妤犲矁鐦夌紒鍐х瘎閺冨爼妫�
         if (practice.getStartTime() != null && practice.getEndTime() != null
                 && practice.getStartTime().isAfter(practice.getEndTime())) {
-            throw new PracticeException("PRACTICE_INVALID_TIME", "练习开始时间不能晚于结束时间");
+            throw new PracticeException("PRACTICE_INVALID_TIME", "缂佸啩绡勫鈧慨瀣闂傜繝绗夐懗鑺ユ珓娴滃海绮ㄩ弶鐔告闂傦拷");
         }
 
-        // 只更新提供的字段，其他字段保持不变
+        // 閸欘亝娲块弬鐗堝絹娓氭稓娈戠€涙顔岄敍灞藉従娴犳牕鐡у▓鍏哥箽閹镐椒绗夐崣锟�
         if (practice.getTitle() != null) {
             existingPractice.setTitle(practice.getTitle());
         }
@@ -118,7 +124,7 @@ public class PracticeServiceImpl implements PracticeService {
     @Override
     public List<Practice> getPracticeList(Long classId) {
         if (classId == null) {
-            throw new PracticeException("PRACTICE_CLASS_REQUIRED", "班级ID不能为空");
+            throw new PracticeException("PRACTICE_CLASS_REQUIRED", "閻濐厾楠嘔D娑撳秷鍏樻稉铏光敄");
         }
         return practiceMapper.getPracticeList(classId);
     }
@@ -127,17 +133,17 @@ public class PracticeServiceImpl implements PracticeService {
     public Practice getPracticeDetail(Long id) {
         Practice practice = practiceMapper.getPracticeById(id);
         if (practice == null) {
-            throw new PracticeException("PRACTICE_NOT_FOUND", "练习不存在");
+            throw new PracticeException("PRACTICE_NOT_FOUND", "缂佸啩绡勬稉宥呯摠閸︼拷");
         }
         List<Question> questions = questionMapper.getQuestionsByPractice(id);
-        // 将score字段赋值到Question对象的score属性
+        // 鐏忓敄core鐎涙顔岀挧瀣偓鐓庡煂Question鐎电钖勯惃鍓哻ore鐏炵偞鈧拷
         for (Question q : questions) {
             try {
                 java.lang.reflect.Field scoreField = q.getClass().getDeclaredField("score");
                 scoreField.setAccessible(true);
-                // 由于MyBatis返回的q已经有score字段（见SQL），直接赋值即可
-                // 如果没有则跳过
-                // 这里假设MyBatis能自动映射score到q.score
+                // 閻㈠彉绨琈yBatis鏉╂柨娲栭惃鍓勫鑼病閺堝』core鐎涙顔岄敍鍫ｎ潌SQL閿涘绱濋惄瀛樺复鐠у鈧厧宓嗛崣锟�
+                // 婵″倹鐏夊▽鈩冩箒閸掓瑨鐑︽潻锟�
+                // 鏉╂瑩鍣烽崑鍥啎MyBatis閼冲€熷殰閸斻劍妲х亸鍓哻ore閸掔殔.score
             } catch (Exception e) {
                 // ignore
             }
@@ -151,31 +157,31 @@ public class PracticeServiceImpl implements PracticeService {
     public void deletePractice(Long id) {
         Practice practice = practiceMapper.getPracticeById(id);
         if (practice == null) {
-            throw new PracticeException("PRACTICE_NOT_FOUND", "练习不存在");
+            throw new PracticeException("PRACTICE_NOT_FOUND", "缂佸啩绡勬稉宥呯摠閸︼拷");
         }
 
-        // 获取与练习相关的所有提交记录
+        // 閼惧嘲褰囨稉搴ｇ矊娑旂姷娴夐崗宕囨畱閹碘偓閺堝褰佹禍銈堫唶瑜帮拷
         List<Long> submissionIds = submissionMapper.findSubmissionIdsByPracticeId(id);
 
-        // 删除与这些提交记录相关的答案
+        // 閸掔娀娅庢稉搴ょ箹娴滄稒褰佹禍銈堫唶瑜版洜娴夐崗宕囨畱缁涙梹顢�
         if (!submissionIds.isEmpty()) {
             answerMapper.deleteAnswersBySubmissionIds(submissionIds);
         }
 
-        // 删除练习关联的题目
+        // 閸掔娀娅庣紒鍐х瘎閸忓疇浠堥惃鍕暯閻╋拷
         questionMapper.removeAllQuestionsFromPractice(id);
 
-        // 删除练习关联的提交记录
+        // 閸掔娀娅庣紒鍐х瘎閸忓疇浠堥惃鍕絹娴溿倛顔囪ぐ锟�
         submissionMapper.removeSubmissionsByPracticeId(id);
 
-        // 删除练习
+        // 閸掔娀娅庣紒鍐х瘎
         practiceMapper.deletePractice(id);
     }
 
     @Override
     public void addQuestionToPractice(Long practiceId, Long questionId, Integer score) {
         try {
-            // 验证练习是否存在
+            // 妤犲矁鐦夌紒鍐х瘎閺勵垰鎯佺€涙ê婀�
             Practice practice = practiceMapper.getPracticeById(practiceId);
             if (practice == null) {
                 System.out.println("练习不存在，ID: " + practiceId);
@@ -210,12 +216,12 @@ public class PracticeServiceImpl implements PracticeService {
                 System.out.println("Warning: 题目 " + questionId + " 不存在，但继续执行（测试模式）");
             }
 
-            // 验证分值
+            // 妤犲矁鐦夐崚鍡椻偓锟�
             if (score <= 0) {
-                throw new PracticeException("PRACTICE_INVALID_SCORE", "题目分值必须大于0");
+                throw new PracticeException("PRACTICE_INVALID_SCORE", "妫版娲伴崚鍡椻偓鐓庣箑妞よ銇囨禍锟�0");
             }
 
-            // 验证题���是否已经在练习中
+            // 妤犲矁鐦夋０姗堟嫹閿熸枻鎷烽弰顖氭儊瀹歌尙绮￠崷銊х矊娑旂姳鑵�
             List<Question> existingQuestions = questionMapper.getQuestionsByPractice(practiceId);
             boolean questionExists = existingQuestions.stream()
                     .anyMatch(q -> q.getId().equals(questionId));
@@ -232,19 +238,19 @@ public class PracticeServiceImpl implements PracticeService {
         } catch (Exception e) {
             if (e.getCause() instanceof java.sql.SQLIntegrityConstraintViolationException) {
                 throw new PracticeException("PRACTICE_ADD_QUESTION_FAILED",
-                        "添加题目失败：练习ID " + practiceId + " 不存在或已被删除");
+                        "濞ｈ濮炴０妯兼窗婢惰精瑙﹂敍姘辩矊娑旂嚐D " + practiceId + " 娑撳秴鐡ㄩ崷銊﹀灗瀹歌尪顫﹂崚鐘绘珟");
             }
             throw new PracticeException("PRACTICE_ADD_QUESTION_FAILED",
-                    "添加题目失败：" + e.getMessage());
+                    "濞ｈ濮炴０妯兼窗婢惰精瑙﹂敍锟�" + e.getMessage());
         }
     }
 
     @Override
     public void removeQuestionFromPractice(Long practiceId, Long questionId) {
-        // 验证练习是否存在
+        // 妤犲矁鐦夌紒鍐х瘎閺勵垰鎯佺€涙ê婀�
         Practice practice = practiceMapper.getPracticeById(practiceId);
         if (practice == null) {
-            throw new PracticeException("PRACTICE_NOT_FOUND", "练习不存在");
+            throw new PracticeException("PRACTICE_NOT_FOUND", "缂佸啩绡勬稉宥呯摠閸︼拷");
         }
 
         questionMapper.removeQuestionFromPractice(practiceId, questionId);
@@ -252,10 +258,10 @@ public class PracticeServiceImpl implements PracticeService {
 
     @Override
     public List<Question> getPracticeQuestions(Long practiceId) {
-        // 验证练习是否存在
+        // 妤犲矁鐦夌紒鍐х瘎閺勵垰鎯佺€涙ê婀�
         Practice practice = practiceMapper.getPracticeById(practiceId);
         if (practice == null) {
-            throw new PracticeException("PRACTICE_NOT_FOUND", "练习不存在");
+            throw new PracticeException("PRACTICE_NOT_FOUND", "缂佸啩绡勬稉宥呯摠閸︼拷");
         }
         return questionMapper.getQuestionsByPractice(practiceId);
     }
@@ -279,18 +285,18 @@ public class PracticeServiceImpl implements PracticeService {
 
     @Override
     public void addWrongQuestion(Long studentId, Long questionId, String wrongAnswer) {
-        // 从数据库获取题目信息，包括正确答案
+        // 娴犲孩鏆熼幑顔肩氨閼惧嘲褰囨０妯兼窗娣団剝浼呴敍灞藉瘶閹奉剚顒滅涵顔剧摕濡楋拷
         Question question = questionMapper.findById(questionId);
         if (question == null) {
-            throw new RuntimeException("题目不存在");
+            throw new RuntimeException("妫版娲版稉宥呯摠閸︼拷");
         }
 
-        // 检查是否已存在该错题
+        // 濡偓閺屻儲妲搁崥锕€鍑＄€涙ê婀拠銉╂晩妫帮拷
         if (wrongQuestionMapper.existsWrongQuestion(studentId, questionId)) {
-            // 如果存在，更新错误次数和最后错误时间
+            // 婵″倹鐏夌€涙ê婀敍灞炬纯閺備即鏁婄拠顖涱偧閺佹澘鎷伴張鈧崥搴ㄦ晩鐠囶垱妞傞梻锟�
             wrongQuestionMapper.updateWrongQuestion(studentId, questionId, wrongAnswer, question.getAnswer());
         } else {
-            // 如果不存在，新增错题记录
+            // 婵″倹鐏夋稉宥呯摠閸︻煉绱濋弬鏉款杻闁挎瑩顣界拋鏉跨秿
             wrongQuestionMapper.insertWrongQuestion(studentId, questionId, wrongAnswer, question.getAnswer());
         }
     }
@@ -300,12 +306,9 @@ public class PracticeServiceImpl implements PracticeService {
         return wrongQuestionMapper.findWrongQuestions(studentId);
     }
 
-//    wrongggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg
     @Override
     public List<Map<String, Object>> getWrongQuestionsByCourse(Long studentId, Long courseId) {
-        // This method may require a more complex query joining with course table
-        // For now, returning all wrong questions
-        return wrongQuestionMapper.findWrongQuestions(studentId);
+        return wrongQuestionMapper.findWrongQuestionsByCourse(studentId, courseId);
     }
 
     @Override

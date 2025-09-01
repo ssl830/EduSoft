@@ -1,13 +1,19 @@
 package org.example.edusoft.learning.controller;
 
-import cn.dev33.satoken.stp.StpUtil;
 import lombok.RequiredArgsConstructor;
 import org.example.edusoft.learning.Result;
+import org.example.edusoft.learning.client.UserServiceClient;
 import org.example.edusoft.learning.dto.PracticeDTO;
 import org.example.edusoft.learning.entity.Practice;
 import org.example.edusoft.learning.entity.Question;
 import org.example.edusoft.learning.service.PracticeService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.*;
+import org.example.edusoft.learning.client.UserServiceClient;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.util.HashMap;
 import java.util.List;
@@ -20,9 +26,43 @@ public class PracticeController {
 
     private final PracticeService practiceService;
 
+    @Autowired
+    private UserServiceClient userServiceClient;
+
+    @org.springframework.beans.factory.annotation.Value("${services.user.base-url:http://localhost:8081}")
+    private String userServiceBaseUrl;
+
+    private String resolveOutboundToken() {
+        RequestAttributes attrs = RequestContextHolder.getRequestAttributes();
+        if (attrs instanceof ServletRequestAttributes servlet) {
+            String satoken = servlet.getRequest().getHeader("satoken");
+            if (satoken != null && !satoken.isEmpty())
+                return satoken;
+            String cookie = servlet.getRequest().getHeader("Cookie");
+            if (cookie != null) {
+                for (String part : cookie.split(";")) {
+                    String p = part.trim();
+                    if (p.startsWith("satoken="))
+                        return p.substring("satoken=".length());
+                }
+            }
+            String auth = servlet.getRequest().getHeader("Authorization");
+            if (auth != null && !auth.isEmpty())
+                return auth;
+        }
+        return null;
+    }
+
     @PostMapping("/create")
-    public Result<Map<String, Object>> createPractice(@RequestBody Practice practice) {
-        // 暂时允许游客访问进行测试
+    public Result<Map<String, Object>> createPractice(@RequestBody Practice practice, @RequestHeader("satoken") String token) {
+        // 从user-service获取完整的用户信息
+        Map<String, Object> userInfo = userServiceClient.fetchCurrentUser(userServiceBaseUrl, token);
+        if (userInfo == null) {
+            return Result.error("请先登录");
+        }
+        
+        // 从用户信息中获取id
+        Long userId = Long.valueOf(userInfo.get("id").toString());
         try {
             if (!StpUtil.isLogin()) {
                 System.out.println("Warning: 未认证的练习创建访问，使用默认用户ID: 1");
@@ -118,11 +158,15 @@ public class PracticeController {
     }
 
     @PostMapping("/questions/{questionId}/favorite")
-    public Result<Void> favoriteQuestion(@PathVariable Long questionId) {
-        if (!StpUtil.isLogin()) {
+    public Result<Void> favoriteQuestion(@PathVariable Long questionId, @RequestHeader("satoken") String token) {
+        // 从user-service获取完整的用户信息
+        Map<String, Object> userInfo = userServiceClient.fetchCurrentUser(userServiceBaseUrl, token);
+        if (userInfo == null) {
             return Result.error("请先登录");
         }
-        Long studentId = StpUtil.getLoginIdAsLong();
+        
+        // 从用户信息中获取id
+        Long studentId = Long.valueOf(userInfo.get("id").toString());
         try {
             practiceService.favoriteQuestion(studentId, questionId);
             return Result.success(null, "收藏成功");
@@ -132,11 +176,15 @@ public class PracticeController {
     }
 
     @DeleteMapping("/questions/{questionId}/favorite")
-    public Result<Void> unfavoriteQuestion(@PathVariable Long questionId) {
-        if (!StpUtil.isLogin()) {
+    public Result<Void> unfavoriteQuestion(@PathVariable Long questionId, @RequestHeader("satoken") String token) {
+        // 从user-service获取完整的用户信息
+        Map<String, Object> userInfo = userServiceClient.fetchCurrentUser(userServiceBaseUrl, token);
+        if (userInfo == null) {
             return Result.error("请先登录");
         }
-        Long studentId = StpUtil.getLoginIdAsLong();
+        
+        // 从用户信息中获取id
+        Long studentId = Long.valueOf(userInfo.get("id").toString());
         try {
             practiceService.unfavoriteQuestion(studentId, questionId);
             return Result.success(null, "取消收藏成功");
@@ -146,22 +194,30 @@ public class PracticeController {
     }
 
     @GetMapping("/questions/favorites")
-    public Result<List<Map<String, Object>>> getFavoriteQuestions() {
-        if (!StpUtil.isLogin()) {
+    public Result<List<Map<String, Object>>> getFavoriteQuestions(@RequestHeader("satoken") String token) {
+        // 从user-service获取完整的用户信息
+        Map<String, Object> userInfo = userServiceClient.fetchCurrentUser(userServiceBaseUrl, token);
+        if (userInfo == null) {
             return Result.error("请先登录");
         }
-        Long studentId = StpUtil.getLoginIdAsLong();
+        
+        // 从用户信息中获取id
+        Long studentId = Long.valueOf(userInfo.get("id").toString());
         List<Map<String, Object>> questions = practiceService.getFavoriteQuestions(studentId);
         return Result.success(questions);
     }
 
     // 添加错题
     @PostMapping("/questions/{questionId}/wrong")
-    public Result<Boolean> addWrongQuestion(@PathVariable Long questionId, @RequestBody Map<String, String> data) {
-        if (!StpUtil.isLogin()) {
+    public Result<Boolean> addWrongQuestion(@PathVariable Long questionId, @RequestBody Map<String, String> data, @RequestHeader("satoken") String token) {
+        // 从user-service获取完整的用户信息
+        Map<String, Object> userInfo = userServiceClient.fetchCurrentUser(userServiceBaseUrl, token);
+        if (userInfo == null) {
             return Result.error("请先登录");
         }
-        Long studentId = StpUtil.getLoginIdAsLong();
+        
+        // 从用户信息中获取id
+        Long studentId = Long.valueOf(userInfo.get("id").toString());
         String wrongAnswer = data.get("wrongAnswer");
         practiceService.addWrongQuestion(studentId, questionId, wrongAnswer);
         return Result.success(true);
@@ -169,25 +225,45 @@ public class PracticeController {
 
     // 获取错题列表
     @GetMapping("/questions/wrong")
-    public Result<List<Map<String, Object>>> getWrongQuestions(@RequestHeader("X-User-Id") Long studentId) {
+    public Result<List<Map<String, Object>>> getWrongQuestions(@RequestHeader("satoken") String token) {
+        // 从user-service获取完整的用户信息
+        Map<String, Object> userInfo = userServiceClient.fetchCurrentUser(userServiceBaseUrl, token);
+        if (userInfo == null) {
+            return Result.error("请先登录");
+        }
+        
+        // 从用户信息中获取id
+        Long studentId = Long.valueOf(userInfo.get("id").toString());
         List<Map<String, Object>> questions = practiceService.getWrongQuestions(studentId);
         return Result.success(questions);
     }
 
     // 获取某个课程的错题列表
     @GetMapping("/questions/wrong/course/{courseId}")
-    public Result<List<Map<String, Object>>> getWrongQuestionsByCourse(
-            @RequestHeader("X-User-Id") Long studentId,
-            @PathVariable Long courseId) {
+    public Result<List<Map<String, Object>>> getWrongQuestionsByCourse(@PathVariable Long courseId, @RequestHeader("satoken") String token) {
+        // 从user-service获取完整的用户信息
+        Map<String, Object> userInfo = userServiceClient.fetchCurrentUser(userServiceBaseUrl, token);
+        if (userInfo == null) {
+            return Result.error("请先登录");
+        }
+        
+        // 从用户信息中获取id
+        Long studentId = Long.valueOf(userInfo.get("id").toString());
         List<Map<String, Object>> questions = practiceService.getWrongQuestionsByCourse(studentId, courseId);
         return Result.success(questions);
     }
 
     // 删除错题
     @DeleteMapping("/questions/{questionId}/wrong")
-    public Result<Boolean> removeWrongQuestion(
-            @RequestHeader("X-User-Id") Long studentId,
-            @PathVariable Long questionId) {
+    public Result<Boolean> removeWrongQuestion(@PathVariable Long questionId, @RequestHeader("satoken") String token) {
+        // 从user-service获取完整的用户信息
+        Map<String, Object> userInfo = userServiceClient.fetchCurrentUser(userServiceBaseUrl, token);
+        if (userInfo == null) {
+            return Result.error("请先登录");
+        }
+        
+        // 从用户信息中获取id
+        Long studentId = Long.valueOf(userInfo.get("id").toString());
         practiceService.removeWrongQuestion(studentId, questionId);
         return Result.success(true);
     }
@@ -297,48 +373,53 @@ public class PracticeController {
         }
     }
 //
-//    /**
-//     * 获取教师相关的所有练习信息
-//     */
-//    @GetMapping("/teacher/practices")
-//    public Result<List<Map<String, Object>>> getTeacherPractices() {
-//        if (!StpUtil.isLogin()) {
-//            return Result.error("请先登录");
-//        }
-//        Long teacherId = StpUtil.getLoginIdAsLong();
-//        List<Map<String, Object>> practices = practiceService.getTeacherPractices(teacherId);
-//        return Result.success(practices, "获取教师练习信息成功");
-//    }
-//
-//    @GetMapping("/stats/{practiceId}")
-//    public Result<Map<String, Object>> getPracticeStats(@PathVariable Long practiceId) {
-//        Map<String, Object> stats = practiceService.getSubmissionStats(practiceId);
-//        return Result.success(stats);
-//    }
-//
-//    /**
-//     * 手动触发：统计并写入练习每题得分率
-//     */
-//    @PostMapping("/update-score-rate/{practiceId}")
-//    public Result<String> updateScoreRate(@PathVariable Long practiceId) {
-//        try {
-//            practiceService.updateScoreRateAfterDeadline(practiceId);
-//            return Result.success("OK", "得分率统计并写入成功");
-//        } catch (Exception e) {
-//            return Result.error(500, "得分率统计失败：" + e.getMessage());
-//        }
-//    }
-//
-//    /**
-//     * 自动定时任务：每天凌晨1点检查所有已截止练习，自动统计得分率
-//     * 需在主类加@EnableScheduling
-//     */
-//    @Scheduled(cron = "0 0 1 * * ?")
-//    public void autoUpdateScoreRateForAllPractices() {
-//        // 伪代码：实际应查找所有已截止且未统计的练习ID
-//        List<Long> practiceIds = practiceService.getAllEndedPracticeIds();
-//        for (Long pid : practiceIds) {
-//            practiceService.updateScoreRateAfterDeadline(pid);
-//        }
-//    }
+    /**
+     * 获取教师相关的所有练习信息
+     */
+    @GetMapping("/teacher/practices")
+    public Result<List<Map<String, Object>>> getTeacherPractices() {
+        String token = resolveOutboundToken();
+        System.out.println("27555555555555555555555555");
+        Map<String, Object> userInfo = userServiceClient.fetchCurrentUser(userServiceBaseUrl, token);
+        if (userInfo == null || userInfo.get("id") == null) {
+            return Result.error("请先登录");
+        }
+        Long teacherId = Long.valueOf(userInfo.get("id").toString());
+        System.out.println("teacherIdd===========================================================");
+        System.out.println(teacherId);
+        List<Map<String, Object>> practices = practiceService.getTeacherPractices(teacherId);
+        return Result.success(practices, "获取教师练习信息成功");
+    }
+
+    @GetMapping("/stats/{practiceId}")
+    public Result<Map<String, Object>> getPracticeStats(@PathVariable Long practiceId) {
+        Map<String, Object> stats = practiceService.getSubmissionStats(practiceId);
+        return Result.success(stats);
+    }
+
+    /**
+     * 手动触发：统计并写入练习每题得分率
+     */
+    @PostMapping("/update-score-rate/{practiceId}")
+    public Result<String> updateScoreRate(@PathVariable Long practiceId) {
+        try {
+            practiceService.updateScoreRateAfterDeadline(practiceId);
+            return Result.success("OK", "得分率统计并写入成功");
+        } catch (Exception e) {
+            return Result.error(500, "得分率统计失败：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 自动定时任务：每天凌晨1点检查所有已截止练习，自动统计得分率
+     * 需在主类加@EnableScheduling
+     */
+    @Scheduled(cron = "0 0 1 * * ?")
+    public void autoUpdateScoreRateForAllPractices() {
+        // 伪代码：实际应查找所有已截止且未统计的练习ID
+        List<Long> practiceIds = practiceService.getAllEndedPracticeIds();
+        for (Long pid : practiceIds) {
+            practiceService.updateScoreRateAfterDeadline(pid);
+        }
+    }
 }
