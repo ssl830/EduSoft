@@ -39,4 +39,23 @@ public interface PracticeService {
     void removeWrongQuestion(Long studentId, Long questionId);
 
     List<PracticeDTO> getStudentPracticeList(Long studentId, Long classId);
+
+    List<Map<String, Object>> getTeacherPractices(Long teacherId);
+
+    /**
+     * 获取练习的提交统计信息
+     * @param practiceId 练习ID
+     * @return 包含总提交人数和平均分的统计信息
+     */
+    Map<String, Object> getSubmissionStats(Long practiceId);
+
+    /**
+     * 练习截止后统计并写入每题得分率
+     */
+    void updateScoreRateAfterDeadline(Long practiceId);
+
+    /**
+     * 获取所有已截止且未统计得分率的练习ID（定时任务用）
+     */
+    List<Long> getAllEndedPracticeIds();
 }
