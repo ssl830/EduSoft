@@ -1,0 +1,87 @@
+# EduSoft 用户服务 .gitignore
+# 专用于 micro_user_service 分支
+
+# Java 编译输出
+user-service/target/
+user-service/out/
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+
+# Maven
+user-service/.mvn/wrapper/maven-wrapper.jar
+user-service/.mvn/wrapper/maven-wrapper.properties
+
+# IDE 文件
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.project
+.classpath
+.factorypath
+.settings/
+
+# 日志文件
+*.log
+logs/
+user-service/logs/
+
+# 操作系统生成的文件
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# 临时文件
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# 环境配置文件
+.env
+.env.local
+.env.production
+user-service/src/main/resources/application-*.yml
+!user-service/src/main/resources/application.yml
+
+# 数据库文件
+*.db
+*.sqlite
+*.sqlite3
+
+# 测试覆盖率报告
+user-service/coverage/
+user-service/test-results/
+
+# Docker 相关
+.dockerignore
+
+# Kubernetes 临时文件
+k8s/**/*.tmp
+k8s/**/*.backup
+
+# 脚本执行日志
+scripts/*.log
+
+# 备份文件
+*.bak
+*.backup
+
+# Node.js (如果有前端工具)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 本地开发配置
+local.properties
+application-local.yml

@@ -36,11 +36,6 @@ INSERT INTO `user` (`user_id`, `username`, `password_hash`, `role`, `email`, `cr
 ('S001', '小明', 'hashed_pwd2', 'student', 'xiaoming@example.com', '2025-07-08 06:08:19', '2025-07-08 06:08:19'),
 ('S002', '小红', 'hashed_pwd3', 'student', 'xiaohong@example.com', '2025-07-08 06:08:19', '2025-07-08 06:08:19'),
 ('T002', 'Teacher2', 'bc1785c9eda2973c1157cbbb90a8b1f9', 'teacher', 'pengsquare82@gmail.com', '2025-07-08 06:09:39', '2025-07-08 06:09:39'),
-('S003', 'User', 'bc1785c9eda2973c1157cbbb90a8b1f9', 'student', 'buaavolunteers@sina.com', '2025-07-08 06:10:10', '2025-07-08 06:10:10'),
-('Admin1', 'Admin', 'bc1785c9eda2973c1157cbbb90a8b1f9', 'tutor', '23371112@buaa.edu.cn', '2025-07-08 06:11:41', '2025-07-08 06:11:41'),
-('T003', 'Teacher2', 'bc1785c9eda2973c1157cbbb90a8b1f9', 'teacher', 'pengsquare82@gmail.com', '2025-07-08 15:04:32', '2025-07-08 15:04:32'),
-('S004', 'S004', 'bc1785c9eda2973c1157cbbb90a8b1f9', 'student', 'pengsquare82@gmail.com', '2025-08-16 08:30:33', '2025-08-16 08:30:33'),
-('S005', 'S005', 'bc1785c9eda2973c1157cbbb90a8b1f9', 'student', 'pengsquare82@gmail.com', '2025-08-16 08:31:01', '2025-08-16 08:31:01'),
 ('T100', 'T100', 'bc1785c9eda2973c1157cbbb90a8b1f9', 'teacher', 'buaavolunteers@sina.com', '2025-08-21 09:50:31', '2025-08-21 09:50:31');
 
 -- 重置外键检查

@@ -1,0 +1,310 @@
+# 用户服务数据库独立部署配置
+# 每个微服务都应该有自己的数据库实例
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: edusoft
+  labels:
+    name: edusoft
+---
+# MySQL用户数据库配置
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-user-config
+  namespace: edusoft
+data:
+  my.cnf: |
+    [mysqld]
+    default-authentication-plugin=mysql_native_password
+    character-set-server=utf8mb4
+    collation-server=utf8mb4_unicode_ci
+    max_connections=1000
+    max_allowed_packet=64M
+    innodb_buffer_pool_size=1G
+    innodb_log_file_size=256M
+    innodb_flush_log_at_trx_commit=2
+    innodb_flush_method=O_DIRECT
+    slow_query_log=1
+    long_query_time=2
+    binlog_format=ROW
+    server-id=1
+    log-bin=mysql-bin
+    binlog_expire_logs_seconds=604800
+    
+  init.sql: |
+    -- 用户微服务数据库初始化脚本
+    CREATE DATABASE IF NOT EXISTS `user_db` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+    
+    USE `user_db`;
+    
+    -- 创建用户表
+    CREATE TABLE IF NOT EXISTS `user` (
+      `id` bigint NOT NULL AUTO_INCREMENT COMMENT '用户ID（主键）',
+      `user_id` varchar(15) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '用户登录ID',
+      `username` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '用户姓名',
+      `password_hash` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '密码哈希值',
+      `role` enum('student','teacher','tutor') COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '用户角色',
+      `email` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '邮箱地址',
+      `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+      `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+      PRIMARY KEY (`id`),
+      UNIQUE KEY `uk_user_id` (`user_id`),
+      UNIQUE KEY `uk_email` (`email`),
+      KEY `idx_role` (`role`),
+      KEY `idx_created_at` (`created_at`)
+    ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户表';
+    
+    -- 插入初始数据
+    INSERT IGNORE INTO `user` (`user_id`, `username`, `password_hash`, `role`, `email`) VALUES
+    ('T001', '张老师', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.', 'teacher', 'teacher@example.com'),
+    ('S001', '小明', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.', 'student', 'xiaoming@example.com'),
+    ('S002', '小红', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.', 'student', 'xiaohong@example.com');
+    
+    -- 创建应用用户
+    CREATE USER IF NOT EXISTS 'user_service'@'%' IDENTIFIED BY 'user_service_password';
+    GRANT SELECT, INSERT, UPDATE, DELETE ON user_db.* TO 'user_service'@'%';
+    FLUSH PRIVILEGES;
+
+---
+# MySQL用户数据库Secret
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mysql-user-secret
+  namespace: edusoft
+type: Opaque
+data:
+  mysql-root-password: cm9vdF9wYXNzd29yZA== # root_password base64编码
+  mysql-user: dXNlcl9zZXJ2aWNl # user_service base64编码
+  mysql-password: dXNlcl9zZXJ2aWNlX3Bhc3N3b3Jk # user_service_password base64编码
+
+---
+# MySQL用户数据库PV
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mysql-user-pv
+spec:
+  capacity:
+    storage: 20Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local-storage
+  local:
+    path: /data/mysql-user
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - node1  # 指定节点，确保数据库跟随服务部署
+
+---
+# MySQL用户数据库PVC
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-user-pvc
+  namespace: edusoft
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+  storageClassName: local-storage
+
+---
+# MySQL用户数据库Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql-user-service
+  namespace: edusoft
+  labels:
+    app: mysql-user
+    service: user-service
+spec:
+  replicas: 1  # 数据库单实例
+  strategy:
+    type: Recreate  # 数据库使用Recreate策略
+  selector:
+    matchLabels:
+      app: mysql-user
+  template:
+    metadata:
+      labels:
+        app: mysql-user
+        service: user-service
+    spec:
+      # 确保数据库部署在用户服务相同节点
+      affinity:
+        podAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - user-service
+              topologyKey: kubernetes.io/hostname
+      containers:
+      - name: mysql
+        image: mysql:8.0
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-user-secret
+              key: mysql-root-password
+        - name: MYSQL_DATABASE
+          value: user_db
+        - name: MYSQL_USER
+          valueFrom:
+            secretKeyRef:
+              name: mysql-user-secret
+              key: mysql-user
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-user-secret
+              key: mysql-password
+        ports:
+        - containerPort: 3306
+          name: mysql
+        volumeMounts:
+        - name: mysql-storage
+          mountPath: /var/lib/mysql
+        - name: mysql-config
+          mountPath: /etc/mysql/conf.d
+        - name: mysql-init
+          mountPath: /docker-entrypoint-initdb.d
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1"
+        livenessProbe:
+          exec:
+            command:
+            - mysqladmin
+            - ping
+            - -h
+            - localhost
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          exec:
+            command:
+            - mysql
+            - -h
+            - localhost
+            - -u
+            - root
+            - -p${MYSQL_ROOT_PASSWORD}
+            - -e
+            - "SELECT 1"
+          initialDelaySeconds: 5
+          periodSeconds: 2
+          timeoutSeconds: 1
+          failureThreshold: 3
+      volumes:
+      - name: mysql-storage
+        persistentVolumeClaim:
+          claimName: mysql-user-pvc
+      - name: mysql-config
+        configMap:
+          name: mysql-user-config
+          items:
+          - key: my.cnf
+            path: my.cnf
+      - name: mysql-init
+        configMap:
+          name: mysql-user-config
+          items:
+          - key: init.sql
+            path: init.sql
+
+---
+# MySQL用户数据库Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-user-service
+  namespace: edusoft
+  labels:
+    app: mysql-user
+    service: user-service
+spec:
+  type: ClusterIP
+  ports:
+  - port: 3306
+    targetPort: 3306
+    protocol: TCP
+    name: mysql
+  selector:
+    app: mysql-user
+
+---
+# MySQL备份Job (定时备份)
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: mysql-user-backup
+  namespace: edusoft
+spec:
+  schedule: "0 2 * * *"  # 每天凌晨2点备份
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: mysql-backup
+            image: mysql:8.0
+            command:
+            - /bin/bash
+            - -c
+            - |
+              BACKUP_FILE="/backup/user_db_$(date +%Y%m%d_%H%M%S).sql"
+              mysqldump -h mysql-user-service -u root -p${MYSQL_ROOT_PASSWORD} user_db > ${BACKUP_FILE}
+              # 保留最近7天的备份
+              find /backup -name "user_db_*.sql" -mtime +7 -delete
+            env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-user-secret
+                  key: mysql-root-password
+            volumeMounts:
+            - name: backup-storage
+              mountPath: /backup
+          volumes:
+          - name: backup-storage
+            persistentVolumeClaim:
+              claimName: mysql-backup-pvc
+          restartPolicy: OnFailure
+
+---
+# 备份存储PVC
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-backup-pvc
+  namespace: edusoft
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 50Gi

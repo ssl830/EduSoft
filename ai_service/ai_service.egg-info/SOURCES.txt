@@ -1,6 +1,0 @@
-setup.py
-ai_service.egg-info/PKG-INFO
-ai_service.egg-info/SOURCES.txt
-ai_service.egg-info/dependency_links.txt
-ai_service.egg-info/requires.txt
-ai_service.egg-info/top_level.txt

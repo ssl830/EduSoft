@@ -1,0 +1,253 @@
+# User Service Kubernetes部署配置
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: edusoft
+  labels:
+    name: edusoft
+---
+# ConfigMap for User Service
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: user-service-config
+  namespace: edusoft
+data:
+  application.yml: |
+    server:
+      port: 8081
+    spring:
+      application:
+        name: user-service
+      datasource:
+        url: jdbc:mysql://mysql-user-service:3306/user_db?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=utf8
+        username: ${DB_USERNAME:user_service}
+        password: ${DB_PASSWORD:user_service_password}
+        driver-class-name: com.mysql.cj.jdbc.Driver
+      jpa:
+        hibernate:
+          ddl-auto: validate
+        show-sql: false
+        properties:
+          hibernate:
+            dialect: org.hibernate.dialect.MySQL8Dialect
+    mybatis:
+      mapper-locations: classpath:mapper/*.xml
+      type-aliases-package: org.example.edusoft.user.model
+    sa-token:
+      token-name: satoken
+      timeout: 2592000
+      activity-timeout: -1
+      is-concurrent: true
+      is-share: true
+      token-style: uuid
+      is-log: false
+    management:
+      endpoints:
+        web:
+          exposure:
+            include: health,info,metrics
+      endpoint:
+        health:
+          show-details: always
+    logging:
+      level:
+        org.example.edusoft.user: INFO
+        org.springframework.security: DEBUG
+---
+# Secret for User Service
+apiVersion: v1
+kind: Secret
+metadata:
+  name: user-service-secret
+  namespace: edusoft
+type: Opaque
+data:
+  db-username: dXNlcl9zZXJ2aWNl # user_service base64编码
+  db-password: dXNlcl9zZXJ2aWNlX3Bhc3N3b3Jk # user_service_password base64编码
+  jwt-secret: ZWR1c29mdC1qd3Qtc2VjcmV0LWZvci11c2VyLXNlcnZpY2U= # 你的JWT密钥base64编码
+---
+# User Service Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: edusoft-user-service
+  namespace: edusoft
+  labels:
+    app: user-service
+    version: v1
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: user-service
+  template:
+    metadata:
+      labels:
+        app: user-service
+        version: v1
+    spec:
+      # 确保用户服务和数据库部署在相同节点组
+      affinity:
+        podAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - mysql-user
+              topologyKey: kubernetes.io/hostname
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - user-service
+              topologyKey: kubernetes.io/hostname
+      # 初始化容器，等待数据库就绪
+      initContainers:
+      - name: wait-for-db
+        image: busybox:1.35
+        command: ['sh', '-c']
+        args:
+        - |
+          echo "等待MySQL数据库启动..."
+          until nc -z mysql-user-service 3306; do
+            echo "等待数据库连接..."
+            sleep 2
+          done
+          echo "数据库已就绪！"
+      containers:
+      - name: user-service
+        image: crpi-z38aw29its2zwb1p.cn-beijing.personal.cr.aliyuncs.com/sjy330/edusoft-user-service:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8081
+          name: http
+        env:
+        - name: DB_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: user-service-secret
+              key: db-username
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: user-service-secret
+              key: db-password
+        - name: SPRING_PROFILES_ACTIVE
+          value: "prod"
+        volumeMounts:
+        - name: config-volume
+          mountPath: /app/config
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8081
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8081
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        startupProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8081
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 10
+      volumes:
+      - name: config-volume
+        configMap:
+          name: user-service-config
+      imagePullSecrets:
+      - name: aliyun-registry-secret
+---
+# User Service Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-service
+  namespace: edusoft
+  labels:
+    app: user-service
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8081
+    targetPort: 8081
+    protocol: TCP
+    name: http
+  selector:
+    app: user-service
+---
+# User Service HPA
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: user-service-hpa
+  namespace: edusoft
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: edusoft-user-service
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 10
+        periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 15
+      - type: Pods
+        value: 4
+        periodSeconds: 15
+      selectPolicy: Max
