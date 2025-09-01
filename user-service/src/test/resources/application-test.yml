@@ -1,0 +1,55 @@
+# 测试环境配置
+server:
+  port: 0  # 随机端口，避免冲突
+
+spring:
+  application:
+    name: user-service-test
+  
+  # 测试数据库配置 - 使用H2内存数据库
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password: 
+    driver-class-name: org.h2.Driver
+  
+  # H2数据库配置
+  h2:
+    console:
+      enabled: true
+  
+  # JPA配置
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    database-platform: org.hibernate.dialect.H2Dialect
+
+# Sa-Token配置（测试环境）
+sa-token:
+  token-name: satoken-test
+  timeout: 86400  # 24小时
+  activity-timeout: -1
+  is-concurrent: true
+  is-share: true
+  token-style: uuid
+  is-log: false
+
+# 日志配置
+logging:
+  level:
+    '[org.example.edusoft.user]': DEBUG
+    '[org.springframework.web]': DEBUG
+    '[org.springframework.test]': DEBUG
+
+# 禁用Actuator安全性
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+  security:
+    enabled: false
