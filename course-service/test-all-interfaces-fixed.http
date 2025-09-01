@@ -128,7 +128,7 @@ satoken: a4154b98-4285-4561-a806-d2903ffde689
 ### 20. 创建课程章节
 POST http://localhost:8082/api/courses
 Content-Type: application/json
-satoken: a4154b98-4285-4561-a806-d2903ffde689
+satoken: 265ae1fa-5e3f-448c-83aa-e189c8788f80
 
 {
   "courseId": 9,
@@ -137,8 +137,8 @@ satoken: a4154b98-4285-4561-a806-d2903ffde689
 }
 
 ### 21. 获取课程章节列表
-GET http://localhost:8082/api/courses/course/2
-satoken: 5b561e2d-4db1-4c96-919d-73aee9223c7f
+GET http://localhost:8082/api/courses/2/sections
+satoken: 265ae1fa-5e3f-448c-83aa-e189c8788f80
 
 ### 22. 更新课程章节
 PUT http://localhost:8082/api/courses/10

@@ -107,7 +107,7 @@ public class CourseClient extends BaseServiceClient {
             headers.set("satoken", token);
         }
         org.springframework.http.HttpEntity<Void> entity = new org.springframework.http.HttpEntity<>(headers);
-        String url = getBaseUrl() + "/api/courses/batch?ids=" + sectionIds;
+        String url = getBaseUrl() + "/api/courses/section/batch?ids=" + sectionIds;
         org.springframework.http.ResponseEntity<List> response = restTemplate.exchange(
             url, 
             org.springframework.http.HttpMethod.GET, 
@@ -132,8 +132,8 @@ public class CourseClient extends BaseServiceClient {
             headers.set("satoken", token);
         }
         org.springframework.http.HttpEntity<Void> entity = new org.springframework.http.HttpEntity<>(headers);
-        String url = getBaseUrl() + "/api/courses/course/" + courseId;
-        
+        String url = getBaseUrl() + "/api/courses/" + courseId + "/sections";
+
         try {
             logger.info("[CourseClient] 发送请求到: {}", url);
             org.springframework.http.ResponseEntity<List> response = restTemplate.exchange(
