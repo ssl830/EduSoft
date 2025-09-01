@@ -10,13 +10,14 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/course-sections") 
+@RequestMapping("/api/courses") 
 public class CourseSectionController {
 
     @Autowired
     private CourseSectionService courseSectionService;
 
-    @GetMapping("/course/{courseId}")
+    // /courses/{courseId}
+    @GetMapping("/{courseId}/sections")
     public Result<List<CourseSection>> getSectionsByCourseId(@PathVariable Long courseId) {
         try {
             List<CourseSection> sections = courseSectionService.getSectionsByCourseId(courseId);
@@ -35,6 +36,25 @@ public class CourseSectionController {
             return Result.error(500, "创建章节失败：" + e.getMessage());
         }
     }
+
+    @PostMapping("/{courseId}/sections")
+    public Result<List<CourseSection>> createSections(
+            @PathVariable Long courseId,
+            @RequestBody Map<String, List<CourseSection>> request) {
+        try {
+            List<CourseSection> sections = request.get("sections");
+            for (CourseSection section : sections) {
+                section.setCourseId(courseId);
+            }
+            courseSectionService.createSections(sections);
+            return Result.success(sections);
+        } catch (CourseSectionException e) {
+            return Result.error(e.getCode() + ": " + e.getMessage());
+        } catch (Exception e) {
+            return Result.error("系统错误：" + e.getMessage());
+        }
+    }
+    
 
     @GetMapping("/{id}")
     public Result<CourseSection> getSectionById(@PathVariable Long id) {
