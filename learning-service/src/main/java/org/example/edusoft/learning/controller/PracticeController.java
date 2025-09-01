@@ -1,8 +1,8 @@
 package org.example.edusoft.learning.controller;
 
-import cn.dev33.satoken.stp.StpUtil;
 import lombok.RequiredArgsConstructor;
 import org.example.edusoft.learning.Result;
+import org.example.edusoft.learning.client.UserServiceClient;
 import org.example.edusoft.learning.dto.PracticeDTO;
 import org.example.edusoft.learning.entity.Practice;
 import org.example.edusoft.learning.entity.Question;
@@ -25,6 +25,7 @@ import java.util.Map;
 public class PracticeController {
 
     private final PracticeService practiceService;
+
     @Autowired
     private UserServiceClient userServiceClient;
 
@@ -53,11 +54,15 @@ public class PracticeController {
     }
 
     @PostMapping("/create")
-    public Result<Map<String, Object>> createPractice(@RequestBody Practice practice) {
-        if (!StpUtil.isLogin()) {
+    public Result<Map<String, Object>> createPractice(@RequestBody Practice practice, @RequestHeader("satoken") String token) {
+        // 从user-service获取完整的用户信息
+        Map<String, Object> userInfo = userServiceClient.fetchCurrentUser(userServiceBaseUrl, token);
+        if (userInfo == null) {
             return Result.error("请先登录");
         }
-        Long userId = StpUtil.getLoginIdAsLong();
+        
+        // 从用户信息中获取id
+        Long userId = Long.valueOf(userInfo.get("id").toString());
         try {
             practice.setCreatedBy(userId);
             Practice createdPractice = practiceService.createPractice(practice);
@@ -141,11 +146,15 @@ public class PracticeController {
     }
 
     @PostMapping("/questions/{questionId}/favorite")
-    public Result<Void> favoriteQuestion(@PathVariable Long questionId) {
-        if (!StpUtil.isLogin()) {
+    public Result<Void> favoriteQuestion(@PathVariable Long questionId, @RequestHeader("satoken") String token) {
+        // 从user-service获取完整的用户信息
+        Map<String, Object> userInfo = userServiceClient.fetchCurrentUser(userServiceBaseUrl, token);
+        if (userInfo == null) {
             return Result.error("请先登录");
         }
-        Long studentId = StpUtil.getLoginIdAsLong();
+        
+        // 从用户信息中获取id
+        Long studentId = Long.valueOf(userInfo.get("id").toString());
         try {
             practiceService.favoriteQuestion(studentId, questionId);
             return Result.success(null, "收藏成功");
@@ -155,11 +164,15 @@ public class PracticeController {
     }
 
     @DeleteMapping("/questions/{questionId}/favorite")
-    public Result<Void> unfavoriteQuestion(@PathVariable Long questionId) {
-        if (!StpUtil.isLogin()) {
+    public Result<Void> unfavoriteQuestion(@PathVariable Long questionId, @RequestHeader("satoken") String token) {
+        // 从user-service获取完整的用户信息
+        Map<String, Object> userInfo = userServiceClient.fetchCurrentUser(userServiceBaseUrl, token);
+        if (userInfo == null) {
             return Result.error("请先登录");
         }
-        Long studentId = StpUtil.getLoginIdAsLong();
+        
+        // 从用户信息中获取id
+        Long studentId = Long.valueOf(userInfo.get("id").toString());
         try {
             practiceService.unfavoriteQuestion(studentId, questionId);
             return Result.success(null, "取消收藏成功");
@@ -169,22 +182,30 @@ public class PracticeController {
     }
 
     @GetMapping("/questions/favorites")
-    public Result<List<Map<String, Object>>> getFavoriteQuestions() {
-        if (!StpUtil.isLogin()) {
+    public Result<List<Map<String, Object>>> getFavoriteQuestions(@RequestHeader("satoken") String token) {
+        // 从user-service获取完整的用户信息
+        Map<String, Object> userInfo = userServiceClient.fetchCurrentUser(userServiceBaseUrl, token);
+        if (userInfo == null) {
             return Result.error("请先登录");
         }
-        Long studentId = StpUtil.getLoginIdAsLong();
+        
+        // 从用户信息中获取id
+        Long studentId = Long.valueOf(userInfo.get("id").toString());
         List<Map<String, Object>> questions = practiceService.getFavoriteQuestions(studentId);
         return Result.success(questions);
     }
 
     // 添加错题
     @PostMapping("/questions/{questionId}/wrong")
-    public Result<Boolean> addWrongQuestion(@PathVariable Long questionId, @RequestBody Map<String, String> data) {
-        if (!StpUtil.isLogin()) {
+    public Result<Boolean> addWrongQuestion(@PathVariable Long questionId, @RequestBody Map<String, String> data, @RequestHeader("satoken") String token) {
+        // 从user-service获取完整的用户信息
+        Map<String, Object> userInfo = userServiceClient.fetchCurrentUser(userServiceBaseUrl, token);
+        if (userInfo == null) {
             return Result.error("请先登录");
         }
-        Long studentId = StpUtil.getLoginIdAsLong();
+        
+        // 从用户信息中获取id
+        Long studentId = Long.valueOf(userInfo.get("id").toString());
         String wrongAnswer = data.get("wrongAnswer");
         practiceService.addWrongQuestion(studentId, questionId, wrongAnswer);
         return Result.success(true);
@@ -192,36 +213,60 @@ public class PracticeController {
 
     // 获取错题列表
     @GetMapping("/questions/wrong")
-    public Result<List<Map<String, Object>>> getWrongQuestions(@RequestHeader("X-User-Id") Long studentId) {
+    public Result<List<Map<String, Object>>> getWrongQuestions(@RequestHeader("satoken") String token) {
+        // 从user-service获取完整的用户信息
+        Map<String, Object> userInfo = userServiceClient.fetchCurrentUser(userServiceBaseUrl, token);
+        if (userInfo == null) {
+            return Result.error("请先登录");
+        }
+        
+        // 从用户信息中获取id
+        Long studentId = Long.valueOf(userInfo.get("id").toString());
         List<Map<String, Object>> questions = practiceService.getWrongQuestions(studentId);
         return Result.success(questions);
     }
 
     // 获取某个课程的错题列表
     @GetMapping("/questions/wrong/course/{courseId}")
-    public Result<List<Map<String, Object>>> getWrongQuestionsByCourse(
-            @RequestHeader("X-User-Id") Long studentId,
-            @PathVariable Long courseId) {
+    public Result<List<Map<String, Object>>> getWrongQuestionsByCourse(@PathVariable Long courseId, @RequestHeader("satoken") String token) {
+        // 从user-service获取完整的用户信息
+        Map<String, Object> userInfo = userServiceClient.fetchCurrentUser(userServiceBaseUrl, token);
+        if (userInfo == null) {
+            return Result.error("请先登录");
+        }
+        
+        // 从用户信息中获取id
+        Long studentId = Long.valueOf(userInfo.get("id").toString());
         List<Map<String, Object>> questions = practiceService.getWrongQuestionsByCourse(studentId, courseId);
         return Result.success(questions);
     }
 
     // 删除错题
     @DeleteMapping("/questions/{questionId}/wrong")
-    public Result<Boolean> removeWrongQuestion(
-            @RequestHeader("X-User-Id") Long studentId,
-            @PathVariable Long questionId) {
+    public Result<Boolean> removeWrongQuestion(@PathVariable Long questionId, @RequestHeader("satoken") String token) {
+        // 从user-service获取完整的用户信息
+        Map<String, Object> userInfo = userServiceClient.fetchCurrentUser(userServiceBaseUrl, token);
+        if (userInfo == null) {
+            return Result.error("请先登录");
+        }
+        
+        // 从用户信息中获取id
+        Long studentId = Long.valueOf(userInfo.get("id").toString());
         practiceService.removeWrongQuestion(studentId, questionId);
         return Result.success(true);
     }
 
 //    // 获取课程的所有练习
 //    @GetMapping("/course/{courseId}")
-//    public Result<List<Map<String, Object>>> getCoursePractices(@PathVariable Long courseId) {
-//        if (!StpUtil.isLogin()) {
+//    public Result<List<Map<String, Object>>> getCoursePractices(@PathVariable Long courseId, @RequestHeader("Authorization") String token) {
+//        // 从user-service获取完整的用户信息
+//        Map<String, Object> userInfo = userServiceClient.fetchCurrentUser(userServiceBaseUrl, token);
+//        if (userInfo == null) {
 //            return Result.error("请先登录");
 //        }
-//        Long studentId = StpUtil.getLoginIdAsLong();
+//        
+//        // 从用户信息中获取id
+//        Long studentId = Long.valueOf(userInfo.get("id").toString());
 //        List<Map<String, Object>> practices = practiceService.getCoursePractices(studentId, courseId);
 //        return Result.success(practices);
 //    }

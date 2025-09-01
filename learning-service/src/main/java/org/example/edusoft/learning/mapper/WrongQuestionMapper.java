@@ -6,7 +6,7 @@ import java.util.Map;
 
 @Mapper
 public interface WrongQuestionMapper {
-    @Select("SELECT COUNT(*) FROM wrong_question WHERE student_id = #{studentId} AND question_id = #{questionId}")
+    @Select("SELECT COUNT(*) > 0 FROM wrong_question WHERE student_id = #{studentId} AND question_id = #{questionId}")
     boolean existsWrongQuestion(@Param("studentId") Long studentId, @Param("questionId") Long questionId);
 
     @Insert("""
@@ -53,6 +53,26 @@ public interface WrongQuestionMapper {
             ORDER BY wq.last_wrong_time DESC
             """)
     List<Map<String, Object>> findWrongQuestions(@Param("studentId") Long studentId);
+
+    @Select("""
+            SELECT
+                q.id,
+                q.content,
+                q.type,
+                q.options,
+                q.answer,
+                q.course_id,
+                q.section_id,
+                wq.wrong_answer,
+                wq.last_wrong_time,
+                wq.wrong_count
+            FROM wrong_question wq
+            JOIN question q ON wq.question_id = q.id
+            WHERE wq.student_id = #{studentId}
+            AND q.course_id = #{courseId}
+            ORDER BY wq.last_wrong_time DESC
+            """)
+    List<Map<String, Object>> findWrongQuestionsByCourse(@Param("studentId") Long studentId, @Param("courseId") Long courseId);
 
     @Delete("DELETE FROM wrong_question WHERE student_id = #{studentId} AND question_id = #{questionId}")
     void deleteWrongQuestion(@Param("studentId") Long studentId, @Param("questionId") Long questionId);
