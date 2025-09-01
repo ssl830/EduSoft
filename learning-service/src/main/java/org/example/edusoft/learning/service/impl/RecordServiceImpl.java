@@ -30,7 +30,7 @@ import com.itextpdf.io.font.PdfEncodings; // 添加这个导入
 import java.util.HashSet;
 import java.util.Set;
 
-import org.example.edusoft.learning.client.UserClient;
+import org.example.edusoft.learning.client.UserServiceClient;
 import org.example.edusoft.learning.client.ContentClient;
 import org.example.edusoft.learning.client.CourseClient;
 
@@ -44,7 +44,7 @@ public class RecordServiceImpl implements RecordService {
     private PracticeRecordMapper practiceRecordMapper;
 
     @Autowired
-    private UserClient userClient;
+    private UserServiceClient userClient;
 
     @Autowired
     private ContentClient contentClient;

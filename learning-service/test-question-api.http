@@ -1,0 +1,75 @@
+### 题目管理接口测试
+
+### 1. 创建题目
+POST http://localhost:8083/api/practice/question/create
+Content-Type: application/json
+
+{
+  "courseId": 1,
+  "title": "什么是Java？",
+  "type": "单选题",
+  "options": ["编程语言", "数据库", "操作系统", "硬件"],
+  "answer": "编程语言",
+  "analysis": "Java是一种广泛使用的编程语言"
+}
+
+### 2. 更新题目
+PUT http://localhost:8083/api/practice/question/1
+Content-Type: application/json
+
+{
+  "courseId": 1,
+  "title": "什么是Java（更新版）？",
+  "type": "单选题",
+  "options": ["编程语言", "数据库", "操作系统", "硬件"],
+  "answer": "编程语言",
+  "analysis": "Java是一种广泛使用的面向对象编程语言"
+}
+
+### 3. 获取题目列表（全部）
+GET http://localhost:8083/api/practice/question/list
+
+### 4. 获取题目列表（按课程筛选）
+GET http://localhost:8083/api/practice/question/list?courseId=1
+
+### 5. 获取题目详情
+GET http://localhost:8083/api/practice/question/1
+
+### 6. 删除题目
+DELETE http://localhost:8083/api/practice/question/1
+
+### 7. 导入题目到练习
+POST http://localhost:8083/api/practice/question/import
+Content-Type: application/json
+
+{
+  "practiceId": 1001,
+  "questionIds": [1, 2, 3],
+  "scores": [10, 15, 20]
+}
+
+### 8. 按章节获取题目
+GET http://localhost:8083/api/practice/question/section?courseId=1&sectionId=1
+
+### 9. 批量创建题目
+POST http://localhost:8083/api/practice/question/batch
+Content-Type: application/json
+
+[
+  {
+    "courseId": 1,
+    "title": "什么是Python？",
+    "type": "单选题",
+    "options": ["编程语言", "数据库", "操作系统", "硬件"],
+    "answer": "编程语言",
+    "analysis": "Python是一种流行的高级编程语言"
+  },
+  {
+    "courseId": 1,
+    "title": "什么是JavaScript？",
+    "type": "单选题",
+    "options": ["编程语言", "数据库", "操作系统", "硬件"],
+    "answer": "编程语言",
+    "analysis": "JavaScript是一种广泛使用的网页脚本语言"
+  }
+]

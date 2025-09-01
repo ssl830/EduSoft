@@ -1,5 +1,4 @@
 package org.example.edusoft.controller;
-
 import jakarta.validation.Valid;
 import org.example.edusoft.common.Result;
 import org.example.edusoft.entity.CourseSection;
@@ -10,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/course-sections") //
+@RequestMapping("/api/course-sections") 
 public class CourseSectionController {
 
     @Autowired
