@@ -2,6 +2,7 @@ package org.example.edusoft.learning.service;
 
 import org.example.edusoft.learning.entity.Question;
 import org.example.edusoft.learning.dto.QuestionDTO;
+import org.example.edusoft.learning.dto.QuestionListDTO;
 import java.util.List;
 
 public interface QuestionService {
@@ -13,6 +14,8 @@ public interface QuestionService {
     List<Question> getQuestionList(Long courseId, Integer page, Integer size);
 
     Question getQuestionDetail(Long id);
+    
+    Question getQuestionById(Long id);
 
     void deleteQuestion(Long id);
 
@@ -24,7 +27,7 @@ public interface QuestionService {
 
     List<Question> getQuestionListByTeacherAndSection(Long teacherId, Long courseId, Long sectionId);
 
-    List<QuestionDTO> getQuestionListByCourse(Long courseId);
+    List<QuestionListDTO> getQuestionListByCourse(Long courseId);
 
-    List<QuestionDTO> getAllQuestions();
+    List<QuestionListDTO> getAllQuestions();
 }

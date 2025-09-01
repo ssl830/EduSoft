@@ -23,7 +23,7 @@ userId=T002&password=123456
 ### 1. 获取待批改提交列表
 POST http://localhost:8084/api/judge/pendinglist
 Content-Type: application/json
-satoken: b56578af-90db-4c72-abc4-a7c0ef83c806
+satoken: 62626453-a5b2-4969-89b0-5ba48ef88500
 
 {
   "practiceId": 1,
@@ -33,7 +33,7 @@ satoken: b56578af-90db-4c72-abc4-a7c0ef83c806
 ### 2. 获取提交详情
 POST http://localhost:8084/api/judge/pending
 Content-Type: application/json
-satoken: b56578af-90db-4c72-abc4-a7c0ef83c806
+satoken: 62626453-a5b2-4969-89b0-5ba48ef88500
 
 {
   "submissionId": 3
@@ -42,7 +42,7 @@ satoken: b56578af-90db-4c72-abc4-a7c0ef83c806
 ### 3. 判题操作
 POST http://localhost:8084/api/judge/judge
 Content-Type: application/json
-satoken: b56578af-90db-4c72-abc4-a7c0ef83c806
+satoken: 62626453-a5b2-4969-89b0-5ba48ef88500
 
 {
   "submissionId": 1,
@@ -67,7 +67,7 @@ satoken: b56578af-90db-4c72-abc4-a7c0ef83c806
 ### 1. 提交练习答案
 POST http://localhost:8084/api/submission/submit
 Content-Type: application/json
-satoken: b56578af-90db-4c72-abc4-a7c0ef83c806
+satoken: 62626453-a5b2-4969-89b0-5ba48ef88500
 
 {
   "practiceId": 1,
@@ -77,3 +77,13 @@ satoken: b56578af-90db-4c72-abc4-a7c0ef83c806
       "Java的面向对象特性包括封装、继承和多态。"
   ]
 }
+
+# 题目相关接口
+
+### 获取题目列表（带 courseId）
+GET http://localhost:8084/api/learning/question/list?courseId=4
+satoken: 62626453-a5b2-4969-89b0-5ba48ef88500
+
+### 获取题目列表（不带 courseId，返回全部题目）
+GET http://localhost:8084/api/learning/question/list
+satoken: 62626453-a5b2-4969-89b0-5ba48ef88500

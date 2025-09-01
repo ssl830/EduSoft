@@ -3,12 +3,16 @@ package org.example.edusoft.learning.service.impl;
 import lombok.RequiredArgsConstructor;
 import org.example.edusoft.learning.dto.QuestionDTO;
 import org.example.edusoft.learning.dto.QuestionListDTO;
+import org.example.edusoft.learning.client.CourseClient;
 import org.example.edusoft.learning.entity.Question;
 import org.example.edusoft.learning.exception.LearningException;
 import org.example.edusoft.learning.mapper.QuestionMapper;
 import org.example.edusoft.learning.service.QuestionService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -25,6 +29,31 @@ public class QuestionServiceImpl implements QuestionService {
     private static final String OPTION_SEPARATOR = "|||";
 
     private final QuestionMapper questionMapper;
+    private final CourseClient courseClient;
+
+    @org.springframework.beans.factory.annotation.Value("${services.course.base-url:http://localhost:8082}")
+    private String userServiceBaseUrl;
+
+    private String resolveOutboundToken() {
+        RequestAttributes attrs = RequestContextHolder.getRequestAttributes();
+        if (attrs instanceof ServletRequestAttributes servlet) {
+            String satoken = servlet.getRequest().getHeader("satoken");
+            if (satoken != null && !satoken.isEmpty())
+                return satoken;
+            String cookie = servlet.getRequest().getHeader("Cookie");
+            if (cookie != null) {
+                for (String part : cookie.split(";")) {
+                    String p = part.trim();
+                    if (p.startsWith("satoken="))
+                        return p.substring("satoken=".length());
+                }
+            }
+            String auth = servlet.getRequest().getHeader("Authorization");
+            if (auth != null && !auth.isEmpty())
+                return auth;
+        }
+        return null;
+    }
 
     @Override
     @Transactional
@@ -126,6 +155,11 @@ public class QuestionServiceImpl implements QuestionService {
         }
         processQuestionOptions(question);
         return question;
+    }
+
+    @Override
+    public Question getQuestionById(Long id) {
+        return questionMapper.getQuestionById(id);
     }
 
     @Override
@@ -248,20 +282,84 @@ public class QuestionServiceImpl implements QuestionService {
     }
 
     @Override
-    public List<QuestionDTO> getQuestionListByCourse(Long courseId) {
+    public List<QuestionListDTO> getQuestionListByCourse(Long courseId) {
         if (courseId == null) {
-            // 如果没有指定课程ID，则返回所有题目
-            return getAllQuestions();
+            throw new LearningException("COURSE_ID_REQUIRED", "课程ID不能为空");
         }
-        
+//        System.out.println(courseId);
         List<Question> questions = questionMapper.getQuestionsByCourseId(courseId);
-        return questions.stream().map(this::convertToDTO).collect(Collectors.toList());
+//        System.out.println(questions);
+        List<Long> courseIds = questions.stream().map(Question::getCourseId).distinct().collect(Collectors.toList());
+//        System.out.println("courseIdssssssssssssssssssssssssssssssssssssssssssssssss:");
+//        System.out.println(courseIds);
+
+        String token = resolveOutboundToken();
+        Map<Long, Map<String, Object>> courseMap = courseClient.getCoursesByIds(userServiceBaseUrl, token, courseIds);
+//        System.out.println(courseMap);
+
+
+        return questions.stream().map(q -> {
+            QuestionListDTO dto = new QuestionListDTO();
+            dto.setId(q.getId());
+            dto.setName(q.getContent());
+            dto.setCourseId(q.getCourseId());
+            dto.setCourseName(courseMap.getOrDefault(q.getCourseId(), Map.of()).getOrDefault("name", "").toString());
+            dto.setSectionId(q.getSectionId());
+            dto.setTeacherId(q.getCreatorId() == null ? "" : q.getCreatorId().toString());
+            dto.setType(q.getType() == null ? "" : q.getType().toString());
+            dto.setAnswer(q.getAnswer());
+            // 处理选项
+            if (q.getType() == Question.QuestionType.singlechoice && q.getOptions() != null) {
+                String[] options = q.getOptions().split("\\|\\|\\|");
+                List<Map<String, String>> formattedOptions = new ArrayList<>();
+                for (int i = 0; i < options.length; i++) {
+                    Map<String, String> option = new HashMap<>();
+                    option.put("key", String.valueOf((char)('A' + i)));
+                    option.put("text", options[i]);
+                    formattedOptions.add(option);
+                }
+                dto.setOptions(formattedOptions);
+            } else {
+                dto.setOptions(new ArrayList<>());
+            }
+            return dto;
+        }).collect(Collectors.toList());
     }
 
     @Override
-    public List<QuestionDTO> getAllQuestions() {
+    public List<QuestionListDTO> getAllQuestions() {
         List<Question> questions = questionMapper.getAllQuestions();
-        return questions.stream().map(this::convertToDTO).collect(Collectors.toList());
+        List<Long> courseIds = questions.stream().map(Question::getCourseId).distinct().collect(Collectors.toList());
+
+        String token = resolveOutboundToken();
+        Map<Long, Map<String, Object>> courseMap = courseClient.getCoursesByIds(userServiceBaseUrl, token, courseIds);
+
+        return questions.stream().map(q -> {
+            QuestionListDTO dto = new QuestionListDTO();
+            dto.setId(q.getId());
+            dto.setName(q.getContent());
+            dto.setCourseId(q.getCourseId());
+            dto.setCourseName(courseMap.getOrDefault(q.getCourseId(), Map.of()).getOrDefault("name", "").toString());
+            dto.setSectionId(q.getSectionId());
+            dto.setTeacherId(q.getCreatorId() == null ? "" : q.getCreatorId().toString());
+            dto.setType(q.getType() == null ? "" : q.getType().toString());
+            dto.setAnswer(q.getAnswer());
+            // 处理选项
+            if (q.getType() == Question.QuestionType.singlechoice && q.getOptions() != null) {
+                String[] options = q.getOptions().split("\\|\\|\\|");
+                List<Map<String, String>> formattedOptions = new ArrayList<>();
+                for (int i = 0; i < options.length; i++) {
+                    Map<String, String> option = new HashMap<>();
+                    option.put("key", String.valueOf((char)('A' + i)));
+                    option.put("text", options[i]);
+                    formattedOptions.add(option);
+                }
+                dto.setOptions(formattedOptions);
+            } else {
+                dto.setOptions(new ArrayList<>());
+            }
+            return dto;
+        }).collect(Collectors.toList());
     }
 
     /**

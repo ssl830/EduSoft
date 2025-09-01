@@ -1,6 +1,8 @@
 package org.example.edusoft.learning.client;
 
 import org.example.edusoft.learning.exception.ServiceCallException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -8,6 +10,9 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.util.Map;
 
@@ -16,6 +21,7 @@ import java.util.Map;
  * 提供统一的调用方式和异常处理
  */
 public abstract class BaseServiceClient {
+    private static final Logger logger = LoggerFactory.getLogger(BaseServiceClient.class);
     
     @Autowired
     protected RestTemplate restTemplate;
@@ -68,19 +74,58 @@ public abstract class BaseServiceClient {
             HttpHeaders headers = new HttpHeaders();
             headers.set("Content-Type", "application/json");
             
+            // 获取并传递认证token
+            String token = resolveOutboundToken();
+            if (token != null && !token.isEmpty()) {
+                String pureToken = token.replace("Bearer ", "");
+                // 设置satoken头（符合Sa-Token框架）
+                headers.set("satoken", pureToken);
+                // 同时设置Authorization头作为备选
+                headers.set("Authorization", "Bearer " + pureToken);
+                logger.debug("Forwarding token to {}: {}", getServiceName(), pureToken);
+            } else {
+                logger.warn("No authentication token found for request to {}", getServiceName());
+            }
+            
             HttpEntity<?> entity = new HttpEntity<>(requestBody, headers);
             ResponseEntity<T> response = restTemplate.exchange(url, method, entity, responseType);
             
             return response.getBody();
         } catch (HttpStatusCodeException ex) {
+            logger.error("HTTP error calling {}: {} - {}", getServiceName(), ex.getStatusCode(), ex.getResponseBodyAsString());
             throw new ServiceCallException(
                 getServiceName(), 
                 ex.getStatusCode().value(), 
                 ex.getResponseBodyAsString()
             );
         } catch (Exception ex) {
+            logger.error("Error calling {}: {}", getServiceName(), ex.getMessage(), ex);
             throw new ServiceCallException(getServiceName(), ex.getMessage(), ex);
         }
+    }
+    
+    /**
+     * 获取当前请求的认证token
+     */
+    private String resolveOutboundToken() {
+        RequestAttributes attrs = RequestContextHolder.getRequestAttributes();
+        if (attrs instanceof ServletRequestAttributes servlet) {
+            String satoken = servlet.getRequest().getHeader("satoken");
+            if (satoken != null && !satoken.isEmpty())
+                return satoken;
+            String cookie = servlet.getRequest().getHeader("Cookie");
+            if (cookie != null) {
+                for (String part : cookie.split(";")) {
+                    String p = part.trim();
+                    if (p.startsWith("satoken="))
+                        return p.substring("satoken=".length());
+                }
+            }
+            String auth = servlet.getRequest().getHeader("Authorization");
+            if (auth != null && !auth.isEmpty())
+                return auth;
+        }
+        return null;
     }
     
     /**
