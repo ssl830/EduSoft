@@ -17,6 +17,8 @@ import org.example.edusoft.learning.Result;
 import org.example.edusoft.learning.entity.PracticeRecord;
 import org.example.edusoft.learning.entity.StudyRecord;
 import org.example.edusoft.learning.entity.QuestionRecord;
+import java.util.HashMap;
+import org.example.edusoft.learning.mapper.PracticeRecordMapper;
 
 @RestController
 @RequestMapping("/api/record")
@@ -27,6 +29,9 @@ public class RecordController {
 
     @Autowired
     private UserServiceClient userClient;
+
+    @Autowired
+    private PracticeRecordMapper practiceRecordMapper;
 
     @Value("${services.user.base-url:http://localhost:8081}")
     private String userServiceBaseUrl;
@@ -252,23 +257,46 @@ public class RecordController {
     // 获得某次练习提交的报告
     @GetMapping("/submission/{submissionId}/report")
     public Result<Map<String, Object>> getSubmissionReport(@PathVariable Long submissionId, HttpServletRequest request) {
+        System.out.println("=== Controller getSubmissionReport 开始 ===");
+        System.out.println("submissionId: " + submissionId);
+        
         try {
             String token = request.getHeader("satoken");
+            System.out.println("Token: " + (token != null ? "存在" : "不存在"));
+            
             if (token == null || token.isEmpty()) {
+                System.out.println("Token为空，返回请先登录");
                 return Result.error("请先登录");
             }
 
+            System.out.println("正在获取用户信息...");
             Map<String, Object> userInfo = userClient.fetchCurrentUser(userServiceBaseUrl, token);
+            System.out.println("用户信息: " + userInfo);
+            
             if (userInfo == null || userInfo.get("id") == null) {
+                System.out.println("用户信息无效，返回请先登录");
                 return Result.error("请先登录");
             }
+            
             Long studentId = Long.valueOf(userInfo.get("id").toString());
+            System.out.println("studentId: " + studentId);
+            
+            System.out.println("正在调用Service层...");
             Map<String, Object> report = recordService.getSubmissionReport(submissionId, studentId);
+            System.out.println("Service层返回结果: " + (report != null ? "有数据" : "null"));
+            
             if (report == null || report.isEmpty()) {
+                System.out.println("报告为空，返回未找到该提交记录");
                 return Result.error("未找到该提交记录");
             }
+            
+            System.out.println("报告获取成功，返回成功结果");
             return Result.success(report);
         } catch (Exception e) {
+            System.out.println("=== Controller getSubmissionReport 出现异常 ===");
+            System.out.println("异常类型: " + e.getClass().getName());
+            System.out.println("异常信息: " + e.getMessage());
+            e.printStackTrace();
             return Result.error("获取练习报告失败: " + e.getMessage());
         }
     }
@@ -318,5 +346,106 @@ public class RecordController {
         response.setContentType("application/json;charset=UTF-8");
         response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
         response.getWriter().write(String.format("{\"code\":400,\"message\":\"%s\"}", message));
+    }
+
+    // 调试接口：检查练习记录数据
+    @GetMapping("/debug/practice/{courseId}")
+    public Result<Map<String, Object>> debugPracticeRecords(@PathVariable Long courseId, HttpServletRequest request) {
+        try {
+            String token = request.getHeader("satoken");
+            if (token == null || token.isEmpty()) {
+                return Result.error("请先登录");
+            }
+
+            Map<String, Object> userInfo = userClient.fetchCurrentUser(userServiceBaseUrl, token);
+            if (userInfo == null || userInfo.get("id") == null) {
+                return Result.error("请先登录");
+            }
+            Long studentId = Long.valueOf(userInfo.get("id").toString());
+            
+            // 检查数据库中的数据
+            Map<String, Object> debugInfo = new HashMap<>();
+            debugInfo.put("studentId", studentId);
+            debugInfo.put("courseId", courseId);
+            
+            // 检查submission表
+            try {
+                List<Map<String, Object>> submissions = practiceRecordMapper.debugFindSubmissions(studentId, courseId);
+                debugInfo.put("submissions", submissions);
+                debugInfo.put("submissionCount", submissions != null ? submissions.size() : 0);
+            } catch (Exception e) {
+                debugInfo.put("submissionError", e.getMessage());
+            }
+            
+            // 检查practice表
+            try {
+                List<Map<String, Object>> practices = practiceRecordMapper.debugFindPractices(courseId);
+                debugInfo.put("practices", practices);
+                debugInfo.put("practiceCount", practices != null ? practices.size() : 0);
+            } catch (Exception e) {
+                debugInfo.put("practiceError", e.getMessage());
+            }
+            
+            return Result.success(debugInfo);
+        } catch (Exception e) {
+            return Result.error("调试失败: " + e.getMessage());
+        }
+    }
+
+    // 调试接口：检查提交记录数据
+    @GetMapping("/debug/submission/{submissionId}")
+    public Result<Map<String, Object>> debugSubmissionRecord(@PathVariable Long submissionId, HttpServletRequest request) {
+        try {
+            String token = request.getHeader("satoken");
+            if (token == null || token.isEmpty()) {
+                return Result.error("请先登录");
+            }
+
+            Map<String, Object> userInfo = userClient.fetchCurrentUser(userServiceBaseUrl, token);
+            if (userInfo == null || userInfo.get("id") == null) {
+                return Result.error("请先登录");
+            }
+            Long studentId = Long.valueOf(userInfo.get("id").toString());
+            
+            // 检查数据库中的数据
+            Map<String, Object> debugInfo = new HashMap<>();
+            debugInfo.put("submissionId", submissionId);
+            debugInfo.put("studentId", studentId);
+            
+            // 检查submission表
+            try {
+                PracticeRecord submission = practiceRecordMapper.findSubmissionDetail(submissionId, studentId);
+                if (submission != null) {
+                    debugInfo.put("submission", submission);
+                    debugInfo.put("submissionFound", true);
+                    
+                    // 检查题目信息
+                    try {
+                        List<QuestionRecord> questions = practiceRecordMapper.findQuestionsBySubmissionId(submissionId);
+                        debugInfo.put("questions", questions);
+                        debugInfo.put("questionCount", questions != null ? questions.size() : 0);
+                    } catch (Exception e) {
+                        debugInfo.put("questionError", e.getMessage());
+                    }
+                } else {
+                    debugInfo.put("submissionFound", false);
+                }
+            } catch (Exception e) {
+                debugInfo.put("submissionError", e.getMessage());
+            }
+            
+            // 检查所有submission记录
+            try {
+                List<Map<String, Object>> allSubmissions = practiceRecordMapper.debugFindAllSubmissions(studentId);
+                debugInfo.put("allSubmissions", allSubmissions);
+                debugInfo.put("totalSubmissionCount", allSubmissions != null ? allSubmissions.size() : 0);
+            } catch (Exception e) {
+                debugInfo.put("allSubmissionError", e.getMessage());
+            }
+            
+            return Result.success(debugInfo);
+        } catch (Exception e) {
+            return Result.error("调试失败: " + e.getMessage());
+        }
     }
 }

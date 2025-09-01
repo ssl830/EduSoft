@@ -31,4 +31,101 @@ public class PracticeRecord {
     // 添加课程ID和班级ID字段
     private Long courseId;
     private Long classId;
+
+    // 手动添加getter/setter方法
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Long getPracticeId() {
+        return practiceId;
+    }
+
+    public void setPracticeId(Long practiceId) {
+        this.practiceId = practiceId;
+    }
+
+    public Long getStudentId() {
+        return studentId;
+    }
+
+    public void setStudentId(Long studentId) {
+        this.studentId = studentId;
+    }
+
+    public LocalDateTime getSubmittedAt() {
+        return submittedAt;
+    }
+
+    public void setSubmittedAt(LocalDateTime submittedAt) {
+        this.submittedAt = submittedAt;
+    }
+
+    public Integer getScore() {
+        return score;
+    }
+
+    public void setScore(Integer score) {
+        this.score = score;
+    }
+
+    public String getFeedback() {
+        return feedback;
+    }
+
+    public void setFeedback(String feedback) {
+        this.feedback = feedback;
+    }
+
+    public List<QuestionRecord> getQuestions() {
+        return questions;
+    }
+
+    public void setQuestions(List<QuestionRecord> questions) {
+        this.questions = questions;
+    }
+
+    public String getPracticeTitle() {
+        return practiceTitle;
+    }
+
+    public void setPracticeTitle(String practiceTitle) {
+        this.practiceTitle = practiceTitle;
+    }
+
+    public String getCourseName() {
+        return courseName;
+    }
+
+    public void setCourseName(String courseName) {
+        this.courseName = courseName;
+    }
+
+    public String getClassName() {
+        return className;
+    }
+
+    public void setClassName(String className) {
+        this.className = className;
+    }
+
+    public Long getCourseId() {
+        return courseId;
+    }
+
+    public void setCourseId(Long courseId) {
+        this.courseId = courseId;
+    }
+
+    public Long getClassId() {
+        return classId;
+    }
+
+    public void setClassId(Long classId) {
+        this.classId = classId;
+    }
 }
