@@ -97,7 +97,18 @@ public class CourseClient extends BaseServiceClient {
         if (classId == null) {
             throw new IllegalArgumentException("班级ID不能为空");
         }
-        return get("/api/classes/" + classId + "/users", List.class);
+        Object resp = get("/api/classes/" + classId + "/users", Object.class);
+        // 兼容Result对象包裹
+        if (resp instanceof Map) {
+            Object dataObj = ((Map<?, ?>) resp).get("data");
+            if (dataObj instanceof List) {
+                return (List<Map<String, Object>>) dataObj;
+            }
+        }
+        if (resp instanceof List) {
+            return (List<Map<String, Object>>) resp;
+        }
+        return List.of();
     }
 
     /**

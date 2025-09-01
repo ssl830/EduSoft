@@ -118,4 +118,14 @@ public class ContentClient extends BaseServiceClient {
             return false;
         }
     }
+
+    /**
+     * 新建通知
+     */
+    public Map<String, Object> createNotification(Map<String, Object> notification) {
+        if (notification == null || notification.isEmpty()) {
+            throw new IllegalArgumentException("通知内容不能为空");
+        }
+        return post("/api/content/notification", notification, Map.class);
+    }
 }
