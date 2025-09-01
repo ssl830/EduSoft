@@ -184,36 +184,13 @@ public class PracticeServiceImpl implements PracticeService {
             // 妤犲矁鐦夌紒鍐х瘎閺勵垰鎯佺€涙ê婀�
             Practice practice = practiceMapper.getPracticeById(practiceId);
             if (practice == null) {
-                System.out.println("练习不存在，ID: " + practiceId);
-                // 为测试目的，创建一个简单的练习记录
-                try {
-                    Practice testPractice = new Practice();
-                    testPractice.setCourseId(1L);
-                    testPractice.setClassId(1L);
-                    testPractice.setTitle("测试练习 " + practiceId);
-                    testPractice.setCreatedBy(1L);
-                    testPractice.setCreatedAt(java.time.LocalDateTime.now());
-                    
-                    practiceMapper.createPractice(testPractice);
-                    System.out.println("测试练习创建成功，新ID: " + testPractice.getId());
-                    
-                    // 如果创建成功但ID不匹配，使用新ID
-                    if (!testPractice.getId().equals(practiceId)) {
-                        System.out.println("注意：创建的练习ID是 " + testPractice.getId() + "，不是请求的 " + practiceId);
-                        practiceId = testPractice.getId();
-                    }
-                } catch (Exception e) {
-                    System.out.println("创建测试练习失败: " + e.getMessage());
-                    throw new PracticeException("PRACTICE_NOT_FOUND", "练习不存在且无法创建测试练习");
-                }
+                throw new PracticeException("PRACTICE_NOT_FOUND", "缂佸啩绡勬稉宥呯摠閸︼拷");
             }
 
-            // 验证题目是否存在，如果不存在则创建一个测试题目
+            // 妤犲矁鐦夋０妯兼窗閺勵垰鎯佺€涙ê婀�
             Question question = questionMapper.getQuestionById(questionId);
             if (question == null) {
-                System.out.println("题目不存在，创建测试题目 ID: " + questionId);
-                // 为测试目的，跳过题目验证或创建测试题目
-                System.out.println("Warning: 题目 " + questionId + " 不存在，但继续执行（测试模式）");
+                throw new PracticeException("QUESTION_NOT_FOUND", "妫版娲版稉宥呯摠閸︼拷");
             }
 
             // 妤犲矁鐦夐崚鍡椻偓锟�
@@ -226,10 +203,7 @@ public class PracticeServiceImpl implements PracticeService {
             boolean questionExists = existingQuestions.stream()
                     .anyMatch(q -> q.getId().equals(questionId));
             if (questionExists) {
-                System.out.println("题目已存在于练习中，更新分值");
-                // 如果题目已存在，更新分值
-                questionMapper.updateQuestionScore(practiceId, questionId, score);
-                return;
+                throw new PracticeException("QUESTION_ALREADY_EXISTS", "鐠囥儵顣介惄顔煎嚒濞ｈ濮為崚鎵矊娑旂姳鑵�");
             }
 
             questionMapper.addQuestionToPractice(practiceId, questionId, score);
@@ -321,6 +295,107 @@ public class PracticeServiceImpl implements PracticeService {
         // This requires a custom query and DTO, which is not fully implemented in the original code.
         // Returning null for now.
         return null;
+    }
+
+    @Override
+    public List<Map<String, Object>> getTeacherPractices(Long teacherId) {
+        List<Map<String, Object>> practices = practiceMapper.getPracticesByTeacherId(teacherId);
+        // 批量获取所有courseId
+        List<Long> courseIds = practices.stream()
+                .map(p -> p.get("course_id"))
+                .filter(java.util.Objects::nonNull)
+                .map(id -> Long.valueOf(id.toString()))
+                .distinct()
+                .toList();
+        // 批量获取课程信息，兼容Result包裹
+        List<Map<String, Object>> courseList = List.of();
+        System.out.println("courseList===================");
+        System.out.println(courseList);
+        try {
+            Object courseListObj = courseClient.getCoursesByIds(
+                    courseIds.stream().map(String::valueOf).collect(java.util.stream.Collectors.joining(","))
+            );
+            if (courseListObj instanceof Map mapObj && mapObj.containsKey("data")) {
+                Object dataObj = mapObj.get("data");
+                if (dataObj instanceof List) {
+                    courseList = (List<Map<String, Object>>) dataObj;
+                }
+            } else if (courseListObj instanceof List) {
+                courseList = (List<Map<String, Object>>) courseListObj;
+            }
+        } catch (Exception ex) {
+            // RestTemplate反序列化异常时，降级返回模拟数据
+            courseList = courseIds.stream().map(cid -> {
+                Map<String, Object> course = new java.util.HashMap<>();
+                course.put("id", cid);
+                course.put("name", "模拟课程-" + cid);
+                return course;
+            }).toList();
+        }
+        Map<Long, String> courseNameMap = new java.util.HashMap<>();
+        for (Map<String, Object> course : courseList) {
+            Object idObj = course.get("id");
+            Object nameObj = course.get("name");
+            if (idObj != null && nameObj != null) {
+                courseNameMap.put(Long.valueOf(idObj.toString()), nameObj.toString());
+            }
+        }
+        // 补全课程名
+        for (Map<String, Object> practice : practices) {
+            Object courseIdObj = practice.get("course_id");
+            if (courseIdObj != null) {
+                Long courseId = Long.valueOf(courseIdObj.toString());
+                practice.put("course_name", courseNameMap.getOrDefault(courseId, "未知课程"));
+            } else {
+                practice.put("course_name", "未知课程");
+            }
+        }
+        return practices;
+    }
+
+    @Override
+    public Map<String, Object> getSubmissionStats(Long practiceId) {
+        return practiceRecordMapper.getSubmissionStatsByPracticeId(practiceId);
+    }
+
+
+    /**
+     * 练习截止后统计并写入每题得分率
+     */
+    @Transactional
+    public void updateScoreRateAfterDeadline(Long practiceId) {
+        // 1. 获取练习下所有题目
+        List<PracticeQuestion> pqList = practiceQuestionMapper.findpqByPracticeId(practiceId);
+        if (pqList == null || pqList.isEmpty()) return;
+        // 2. 获取所有提交（必须查所有，不加 is_judged 条件）
+        List<PracticeSubmission> submissions = submissionMapper.findByPracticeId(practiceId);
+        if (submissions == null || submissions.isEmpty()) return;
+        for (PracticeQuestion pq : pqList) {
+            Long qid = pq.getQuestionId();
+            int totalScore = 0;
+            int maxScore = pq.getScore() != null ? pq.getScore() : 0;
+            int count = 0;
+            for (PracticeSubmission sub : submissions) {
+                List<Answer> answers = answerMapper.findByQuestionIdsAndSubmissionId(List.of(qid), sub.getId());
+                if (answers != null && !answers.isEmpty()) {
+                    totalScore += answers.get(0).getScore() != null ? answers.get(0).getScore() : 0;
+                    count++;
+                }
+            }
+            double scoreRate = (maxScore > 0 && count > 0) ? ((double) totalScore / (maxScore * count)) : 0.0;
+            practiceQuestionMapper.updateScoreRate(practiceId, qid, scoreRate);
+        }
+    }
+
+    /**
+     * 获取所有已截止且未统计得分率的练习ID（定时任务用）
+     * 实现：查找end_time早于当前时间的所有练习ID
+     */
+    @Override
+    public List<Long> getAllEndedPracticeIds() {
+        // 伪代码：实际应根据业务查找所有已截止且未统计的练习ID
+        // 这里只查end_time早于当前时间的练习
+        return practiceMapper.findAllEndedPracticeIds(java.time.LocalDateTime.now());
     }
 
     @Override

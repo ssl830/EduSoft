@@ -126,7 +126,7 @@ satoken: a4154b98-4285-4561-a806-d2903ffde689
 ### 第五步：课程章节管理接口测试
 
 ### 20. 创建课程章节
-POST http://localhost:8082/api/course-sections
+POST http://localhost:8082/api/courses
 Content-Type: application/json
 satoken: a4154b98-4285-4561-a806-d2903ffde689
 
@@ -137,11 +137,11 @@ satoken: a4154b98-4285-4561-a806-d2903ffde689
 }
 
 ### 21. 获取课程章节列表
-GET http://localhost:8082/api/course-sections/course/2
+GET http://localhost:8082/api/courses/course/2
 satoken: 5b561e2d-4db1-4c96-919d-73aee9223c7f
 
 ### 22. 更新课程章节
-PUT http://localhost:8082/api/course-sections/10
+PUT http://localhost:8082/api/courses/10
 Content-Type: application/json
 satoken: a4154b98-4285-4561-a806-d2903ffde689
 
@@ -153,7 +153,7 @@ satoken: a4154b98-4285-4561-a806-d2903ffde689
 
 ### 23. 获取特定章节
 
-GET http://localhost:8082/api/course-sections/section/6
+GET http://localhost:8082/api/courses/section/6
 satoken: 18d98164-1191-482e-b4e4-e57dae50e980
 
 
@@ -192,7 +192,7 @@ satoken: a4154b98-4285-4561-a806-d2903ffde689
 ### 第七步：清理测试数据
 
 ### 26. 删除课程章节
-DELETE http://localhost:8082/api/course-sections/10
+DELETE http://localhost:8082/api/courses/10
 satoken: a4154b98-4285-4561-a806-d2903ffde689
 
 ### 27. 删除班级
