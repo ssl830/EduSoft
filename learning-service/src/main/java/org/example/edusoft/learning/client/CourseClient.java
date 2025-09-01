@@ -61,15 +61,17 @@ public class CourseClient extends BaseServiceClient {
     }
 
     /**
-     * 根据章节ID获取章节信息 
+     * 根据章节ID获取章节信息
      */
     public Map<String, Object> getSectionById(Long sectionId) {
         if (sectionId == null) {
             throw new IllegalArgumentException("章节ID不能为空");
         }
-        return getForMap("/api/course-sections/" + sectionId);
+        System.out.println("DEBUG: CourseClient.getSectionById called with sectionId: " + sectionId);
+        System.out.println("DEBUG: Calling URL: /api/course-sections/section/" + sectionId);
+        return getForMap("/api/course-sections/section/" + sectionId);
     }
-
+    
     /**
      * 根据章节ID批量获取章节信息，完成微服务化改造
      */

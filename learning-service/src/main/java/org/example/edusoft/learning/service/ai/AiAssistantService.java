@@ -621,13 +621,9 @@ public class AiAssistantService implements AiServiceCaller {
             }
             
             // 获取章节信息
-            if (req.containsKey("section_id") && req.containsKey("course_id")) {
+            if (req.containsKey("section_id")) {
                 Object sectionIdObj = req.get("section_id");
-                Object courseIdObj = req.get("course_id");
                 Long sectionId = null;
-                Long courseId = null;
-                
-                // 解析 section_id
                 if (sectionIdObj instanceof Number) {
                     sectionId = ((Number) sectionIdObj).longValue();
                 } else if (sectionIdObj instanceof String) {
@@ -639,64 +635,30 @@ public class AiAssistantService implements AiServiceCaller {
                     }
                 }
                 
-                // 解析 course_id  
-                if (courseIdObj instanceof Number) {
-                    courseId = ((Number) courseIdObj).longValue();
-                } else if (courseIdObj instanceof String) {
+                if (sectionId != null) {
                     try {
-                        courseId = Long.parseLong((String) courseIdObj);
-                    } catch (NumberFormatException e) {
-                        logger.warn("Invalid course_id format: {}", courseIdObj);
-                        return;
-                    }
-                }
-                
-                if (sectionId != null && courseId != null) {
-                    try {
-                        logger.info("Fetching section info for section_id: {} in course_id: {}", sectionId, courseId);
-                        // 由于没有按ID获取单个章节的接口，我们需要获取课程下的所有章节然后筛选
-                        List<Map<String, Object>> sections = courseClient.getSectionsByCourseId(courseId);
-                        logger.info("Found {} sections for course {}", sections != null ? sections.size() : 0, courseId);
+                        logger.info("Fetching section info for section_id: {}", sectionId);
+                        logger.info("Calling URL: /api/course-sections/{}", sectionId);
+                        Map<String, Object> result = courseClient.getSectionById(sectionId);
+                        logger.info("Raw section service response: {}", result);
                         
-                        Map<String, Object> targetSection = null;
-                        if (sections != null) {
-                            for (Map<String, Object> section : sections) {
-                                Object idObj = section.get("id");
-                                if (idObj != null) {
-                                    Long currentId = null;
-                                    if (idObj instanceof Number) {
-                                        currentId = ((Number) idObj).longValue();
-                                    } else if (idObj instanceof String) {
-                                        try {
-                                            currentId = Long.parseLong((String) idObj);
-                                        } catch (NumberFormatException e) {
-                                            continue;
-                                        }
-                                    }
-                                    
-                                    if (sectionId.equals(currentId)) {
-                                        targetSection = section;
-                                        logger.info("Found target section: {}", section.keySet());
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                        
-                        if (targetSection != null) {
+                        if (result != null && result.get("data") != null) {
+                            Map<String, Object> sectionInfo = (Map<String, Object>) result.get("data");
+                            logger.info("Section data: {}", sectionInfo);
+                            
                             // 添加章节内容作为 lesson_content（如果请求中没有）
                             if (!req.containsKey("lesson_content")) {
-                                Object content = targetSection.get("content");
-                                if (content == null) content = targetSection.get("sectionContent");
-                                if (content == null) content = targetSection.get("outline");
+                                Object content = sectionInfo.get("content");
+                                if (content == null) content = sectionInfo.get("sectionContent");
+                                if (content == null) content = sectionInfo.get("outline");
                                 if (content != null && !content.toString().trim().isEmpty()) {
                                     req.put("lesson_content", content);
                                     logger.info("Added lesson_content from section: {}", content);
                                 } else {
                                     // 使用章节标题作为默认内容
-                                    Object title = targetSection.get("title");
-                                    if (title == null) title = targetSection.get("sectionTitle");
-                                    if (title == null) title = targetSection.get("name");
+                                    Object title = sectionInfo.get("title");
+                                    if (title == null) title = sectionInfo.get("sectionTitle");
+                                    if (title == null) title = sectionInfo.get("name");
                                     if (title != null) {
                                         req.put("lesson_content", title.toString());
                                         logger.info("Added lesson_content from section title: {}", title);
@@ -709,9 +671,9 @@ public class AiAssistantService implements AiServiceCaller {
                             
                             // 添加章节标题
                             if (!req.containsKey("section_title")) {
-                                Object sectionTitle = targetSection.get("title");
-                                if (sectionTitle == null) sectionTitle = targetSection.get("sectionTitle");
-                                if (sectionTitle == null) sectionTitle = targetSection.get("name");
+                                Object sectionTitle = sectionInfo.get("title");
+                                if (sectionTitle == null) sectionTitle = sectionInfo.get("sectionTitle");
+                                if (sectionTitle == null) sectionTitle = sectionInfo.get("name");
                                 if (sectionTitle != null) {
                                     req.put("section_title", sectionTitle);
                                     logger.info("Added section_title: {}", sectionTitle);
@@ -720,7 +682,7 @@ public class AiAssistantService implements AiServiceCaller {
                             
                             // 如果章节信息包含课程ID，也获取课程信息
                             if (!req.containsKey("course_id")) {
-                                Object courseIdFromSection = targetSection.get("courseId");
+                                Object courseIdFromSection = sectionInfo.get("courseId");
                                 if (courseIdFromSection != null) {
                                     req.put("course_id", courseIdFromSection);
                                     logger.info("Found course_id from section: {}", courseIdFromSection);
@@ -733,7 +695,7 @@ public class AiAssistantService implements AiServiceCaller {
                                 }
                             }
                         } else {
-                            logger.warn("Section not found for section_id: {} in course_id: {}", sectionId, courseId);
+                            logger.warn("Section service returned null or no data for section_id: {}, response: {}", sectionId, result);
                         }
                     } catch (Exception e) {
                         logger.error("Failed to fetch section info for section_id {}: {}", sectionId, e.getMessage());

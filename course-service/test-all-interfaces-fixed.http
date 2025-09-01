@@ -152,8 +152,8 @@ satoken: a4154b98-4285-4561-a806-d2903ffde689
 }
 
 ### 23. 获取特定章节
-GET http://localhost:8082/api/course-sections/section/5
-satoken: 9a351971-897a-410b-b62b-d5bb4235b400
+GET http://localhost:8082/api/course-sections/section/6
+satoken: 18d98164-1191-482e-b4e4-e57dae50e980
 
 ### 第六步：学生导入管理接口测试
 
