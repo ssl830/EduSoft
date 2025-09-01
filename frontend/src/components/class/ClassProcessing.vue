@@ -138,7 +138,7 @@ const checkPractice = (submissionId: number) => {
     console.log("selectedExer.value:", selectedExer.value)
     console.log()
     if(selectedExer.value == -1){
-        error.value = '请选择一个练习进行批改'
+        setError('请选择一个练习进行批改')
         return
     }
     router.push({
@@ -180,6 +180,11 @@ const viewPracticeDetail = (practiceId: any) => {
 // 在<script setup>中添加：
 const editPractice = (practiceId: any) => {
     router.push({ name: 'ExerciseEdit', params: { id: practiceId } })
+}
+
+// 新增：设置错误信息，避免模板直接赋值
+const setError = (msg: string) => {
+    error.value = msg
 }
 
 onMounted(() => {
@@ -263,7 +268,7 @@ onMounted(() => {
                         <td class="actions">
                             <button
                                 class="btn-action history"
-                                @click="selectedExer !== -1 ? checkPractice(item.submissionId) : error.value = '请选择一个练习进行批改'"
+                                @click="selectedExer !== -1 ? checkPractice(item.submissionId) : setError('请选择一个练习进行批改')"
                                 :disabled="selectedExer === -1"
                                 title="批改"
                             >
