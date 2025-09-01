@@ -31,4 +31,11 @@ public class PracticeSubmission {
     private Integer score = 0;
 
     private String feedback;
+    
+    // 添加课程ID和班级ID字段
+    @Column(name = "course_id")
+    private Long courseId;
+    
+    @Column(name = "class_id")
+    private Long classId;
 }

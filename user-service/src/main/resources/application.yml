@@ -8,7 +8,7 @@ spring:
   datasource:
     url: jdbc:mysql://localhost:3306/user-db?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
     username: root
-    password: 20240323
+    password: lyt999999
     driver-class-name: com.mysql.cj.jdbc.Driver
 
 # CORS配置

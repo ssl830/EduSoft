@@ -1,10 +1,10 @@
-package org.example.edusoft.learning.service;
+package org.example.edusoft.learning.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Param;
 import java.util.List;
-import org.example.edusoft.entity.record.StudyRecord; // Make sure this path matches your actual StudyRecord location
+import org.example.edusoft.learning.entity.StudyRecord;
 
 
 /*

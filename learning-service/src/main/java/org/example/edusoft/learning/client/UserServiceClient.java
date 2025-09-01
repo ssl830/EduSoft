@@ -171,4 +171,35 @@ public class UserServiceClient {
 			return false;
 		}
 	}
+
+	/**
+	 * 根据用户ID获取用户信息
+	 * @param userId 用户ID
+	 * @return 用户信息Map，如果失败返回null
+	 */
+	public Map<String, Object> getUserById(Long userId) {
+		try {
+			// 使用默认的用户服务地址
+			String defaultBaseUrl = "http://localhost:8081";
+			return fetchUserById(defaultBaseUrl, "test_token", String.valueOf(userId));
+		} catch (Exception ex) {
+			logger.debug("获取用户信息失败: {}", ex.getMessage());
+			return null;
+		}
+	}
+
+	/**
+	 * 检查用户是否存在
+	 * @param userId 用户ID
+	 * @return 如果用户存在返回true，否则返回false
+	 */
+	public boolean userExists(Long userId) {
+		try {
+			Map<String, Object> userInfo = getUserById(userId);
+			return userInfo != null && !userInfo.isEmpty();
+		} catch (Exception ex) {
+			logger.debug("检查用户是否存在失败: {}", ex.getMessage());
+			return false;
+		}
+	}
 }

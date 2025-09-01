@@ -2,7 +2,7 @@ package org.example.edusoft.learning.service.ai;
 
 import org.example.edusoft.learning.ai.AIServiceClient;
 import org.example.edusoft.learning.client.CourseClient;
-import org.example.edusoft.learning.client.UserClient;
+import org.example.edusoft.learning.client.UserServiceClient;
 import org.example.edusoft.learning.client.ContentClient;
 import org.example.edusoft.learning.entity.Practice;
 import org.example.edusoft.learning.entity.ai.AiServiceCallLog;
@@ -51,7 +51,7 @@ public class AiAssistantService implements AiServiceCaller {
     private CourseClient courseClient;
 
     @Autowired
-    private UserClient userClient;
+    private UserServiceClient userServiceClient;
 
     @Autowired
     private ContentClient contentClient;

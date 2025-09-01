@@ -1,7 +1,8 @@
 package org.example.edusoft.learning.service;
 import java.util.List;
 import java.util.Map;
-import org.example.edusoft.entity.record.*;
+import org.example.edusoft.learning.entity.*;
+import jakarta.servlet.http.HttpServletResponse;
 
 public interface RecordService {
     List<StudyRecord> getStudyRecords(Long studentId);

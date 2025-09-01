@@ -1,18 +1,18 @@
 package org.example.edusoft.learning.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.beans.factory.annotation.Autowired;
 import jakarta.servlet.http.HttpServletRequest;
-import org.example.edusoft.learning.client.UserClient;
+import org.example.edusoft.learning.client.UserServiceClient;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import org.example.edusoft.learning.service.record.RecordService;
+import org.example.edusoft.learning.service.RecordService;
 import org.example.edusoft.learning.Result;
 import org.example.edusoft.learning.entity.PracticeRecord;
 import org.example.edusoft.learning.entity.StudyRecord;
@@ -26,7 +26,7 @@ public class RecordController {
     private RecordService recordService;
 
     @Autowired
-    private UserClient userClient;
+    private UserServiceClient userClient;
 
     @Value("${services.user.base-url:http://localhost:8081}")
     private String userServiceBaseUrl;
@@ -97,14 +97,24 @@ public class RecordController {
 
     // 导出所有学习记录
     @GetMapping("/study/export")
-    public void exportRecords(HttpServletResponse response) {
+    public void exportRecords(HttpServletRequest request, HttpServletResponse response) {
         String token = request.getHeader("satoken");
         if (token == null || token.isEmpty()) {
-            return Result.error("请先登录");
+            try {
+                writeErrorResponse(response, "请先登录");
+            } catch (IOException e) {
+                throw new RuntimeException("响应错误信息失败", e);
+            }
+            return;
         }
         Map<String, Object> userInfo = userClient.fetchCurrentUser(userServiceBaseUrl, token);
         if (userInfo == null || userInfo.get("id") == null) {
-            return Result.error("请先登录");
+            try {
+                writeErrorResponse(response, "请先登录");
+            } catch (IOException e) {
+                throw new RuntimeException("响应错误信息失败", e);
+            }
+            return;
         }
         try {
             Long studentId = Long.valueOf(userInfo.get("id").toString());
@@ -120,7 +130,7 @@ public class RecordController {
 
     // 导出某一课程的学习记录
     @GetMapping("/study/course/{courseId}/export")
-    public void exportStudyRecordsByCourse(@PathVariable Long courseId, HttpServletResponse response) {
+    public void exportStudyRecordsByCourse(@PathVariable Long courseId, HttpServletRequest request, HttpServletResponse response) {
         try {
             String token = request.getHeader("satoken");
             if (token == null || token.isEmpty()) {
@@ -157,7 +167,7 @@ public class RecordController {
 
     // 导出所有练习记录
     @GetMapping("/practice/export")
-    public void exportPracticeRecords(HttpServletResponse response) {
+    public void exportPracticeRecords(HttpServletRequest request, HttpServletResponse response) {
         try {
             // 检查登录状态
             String token = request.getHeader("satoken");
@@ -196,7 +206,7 @@ public class RecordController {
 
     // 导出某一课程练习记录
     @GetMapping("/practice/course/{courseId}/export")
-    public void exportPracticeRecordsByCourse(@PathVariable Long courseId, HttpServletResponse response) {
+    public void exportPracticeRecordsByCourse(@PathVariable Long courseId, HttpServletRequest request, HttpServletResponse response) {
         try {
             String token = request.getHeader("satoken");
             if (token == null || token.isEmpty()) {
@@ -241,7 +251,7 @@ public class RecordController {
 
     // 获得某次练习提交的报告
     @GetMapping("/submission/{submissionId}/report")
-    public Result<Map<String, Object>> getSubmissionReport(@PathVariable Long submissionId) {
+    public Result<Map<String, Object>> getSubmissionReport(@PathVariable Long submissionId, HttpServletRequest request) {
         try {
             String token = request.getHeader("satoken");
             if (token == null || token.isEmpty()) {
@@ -265,7 +275,7 @@ public class RecordController {
 
     // 导出某次练习提交的报告
     @GetMapping("/submission/{submissionId}/export-report")
-    public void exportSubmissionReport(@PathVariable Long submissionId, HttpServletResponse response) {
+    public void exportSubmissionReport(@PathVariable Long submissionId, HttpServletRequest request, HttpServletResponse response) {
         try {
             String token = request.getHeader("satoken");
             if (token == null || token.isEmpty()) {
@@ -302,6 +312,7 @@ public class RecordController {
             }
         }
     }
+    
     // 添加辅助方法处理错误响应
     private void writeErrorResponse(HttpServletResponse response, String message) throws IOException {
         response.setContentType("application/json;charset=UTF-8");

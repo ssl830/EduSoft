@@ -9,7 +9,10 @@ import jakarta.persistence.*;
 @Entity
 @Data
 public class QuestionRecord {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    
     private Long sectionId;
     private Long courseId;
     private String content;          // 题目内容

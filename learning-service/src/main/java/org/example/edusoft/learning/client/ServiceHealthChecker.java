@@ -13,7 +13,7 @@ import java.util.Map;
 public class ServiceHealthChecker {
     
     @Autowired
-    private UserClient userClient;
+    private UserServiceClient userServiceClient;
     
     @Autowired
     private CourseClient courseClient;
@@ -39,12 +39,10 @@ public class ServiceHealthChecker {
      */
     public boolean checkUserService() {
         try {
-            // 使用 Actuator 健康检查端点
-            Map<String, Object> health = userClient.getForMap("/actuator/health");
-            return "UP".equals(health.get("status"));
-        } catch (Exception ex) {
-            // 如果 Actuator 端点不可用，回退到业务接口检查
+            // 使用现有的业务接口进行健康检查
             return checkUserServiceFallback();
+        } catch (Exception ex) {
+            return false;
         }
     }
     
@@ -53,11 +51,13 @@ public class ServiceHealthChecker {
      */
     private boolean checkUserServiceFallback() {
         try {
-            // 使用现有的业务接口进行健康检查
-            userClient.getUserById(999999L);
+            // 使用token验证接口进行健康检查
+            String testToken = "test_token";
+            boolean isValid = userServiceClient.validateToken("http://localhost:8081", testToken);
+            // 即使token无效，如果服务响应说明服务正常运行
             return true;
         } catch (Exception ex) {
-            // 如果是404错误，说明服务正常运行，只是用户不存在
+            // 如果是404错误，说明服务正常运行，只是接口不存在
             return ex.getMessage() != null && ex.getMessage().contains("404");
         }
     }

@@ -1,4 +1,4 @@
-package org.example.edusoft.learning.service;
+package org.example.edusoft.learning.mapper;
 
 import org.apache.ibatis.annotations.Many;
 import org.apache.ibatis.annotations.Mapper;
@@ -9,7 +9,7 @@ import org.apache.ibatis.annotations.Results;
 
 import java.util.List;
 import java.util.Map;
-import org.example.edusoft.entity.record.*;
+import org.example.edusoft.learning.entity.*;
 
 @Mapper
 public interface PracticeRecordMapper {
