@@ -220,7 +220,10 @@ public class PracticeServiceImpl implements PracticeService {
             boolean questionExists = existingQuestions.stream()
                     .anyMatch(q -> q.getId().equals(questionId));
             if (questionExists) {
-                throw new PracticeException("QUESTION_ALREADY_EXISTS", "该题目已添加到练习中");
+                System.out.println("题目已存在于练习中，更新分值");
+                // 如果题目已存在，更新分值
+                questionMapper.updateQuestionScore(practiceId, questionId, score);
+                return;
             }
 
             questionMapper.addQuestionToPractice(practiceId, questionId, score);

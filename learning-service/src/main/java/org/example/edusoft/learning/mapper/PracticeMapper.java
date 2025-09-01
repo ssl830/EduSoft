@@ -40,4 +40,7 @@ public interface PracticeMapper {
 
     @Select("SELECT COUNT(*) FROM practice WHERE course_id = #{courseId} AND class_id = #{classId}")
     int getPracticeCount(@Param("courseId") Long courseId, @Param("classId") Long classId);
+    
+    @Update("UPDATE practice_question SET score = #{score} WHERE practice_id = #{practiceId} AND question_id = #{questionId}")
+    int updateQuestionScore(@Param("practiceId") Long practiceId, @Param("questionId") Long questionId, @Param("score") Integer score);
 }

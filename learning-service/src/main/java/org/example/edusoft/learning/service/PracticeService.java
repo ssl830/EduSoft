@@ -1,10 +1,11 @@
 package org.example.edusoft.learning.service;
 
-import org.example.edusoft.learning.entity.Practice;
-import org.example.edusoft.learning.entity.Question;
-import org.example.edusoft.learning.dto.PracticeDTO;
 import java.util.List;
 import java.util.Map;
+
+import org.example.edusoft.learning.dto.PracticeDTO;
+import org.example.edusoft.learning.entity.Practice;
+import org.example.edusoft.learning.entity.Question;
 
 public interface PracticeService {
     
