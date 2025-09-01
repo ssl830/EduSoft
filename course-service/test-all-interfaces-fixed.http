@@ -31,8 +31,8 @@ GET http://localhost:8082/api/courses/user/4
 satoken: aa2cc2bd-15ba-4652-8b9a-e5ae233007f7
 
 ### 4. 获取课程详情
-GET http://localhost:8082/api/courses/2
-satoken: aa2cc2bd-15ba-4652-8b9a-e5ae233007f7
+GET http://localhost:8082/api/courses/1
+satoken: a6daa52f-622f-480e-bee7-62a1de2ba4dc
 
 ### 5. 更新课程
 PUT http://localhost:8082/api/courses/1
@@ -152,8 +152,10 @@ satoken: a4154b98-4285-4561-a806-d2903ffde689
 }
 
 ### 23. 获取特定章节
+
 GET http://localhost:8082/api/course-sections/section/6
 satoken: 18d98164-1191-482e-b4e4-e57dae50e980
+
 
 ### 第六步：学生导入管理接口测试
 

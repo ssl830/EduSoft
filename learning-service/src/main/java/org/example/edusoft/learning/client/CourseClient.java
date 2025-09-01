@@ -31,13 +31,36 @@ public class CourseClient extends BaseServiceClient {
     }
 
     /**
+     * 获取当前请求的token
+     */
+    private String getCurrentToken() {
+        return org.springframework.web.context.request.RequestContextHolder
+            .getRequestAttributes() != null ? 
+            ((org.springframework.web.context.request.ServletRequestAttributes) org.springframework.web.context.request.RequestContextHolder
+                .getRequestAttributes()).getRequest().getHeader("satoken") : null;
+    }
+
+    /**
      * 根据课程ID获取课程信息
      */
     public Map<String, Object> getCourseById(Long courseId) {
         if (courseId == null) {
             throw new IllegalArgumentException("课程ID不能为空");
         }
-        return getForMap("/api/courses/" + courseId);
+        String token = getCurrentToken();
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        if (token != null) {
+            headers.set("satoken", token);
+        }
+        org.springframework.http.HttpEntity<Void> entity = new org.springframework.http.HttpEntity<>(headers);
+        String url = getBaseUrl() + "/api/courses/" + courseId;
+        org.springframework.http.ResponseEntity<Map> response = restTemplate.exchange(
+            url, 
+            org.springframework.http.HttpMethod.GET, 
+            entity, 
+            Map.class
+        );
+        return response.getBody();
     }
 
     /**
@@ -67,9 +90,8 @@ public class CourseClient extends BaseServiceClient {
         if (sectionId == null) {
             throw new IllegalArgumentException("章节ID不能为空");
         }
-        System.out.println("DEBUG: CourseClient.getSectionById called with sectionId: " + sectionId);
-        System.out.println("DEBUG: Calling URL: /api/course-sections/section/" + sectionId);
         return getForMap("/api/course-sections/section/" + sectionId);
+
     }
     
     /**
@@ -79,7 +101,20 @@ public class CourseClient extends BaseServiceClient {
         if (sectionIds == null || sectionIds.trim().isEmpty()) {
             throw new IllegalArgumentException("章节ID列表不能为空");
         }
-        return get("/api/course-sections/batch?ids=" + sectionIds, List.class);
+        String token = getCurrentToken();
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        if (token != null) {
+            headers.set("satoken", token);
+        }
+        org.springframework.http.HttpEntity<Void> entity = new org.springframework.http.HttpEntity<>(headers);
+        String url = getBaseUrl() + "/api/course-sections/batch?ids=" + sectionIds;
+        org.springframework.http.ResponseEntity<List> response = restTemplate.exchange(
+            url, 
+            org.springframework.http.HttpMethod.GET, 
+            entity, 
+            List.class
+        );
+        return response.getBody();
     }
 
     /**
@@ -89,7 +124,31 @@ public class CourseClient extends BaseServiceClient {
         if (courseId == null) {
             throw new IllegalArgumentException("课程ID不能为空");
         }
-        return get("/api/course-sections/course/" + courseId, List.class);
+        String token = getCurrentToken();
+        logger.info("[CourseClient] 获取课程章节列表，课程ID: {}, token: {}", courseId, token);
+        
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        if (token != null) {
+            headers.set("satoken", token);
+        }
+        org.springframework.http.HttpEntity<Void> entity = new org.springframework.http.HttpEntity<>(headers);
+        String url = getBaseUrl() + "/api/course-sections/course/" + courseId;
+        
+        try {
+            logger.info("[CourseClient] 发送请求到: {}", url);
+            org.springframework.http.ResponseEntity<List> response = restTemplate.exchange(
+                url, 
+                org.springframework.http.HttpMethod.GET, 
+                entity, 
+                List.class
+            );
+            List<Map<String, Object>> result = response.getBody();
+            logger.info("[CourseClient] 获取课程章节列表成功，返回数据: {}", result);
+            return result;
+        } catch (Exception e) {
+            logger.error("[CourseClient] 获取课程章节列表失败: {}", e.getMessage());
+            throw e;
+        }
     }
 
     /**
@@ -153,55 +212,67 @@ public class CourseClient extends BaseServiceClient {
     }
 
     /**
-     * 批量获取课程信息（逐个调用 /api/courses/{id}，失败时降级为模拟数据）
+     * 批量获取课程信息（逐个调用 /api/courses/{id}）
      */
     public Map<Long, Map<String, Object>> getCoursesByIds(List<Long> courseIds) {
         Map<Long, Map<String, Object>> result = new HashMap<>();
         if (courseIds == null || courseIds.isEmpty()) {
             return result;
         }
+
+        String token = getCurrentToken();
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        if (token != null) {
+            headers.set("satoken", token);
+        }
+        org.springframework.http.HttpEntity<Void> entity = new org.springframework.http.HttpEntity<>(headers);
+
         for (Long courseId : courseIds) {
             try {
-                // 逐个调用课程详情接口
-                Map<String, Object> courseDetail = getForMap("/api/courses/" + courseId);
-                if (courseDetail != null) {
-                    Object dataObj = courseDetail.get("data");
+                String url = getBaseUrl() + "/api/courses/" + courseId;
+                org.springframework.http.ResponseEntity<Map> response = restTemplate.exchange(
+                    url, 
+                    org.springframework.http.HttpMethod.GET, 
+                    entity, 
+                    Map.class
+                );
+
+                if (response.getBody() != null) {
+                    Object dataObj = response.getBody().get("data");
                     if (dataObj instanceof Map) {
                         result.put(courseId, (Map<String, Object>) dataObj);
-                        continue;
                     }
                 }
             } catch (Exception ex) {
-                // 记录日志，降级为模拟数据
-                 logger.warn("获取课程 {} 失败，使用模拟数据: {}", courseId, ex.getMessage());
+                logger.error("获取课程 {} 失败: {}", courseId, ex.getMessage());
+                throw new RuntimeException("获取课程信息失败：" + ex.getMessage());
             }
-//            // 模拟数据（降级）
-//            Map<String, Object> course = new HashMap<>();
-//            course.put("id", courseId);
-//            course.put("name", "模拟课程-" + courseId);
-//            course.put("description", "这是模拟课程描述-" + courseId);
-//            course.put("teacherId", courseId * 10 + 1);
-//            result.put(courseId, course);
         }
         return result;
     }
 
     /**
-     * 批量获取练习信息（模拟数据）
+     * 批量获取练习信息
      */
     public Map<Long, Map<String, Object>> getPracticesByIds(List<Long> practiceIds) {
         Map<Long, Map<String, Object>> result = new HashMap<>();
-
-        // 模拟数据
-        for (Long practiceId : practiceIds) {
-            Map<String, Object> practice = new HashMap<>();
-            practice.put("id", practiceId);
-            practice.put("title", "模拟练习-" + practiceId);
-            practice.put("courseId", practiceId % 3 + 1);
-            practice.put("courseName", "模拟课程-" + (practiceId % 3 + 1));
-            result.put(practiceId, practice);
+        if (practiceIds == null || practiceIds.isEmpty()) {
+            return result;
         }
-
+        
+        String ids = String.join(",", practiceIds.stream().map(String::valueOf).toList());
+        try {
+            List<Map<String, Object>> practices = get("/api/practices/batch?ids=" + ids, List.class);
+            if (practices != null) {
+                for (Map<String, Object> practice : practices) {
+                    Long id = ((Number) practice.get("id")).longValue();
+                    result.put(id, practice);
+                }
+            }
+        } catch (Exception ex) {
+            logger.error("批量获取练习信息失败: {}", ex.getMessage());
+            throw new RuntimeException("获取练习信息失败：" + ex.getMessage());
+        }
         return result;
     }
 

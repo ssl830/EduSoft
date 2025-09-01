@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 public class QuestionServiceImpl implements QuestionService {
 
     private static final String OPTION_SEPARATOR = "|||";
+    private final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QuestionServiceImpl.class);
 
     private final QuestionMapper questionMapper;
     private final CourseClient courseClient;
@@ -286,18 +287,42 @@ public class QuestionServiceImpl implements QuestionService {
         if (courseId == null) {
             throw new LearningException("COURSE_ID_REQUIRED", "课程ID不能为空");
         }
-//        System.out.println(courseId);
+
+        // 1. 获取题目列表
         List<Question> questions = questionMapper.getQuestionsByCourseId(courseId);
-//        System.out.println(questions);
-        List<Long> courseIds = questions.stream().map(Question::getCourseId).distinct().collect(Collectors.toList());
-//        System.out.println("courseIdssssssssssssssssssssssssssssssssssssssssssssssss:");
-//        System.out.println(courseIds);
 
+        // 2. 收集所需的ID
+        List<Long> courseIds = questions.stream()
+            .map(Question::getCourseId)
+            .distinct()
+            .collect(Collectors.toList());
+
+        List<Long> sectionIds = questions.stream()
+            .map(Question::getSectionId)
+            .filter(id -> id != null)
+            .distinct()
+            .collect(Collectors.toList());
+
+        // 3. 获取认证token
         String token = resolveOutboundToken();
+        
+        // 4. 获取课程信息
         Map<Long, Map<String, Object>> courseMap = courseClient.getCoursesByIds(userServiceBaseUrl, token, courseIds);
-//        System.out.println(courseMap);
+        
+        // 5. 获取章节信息
+        Map<Long, Map<String, Object>> sectionMap = new HashMap<>();
+        for (Long sectionId : sectionIds) {
+            try {
+                Map<String, Object> sectionResult = courseClient.getSectionById(sectionId);
+                if (sectionResult != null && sectionResult.containsKey("data")) {
+                    sectionMap.put(sectionId, (Map<String, Object>) sectionResult.get("data"));
+                }
+            } catch (Exception e) {
+                logger.error("获取章节信息失败，章节ID: " + sectionId + ", 错误: " + e.getMessage());
+            }
+        }
 
-
+        // 6. 转换为DTO
         return questions.stream().map(q -> {
             QuestionListDTO dto = new QuestionListDTO();
             dto.setId(q.getId());
@@ -305,6 +330,12 @@ public class QuestionServiceImpl implements QuestionService {
             dto.setCourseId(q.getCourseId());
             dto.setCourseName(courseMap.getOrDefault(q.getCourseId(), Map.of()).getOrDefault("name", "").toString());
             dto.setSectionId(q.getSectionId());
+            if (q.getSectionId() != null) {
+                Map<String, Object> sectionInfo = sectionMap.get(q.getSectionId());
+                if (sectionInfo != null) {
+                    dto.setSectionName(sectionInfo.getOrDefault("title", "").toString());
+                }
+            }
             dto.setTeacherId(q.getCreatorId() == null ? "" : q.getCreatorId().toString());
             dto.setType(q.getType() == null ? "" : q.getType().toString());
             dto.setAnswer(q.getAnswer());
@@ -328,12 +359,42 @@ public class QuestionServiceImpl implements QuestionService {
 
     @Override
     public List<QuestionListDTO> getAllQuestions() {
+        // 1. 获取所有题目
         List<Question> questions = questionMapper.getAllQuestions();
-        List<Long> courseIds = questions.stream().map(Question::getCourseId).distinct().collect(Collectors.toList());
 
+        // 2. 收集所需的ID
+        List<Long> courseIds = questions.stream()
+            .map(Question::getCourseId)
+            .filter(id -> id != null)
+            .distinct()
+            .collect(Collectors.toList());
+
+        List<Long> sectionIds = questions.stream()
+            .map(Question::getSectionId)
+            .filter(id -> id != null)
+            .distinct()
+            .collect(Collectors.toList());
+
+        // 3. 获取认证token
         String token = resolveOutboundToken();
+        
+        // 4. 获取课程信息
         Map<Long, Map<String, Object>> courseMap = courseClient.getCoursesByIds(userServiceBaseUrl, token, courseIds);
+        
+        // 5. 获取章节信息
+        Map<Long, Map<String, Object>> sectionMap = new HashMap<>();
+        for (Long sectionId : sectionIds) {
+            try {
+                Map<String, Object> sectionResult = courseClient.getSectionById(sectionId);
+                if (sectionResult != null && sectionResult.containsKey("data")) {
+                    sectionMap.put(sectionId, (Map<String, Object>) sectionResult.get("data"));
+                }
+            } catch (Exception e) {
+                logger.error("获取章节信息失败，章节ID: " + sectionId + ", 错误: " + e.getMessage());
+            }
+        }
 
+        // 6. 转换为DTO
         return questions.stream().map(q -> {
             QuestionListDTO dto = new QuestionListDTO();
             dto.setId(q.getId());
@@ -341,6 +402,12 @@ public class QuestionServiceImpl implements QuestionService {
             dto.setCourseId(q.getCourseId());
             dto.setCourseName(courseMap.getOrDefault(q.getCourseId(), Map.of()).getOrDefault("name", "").toString());
             dto.setSectionId(q.getSectionId());
+            if (q.getSectionId() != null) {
+                Map<String, Object> sectionInfo = sectionMap.get(q.getSectionId());
+                if (sectionInfo != null) {
+                    dto.setSectionName(sectionInfo.getOrDefault("title", "").toString());
+                }
+            }
             dto.setTeacherId(q.getCreatorId() == null ? "" : q.getCreatorId().toString());
             dto.setType(q.getType() == null ? "" : q.getType().toString());
             dto.setAnswer(q.getAnswer());

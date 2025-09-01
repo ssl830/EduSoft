@@ -32,8 +32,6 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
-
-
         <!-- Spring Boot Starter Validation -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -59,8 +57,6 @@
             <artifactId>mysql-connector-j</artifactId>
             <scope>runtime</scope>
         </dependency>
-
-
 
         <!-- Lombok -->
         <dependency>
