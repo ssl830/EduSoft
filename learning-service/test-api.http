@@ -78,7 +78,7 @@ satoken: ae86391d-84ff-4924-b8d8-4764e918c820
   ]
 }
 
-# 题目相关接口
+# 题目���关接口
 
 ### 获取题目列表（带 courseId）
 GET http://localhost:8084/api/learning/question/list?courseId=4
@@ -200,4 +200,8 @@ satoken: ae86391d-84ff-4924-b8d8-4764e918c820
 
 ### 手动统计并写入练习每题得分率 200
 POST http://localhost:8084/api/practice/update-score-rate/1
+satoken: ae86391d-84ff-4924-b8d8-4764e918c820
+
+### 获取课程的所有练习
+GET http://localhost:8084/api/practice/course/1
 satoken: ae86391d-84ff-4924-b8d8-4764e918c820

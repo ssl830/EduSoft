@@ -60,28 +60,16 @@ public class PracticeController {
         if (userInfo == null) {
             return Result.error("请先登录");
         }
-        
+
         // 从用户信息中获取id
         Long userId = Long.valueOf(userInfo.get("id").toString());
         try {
-            if (!StpUtil.isLogin()) {
-                System.out.println("Warning: 未认证的练习创建访问，使用默认用户ID: 1");
-                practice.setCreatedBy(1L); // 使用默认用户ID进行测试
-            } else {
-                Long userId = StpUtil.getLoginIdAsLong();
-                practice.setCreatedBy(userId);
-            }
-            
-            System.out.println("创建练习，参数: " + practice);
+            practice.setCreatedBy(userId);
             Practice createdPractice = practiceService.createPractice(practice);
-            System.out.println("练习创建成功，ID: " + createdPractice.getId());
-            
             Map<String, Object> response = new HashMap<>();
             response.put("practiceId", createdPractice.getId());
             return Result.success(response, "练习创建成功");
         } catch (Exception e) {
-            System.out.println("创建练习失败: " + e.getMessage());
-            e.printStackTrace();
             return Result.error("创建练习失败：" + e.getMessage());
         }
     }
@@ -209,7 +197,10 @@ public class PracticeController {
 
     // 添加错题
     @PostMapping("/questions/{questionId}/wrong")
-    public Result<Boolean> addWrongQuestion(@PathVariable Long questionId, @RequestBody Map<String, String> data, @RequestHeader("satoken") String token) {
+    public Result<Boolean> addWrongQuestion(
+            @PathVariable Long questionId,
+            @RequestBody Map<String, String> data,
+            @RequestHeader("satoken") String token) {
         // 从user-service获取完整的用户信息
         Map<String, Object> userInfo = userServiceClient.fetchCurrentUser(userServiceBaseUrl, token);
         if (userInfo == null) {
@@ -225,7 +216,8 @@ public class PracticeController {
 
     // 获取错题列表
     @GetMapping("/questions/wrong")
-    public Result<List<Map<String, Object>>> getWrongQuestions(@RequestHeader("satoken") String token) {
+    public Result<List<Map<String, Object>>> getWrongQuestions(
+            @RequestHeader("satoken") String token) {
         // 从user-service获取完整的用户信息
         Map<String, Object> userInfo = userServiceClient.fetchCurrentUser(userServiceBaseUrl, token);
         if (userInfo == null) {
@@ -240,7 +232,9 @@ public class PracticeController {
 
     // 获取某个课程的错题列表
     @GetMapping("/questions/wrong/course/{courseId}")
-    public Result<List<Map<String, Object>>> getWrongQuestionsByCourse(@PathVariable Long courseId, @RequestHeader("satoken") String token) {
+    public Result<List<Map<String, Object>>> getWrongQuestionsByCourse(
+            @PathVariable Long courseId,
+            @RequestHeader("satoken") String token) {
         // 从user-service获取完整的用户信息
         Map<String, Object> userInfo = userServiceClient.fetchCurrentUser(userServiceBaseUrl, token);
         if (userInfo == null) {
@@ -270,16 +264,16 @@ public class PracticeController {
 
     // 获取课程的所有练习
     @GetMapping("/course/{courseId}")
-    public Result<List<Map<String, Object>>> getCoursePractices(@PathVariable Long courseId) {
+    public Result<List<Map<String, Object>>> getCoursePractices(
+            @PathVariable Long courseId,
+            @RequestHeader(value = "satoken", required = false) String token) {
         try {
-            // 如果用户已登录，使用登录用户ID；否则使用默认值0（游客模式）
             Long studentId = 0L;
-            try {
-                if (StpUtil.isLogin()) {
-                    studentId = StpUtil.getLoginIdAsLong();
+            if (token != null && !token.isEmpty()) {
+                Map<String, Object> userInfo = userServiceClient.fetchCurrentUser(userServiceBaseUrl, token);
+                if (userInfo != null && userInfo.get("id") != null) {
+                    studentId = Long.valueOf(userInfo.get("id").toString());
                 }
-            } catch (Exception ignored) {
-                // 忽略认证异常，使用游客模式
             }
             List<Map<String, Object>> practices = practiceService.getCoursePractices(studentId, courseId);
             return Result.success(practices);
@@ -311,15 +305,6 @@ public class PracticeController {
     @GetMapping("/list/teacher")
     public Result<List<Practice>> getPracticeListForTeacher(@RequestParam Long classId) {
         try {
-            // 教师端接口，但允许游客访问进行测试
-            try {
-                if (!StpUtil.isLogin()) {
-                    // 暂时允许未认证的访问用于测试
-                    System.out.println("Warning: 未认证的教师端访问");
-                }
-            } catch (Exception e) {
-                System.out.println("Sa-Token 认证异常: " + e.getMessage());
-            }
             List<Practice> practices = practiceService.getPracticeList(classId);
             return Result.success(practices, "获取练习列表成功");
         } catch (IllegalArgumentException e) {
@@ -340,15 +325,6 @@ public class PracticeController {
         System.out.println("score: " + score);
         
         try {
-            // 教师端接口，但暂时允许游客访问进行测试
-            try {
-                if (!StpUtil.isLogin()) {
-                    System.out.println("Warning: 未认证的题目分值更新访问");
-                }
-            } catch (Exception e) {
-                System.out.println("Sa-Token 认证异常: " + e.getMessage());
-            }
-            
             // 验证参数
             if (score == null) {
                 System.out.println("分值为null");

@@ -59,4 +59,7 @@ public interface PracticeService {
      * 获取所有已截止且未统计得分率的练习ID（定时任务用）
      */
     List<Long> getAllEndedPracticeIds();
+
+    // 新增：按课程获取练习列表（当前用于学生端展示，保留studentId参数以便后续扩展个性化）
+    List<Map<String, Object>> getCoursePractices(Long studentId, Long courseId);
 }
