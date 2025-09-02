@@ -7,7 +7,6 @@ import org.example.edusoft.learning.client.ContentClient;
 import org.example.edusoft.learning.entity.Answer;
 import org.example.edusoft.learning.entity.PracticeSubmission;
 import org.example.edusoft.learning.exception.PracticeException;
-import org.example.edusoft.learning.other.BusinessException;
 import org.example.edusoft.learning.dto.PracticeDTO;
 import org.example.edusoft.learning.entity.Practice;
 import org.example.edusoft.learning.entity.Question;
@@ -16,7 +15,6 @@ import org.example.edusoft.learning.service.PracticeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.example.edusoft.learning.mapper.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -290,16 +288,26 @@ public class PracticeServiceImpl implements PracticeService {
         wrongQuestionMapper.deleteWrongQuestion(studentId, questionId);
     }
 
+//    @Override
+//    public List<PracticeDTO> getStudentPracticeList(Long studentId, Long classId) {
+//        // This requires a custom query and DTO, which is not fully implemented in the original code.
+//        // Returning null for now.
+//        return null;
+//    }
+
     @Override
     public List<PracticeDTO> getStudentPracticeList(Long studentId, Long classId) {
-        // This requires a custom query and DTO, which is not fully implemented in the original code.
-        // Returning null for now.
-        return null;
+        if (studentId == null || classId == null) {
+            throw new IllegalArgumentException("学生ID和班级ID不能为空");
+        }
+        return practiceMapper.getStudentPracticeList(studentId, classId);
     }
 
     @Override
     public List<Map<String, Object>> getTeacherPractices(Long teacherId) {
         List<Map<String, Object>> practices = practiceMapper.getPracticesByTeacherId(teacherId);
+        System.out.println("practices===================");
+        System.out.println(practices);
         // 批量获取所有courseId
         List<Long> courseIds = practices.stream()
                 .map(p -> p.get("course_id"))
