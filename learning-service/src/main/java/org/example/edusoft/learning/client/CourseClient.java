@@ -219,7 +219,39 @@ public class CourseClient extends BaseServiceClient {
         if (courseIds == null || courseIds.trim().isEmpty()) {
             throw new IllegalArgumentException("课程ID列表不能为空");
         }
-        return get("/api/courses/batch?ids=" + courseIds, List.class);
+        String token = getCurrentToken();
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        if (token != null) {
+            // 同时设置 satoken 和 Authorization，兼容下游
+            headers.set("satoken", token);
+            headers.set("Authorization", "Bearer " + token);
+        }
+        org.springframework.http.HttpEntity<Void> entity = new org.springframework.http.HttpEntity<>(headers);
+        String url = getBaseUrl() + "/api/courses/batch?ids=" + courseIds;
+
+        // 使用 Object.class 接收，兼容 Result 包裹或直接 List 返回
+        org.springframework.http.ResponseEntity<Object> response = restTemplate.exchange(
+            url,
+            org.springframework.http.HttpMethod.GET,
+            entity,
+            Object.class
+        );
+
+        Object body = response.getBody();
+        if (body instanceof java.util.Map<?, ?> map) {
+            Object data = map.get("data");
+            if (data instanceof java.util.List<?> list) {
+                // 安全转换
+                @SuppressWarnings("unchecked")
+                List<Map<String, Object>> res = (List<Map<String, Object>>) list;
+                return res;
+            }
+        } else if (body instanceof java.util.List<?> list) {
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> res = (List<Map<String, Object>>) list;
+            return res;
+        }
+        return java.util.List.of();
     }
 
     /**
