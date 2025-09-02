@@ -1,21 +1,23 @@
 package org.example.edusoft.content.dto.homework;
 
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 import java.time.LocalDateTime;
 
-import lombok.Data;
-
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class HomeworkDTO {
-    private Long homeworkId;
-    private Long courseId;
+    
+    private Long id;
+    private Long classId;
     private String title;
     private String description;
+    private String endTime;
     private String fileUrl;
     private String fileName;
-    private LocalDateTime endTime;
-    private Long classId;
-    private Long createdBy;
-    private String createdByName;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private Boolean isActive;
 }

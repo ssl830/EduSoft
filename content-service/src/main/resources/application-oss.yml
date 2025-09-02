@@ -1,0 +1,7 @@
+# 阿里云OSS配置
+aliyun:
+  oss:
+    endpoint: oss-cn-hangzhou.aliyuncs.com  # 替换为你的OSS endpoint
+    accessKeyId: test-access-key-id          # 测试用的默认值
+    accessKeySecret: test-access-key-secret  # 测试用的默认值
+    bucketName: test-bucket-name             # 测试用的默认值

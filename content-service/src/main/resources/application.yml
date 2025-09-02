@@ -4,6 +4,8 @@ server:
 spring:
   application:
     name: content-service
+  profiles:
+    include: oss
   
   datasource:
     url: jdbc:mysql://localhost:3306/content-db?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai

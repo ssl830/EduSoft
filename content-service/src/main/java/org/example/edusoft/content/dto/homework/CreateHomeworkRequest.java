@@ -1,12 +1,14 @@
 package org.example.edusoft.content.dto.homework;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 
-/**
- * 创建作业请求DTO
- */
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class CreateHomeworkRequest {
+    
     private Long classId;
     private String title;
     private String description;

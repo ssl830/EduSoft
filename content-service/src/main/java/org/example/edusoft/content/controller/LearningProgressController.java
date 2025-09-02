@@ -1,16 +1,19 @@
 package org.example.edusoft.content.controller;
 
-import org.example.edusoft.content.entity.LearningProgress;
-import org.example.edusoft.content.service.LearningProgressService;
+import org.example.edusoft.content.common.Result;
+import org.example.edusoft.content.dto.progress.LearningProgressDTO;
+import org.example.edusoft.content.dto.progress.ProgressStatisticsDTO;
+import org.example.edusoft.content.dto.progress.ProgressUpdateRequest;
+import org.example.edusoft.content.entity.resource.LearningProgress;
+import org.example.edusoft.content.service.progress.LearningProgressService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDateTime;
-import java.util.HashMap;
+import jakarta.validation.Valid;
 import java.util.List;
-import java.util.Map;
 
+/**
+ * 学习进度管理控制器
+ */
 @RestController
 @RequestMapping("/api/content/learning-progress")
 @CrossOrigin(origins = "*")
@@ -20,187 +23,122 @@ public class LearningProgressController {
     private LearningProgressService learningProgressService;
 
     /**
-     * 创建学习进度
+     * 更新学习进度
      */
-    @PostMapping
-    public ResponseEntity<Map<String, Object>> createProgress(@RequestBody LearningProgress progress) {
+    @PostMapping("/update")
+    public Result<LearningProgress> updateProgress(@Valid @RequestBody ProgressUpdateRequest request) {
         try {
-            // 设置创建时间和更新时间
-            progress.setCreatedAt(LocalDateTime.now());
-            progress.setUpdatedAt(LocalDateTime.now());
-            progress.setLastWatchTime(LocalDateTime.now());
-            
-            LearningProgress created = learningProgressService.createProgress(progress);
-            Map<String, Object> response = new HashMap<>();
-            response.put("code", 200);
-            response.put("msg", "学习进度创建成功");
-            response.put("data", created);
-            return ResponseEntity.ok(response);
+            LearningProgress progress = learningProgressService.updateProgress(
+                request.getResourceId(),
+                request.getStudentId(),
+                request.getProgress(),
+                request.getPosition()
+            );
+            return Result.success(progress, "学习进度更新成功");
         } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("code", 500);
-            response.put("msg", "学习进度创建失败: " + e.getMessage());
-            return ResponseEntity.ok(response);
+            return Result.error("学习进度更新失败：" + e.getMessage());
         }
     }
 
     /**
-     * 获取进度详情
+     * 获取学习进度
      */
-    @GetMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> getProgress(@PathVariable Long id) {
-        try {
-            LearningProgress progress = learningProgressService.getProgressById(id);
-            Map<String, Object> response = new HashMap<>();
-            if (progress != null) {
-                response.put("code", 200);
-                response.put("msg", "获取成功");
-                response.put("data", progress);
-            } else {
-                response.put("code", 404);
-                response.put("msg", "学习进度不存在");
-            }
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("code", 500);
-            response.put("msg", "获取学习进度失败: " + e.getMessage());
-            return ResponseEntity.ok(response);
-        }
-    }
-
-    /**
-     * 获取资源学生进度
-     */
-    @GetMapping("/resource/{resourceId}/student/{studentId}")
-    public ResponseEntity<Map<String, Object>> getProgressByResourceAndStudent(
-            @PathVariable Long resourceId, 
+    @GetMapping("/{resourceId}/{studentId}")
+    public Result<LearningProgress> getProgress(
+            @PathVariable Long resourceId,
             @PathVariable Long studentId) {
         try {
-            LearningProgress progress = learningProgressService.getProgressByResourceAndStudent(resourceId, studentId);
-            Map<String, Object> response = new HashMap<>();
-            if (progress != null) {
-                response.put("code", 200);
-                response.put("msg", "获取成功");
-                response.put("data", progress);
-            } else {
-                response.put("code", 404);
-                response.put("msg", "学习进度不存在");
+            LearningProgress progress = learningProgressService.getProgress(resourceId, studentId);
+            if (progress == null) {
+                return Result.error("未找到学习进度记录");
             }
-            return ResponseEntity.ok(response);
+            return Result.success(progress, "获取学习进度成功");
         } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("code", 500);
-            response.put("msg", "获取学习进度失败: " + e.getMessage());
-            return ResponseEntity.ok(response);
+            return Result.error("获取学习进度失败：" + e.getMessage());
         }
     }
 
     /**
-     * 获取学生进度列表
+     * 获取学生的所有学习进度
      */
     @GetMapping("/student/{studentId}")
-    public ResponseEntity<Map<String, Object>> getProgressByStudent(@PathVariable Long studentId) {
+    public Result<List<LearningProgressDTO>> getStudentProgress(@PathVariable Long studentId) {
         try {
-            List<LearningProgress> progressList = learningProgressService.getProgressByStudentId(studentId);
-            Map<String, Object> response = new HashMap<>();
-            response.put("code", 200);
-            response.put("msg", "获取成功");
-            response.put("data", progressList);
-            return ResponseEntity.ok(response);
+            List<LearningProgressDTO> progressList = learningProgressService.getStudentProgress(studentId);
+            return Result.success(progressList, "获取学生学习进度成功");
         } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("code", 500);
-            response.put("msg", "获取学习进度列表失败: " + e.getMessage());
-            return ResponseEntity.ok(response);
+            return Result.error("获取学生学习进度失败：" + e.getMessage());
         }
     }
 
     /**
-     * 获取资源进度列表
+     * 获取资源的所有学习进度
      */
     @GetMapping("/resource/{resourceId}")
-    public ResponseEntity<Map<String, Object>> getProgressByResource(@PathVariable Long resourceId) {
+    public Result<List<LearningProgressDTO>> getResourceProgress(@PathVariable Long resourceId) {
         try {
-            List<LearningProgress> progressList = learningProgressService.getProgressByResourceId(resourceId);
-            Map<String, Object> response = new HashMap<>();
-            response.put("code", 200);
-            response.put("msg", "获取成功");
-            response.put("data", progressList);
-            return ResponseEntity.ok(response);
+            List<LearningProgressDTO> progressList = learningProgressService.getResourceProgress(resourceId);
+            return Result.success(progressList, "获取资源学习进度成功");
         } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("code", 500);
-            response.put("msg", "获取学习进度列表失败: " + e.getMessage());
-            return ResponseEntity.ok(response);
+            return Result.error("获取资源学习进度失败：" + e.getMessage());
         }
     }
 
     /**
-     * 更新进度
+     * 获取课程的学习进度统计
      */
-    @PutMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> updateProgress(@PathVariable Long id, @RequestBody LearningProgress progress) {
+    @GetMapping("/statistics/course/{courseId}")
+    public Result<List<ProgressStatisticsDTO>> getCourseProgressStatistics(@PathVariable Long courseId) {
         try {
-            progress.setId(id);
-            progress.setUpdatedAt(LocalDateTime.now());
-            progress.setLastWatchTime(LocalDateTime.now());
-            
-            LearningProgress updated = learningProgressService.updateProgress(progress);
-            Map<String, Object> response = new HashMap<>();
-            response.put("code", 200);
-            response.put("msg", "学习进度更新成功");
-            response.put("data", updated);
-            return ResponseEntity.ok(response);
+            List<ProgressStatisticsDTO> statistics = learningProgressService.getCourseProgressStatistics(courseId);
+            return Result.success(statistics, "获取课程学习进度统计成功");
         } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("code", 500);
-            response.put("msg", "学习进度更新失败: " + e.getMessage());
-            return ResponseEntity.ok(response);
+            return Result.error("获取课程学习进度统计失败：" + e.getMessage());
         }
     }
 
     /**
-     * 更新进度（通过资源ID和学生ID）
+     * 获取章节的学习进度统计
      */
-    @PutMapping("/resource/{resourceId}/student/{studentId}")
-    public ResponseEntity<Map<String, Object>> updateProgressByResourceAndStudent(
-            @PathVariable Long resourceId,
-            @PathVariable Long studentId,
-            @RequestParam(required = false) Integer progress,
-            @RequestParam(required = false) Integer lastPosition) {
+    @GetMapping("/statistics/chapter/{chapterId}")
+    public Result<List<ProgressStatisticsDTO>> getChapterProgressStatistics(@PathVariable Long chapterId) {
         try {
-            learningProgressService.updateProgress(resourceId, studentId, progress, lastPosition);
-            Map<String, Object> response = new HashMap<>();
-            response.put("code", 200);
-            response.put("msg", "学习进度更新成功");
-            return ResponseEntity.ok(response);
+            List<ProgressStatisticsDTO> statistics = learningProgressService.getChapterProgressStatistics(chapterId);
+            return Result.success(statistics, "获取章节学习进度统计成功");
         } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("code", 500);
-            response.put("msg", "学习进度更新失败: " + e.getMessage());
-            return ResponseEntity.ok(response);
+            return Result.error("获取章节学习进度统计失败：" + e.getMessage());
         }
     }
 
     /**
-     * 增加观看次数
+     * 删除学习进度
      */
-    @PutMapping("/resource/{resourceId}/student/{studentId}/watch")
-    public ResponseEntity<Map<String, Object>> incrementWatchCount(
+    @DeleteMapping("/{resourceId}/{studentId}")
+    public Result<Void> deleteProgress(
             @PathVariable Long resourceId,
             @PathVariable Long studentId) {
         try {
-            learningProgressService.incrementWatchCount(resourceId, studentId);
-            Map<String, Object> response = new HashMap<>();
-            response.put("code", 200);
-            response.put("msg", "观看次数更新成功");
-            return ResponseEntity.ok(response);
+            boolean success = learningProgressService.deleteProgress(resourceId, studentId);
+            if (success) {
+                return Result.success(null, "学习进度删除成功");
+            } else {
+                return Result.error("学习进度删除失败");
+            }
         } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("code", 500);
-            response.put("msg", "观看次数更新失败: " + e.getMessage());
-            return ResponseEntity.ok(response);
+            return Result.error("学习进度删除失败：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 批量更新学习进度
+     */
+    @PostMapping("/batch-update")
+    public Result<List<LearningProgress>> batchUpdateProgress(@RequestBody List<LearningProgress> progressList) {
+        try {
+            List<LearningProgress> updatedProgress = learningProgressService.batchUpdateProgress(progressList);
+            return Result.success(updatedProgress, "批量更新学习进度成功");
+        } catch (Exception e) {
+            return Result.error("批量更新学习进度失败：" + e.getMessage());
         }
     }
 }
