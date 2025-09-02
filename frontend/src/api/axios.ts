@@ -9,12 +9,28 @@ export interface ApiResponse<T = any> {
 
 // Create an axios instance
 const instance = axios.create({
-  baseURL: 'http://localhost:8081',  // 修改为user-service端口
+  baseURL: getBaseURL(),
   timeout: 1000000,
   headers: {
     'Content-Type': 'application/json'
   }
 })
+
+function getBaseURL(): string {
+  const url = window.location.pathname;
+
+  if (url.startsWith('/api/user')) {
+    return 'http://localhost:8081';
+  } else if (url.startsWith('/api/imports') || url.startsWith('/api/courses') || url.startsWith('/api/classes')) {
+    return 'http://localhost:8082';
+  } else if (url.startsWith('/service3')) {  // TODO: 修改为实际路径
+    return 'http://localhost:8083';
+  } else if (url.startsWith('/api/judge') || url.startsWith('/api/record') || url.startsWith('/api/practice')
+  || url.startsWith('/api/selfpractice') || url.startsWith('/api/submission') || url.startsWith('/api/learning')) {
+    return 'http://localhost:8084';
+  }
+  return 'http://localhost:8080'; // 默认后端地址
+}
 
 // Add a request interceptor
 instance.interceptors.request.use(
