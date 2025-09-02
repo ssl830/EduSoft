@@ -8,7 +8,10 @@ import org.example.edusoft.content.entity.homework.HomeworkSubmission;
 import org.example.edusoft.content.mapper.homework.HomeworkMapper;
 import org.example.edusoft.content.mapper.homework.HomeworkSubmissionMapper;
 import org.example.edusoft.content.service.homework.HomeworkService;
-import org.example.edusoft.content.service.FileUploadService;
+import org.example.edusoft.content.service.file.FileUpload;
+import org.example.edusoft.content.entity.file.FileType;
+import org.example.edusoft.content.entity.file.FileInfo;
+import org.example.edusoft.content.common.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,7 +38,7 @@ public class HomeworkServiceImpl implements HomeworkService {
     private HomeworkSubmissionMapper submissionMapper;
     
     @Autowired
-    private FileUploadService fileUploadService;
+    private FileUpload fileUploadService;
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
@@ -62,11 +65,12 @@ public class HomeworkServiceImpl implements HomeworkService {
 
         // 上传附件（如果有）
         if (file != null && !file.isEmpty()) {
-            // 上传到阿里云OSS
-            String folder = "homework/" + classId;
-            String fileUrl = fileUploadService.uploadFile(file, folder);
-            homework.setFileUrl(fileUrl);
-            homework.setFileName(file.getOriginalFilename());
+            // 使用新的上传接口
+            Result<?> result = fileUploadService.upload(file, title, null, null, classId, "private", null, FileType.OTHER, null);
+            if (result.getData() instanceof FileInfo fileInfo) {
+                homework.setFileUrl(fileInfo.getUrl());
+                homework.setFileName(fileInfo.getName());
+            }
         }
 
         // 保存作业信息
@@ -145,14 +149,14 @@ public class HomeworkServiceImpl implements HomeworkService {
         submission.setStudentName("学生" + studentId); // 简化处理
         submission.setContent(content);
 
-        // 处理文件上传
-        String fileName = file.getOriginalFilename();
-        submission.setFileName(fileName);
-        
-        // 上传到阿里云OSS
+        // 使用新的上传接口
+        String title = file.getOriginalFilename();
         String folder = "homework-submission/" + homeworkId + "/" + studentId;
-        String fileUrl = fileUploadService.uploadFile(file, folder);
-        submission.setFileUrl(fileUrl);
+        Result<?> result = fileUploadService.upload(file, title, null, null, null, "private", null, FileType.OTHER, null);
+        if (result.getData() instanceof FileInfo fileInfo) {
+            submission.setFileUrl(fileInfo.getUrl());
+            submission.setFileName(fileInfo.getName());
+        }
         submission.setSubmittedAt(LocalDateTime.now());
 
         // 保存提交记录

@@ -3,10 +3,15 @@ package org.example.edusoft.content.service.file.impl;
 import org.example.edusoft.content.dto.file.FileResponseDTO;
 import org.example.edusoft.content.service.file.FileQueryService;
 import lombok.RequiredArgsConstructor;
+import org.example.edusoft.content.utils.FileUtil;
 import org.springframework.stereotype.Service;
+
+import java.util.Collections;
 import java.util.List;
 import java.util.ArrayList;
-import org.example.edusoft.content.client.UserClient;    
+import java.util.stream.Collectors;
+
+import org.example.edusoft.content.client.UserClient;
 import org.example.edusoft.content.client.CourseClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.example.edusoft.content.mapper.FileMapper;
@@ -51,8 +56,7 @@ public class FileQueryServiceImpl implements FileQueryService {
     @Override
     public List<FileResponseDTO> getAllFilesByUserId(Long userId) {
         //return fileMapper.getRootFoldersByUserId(userId);
-        Long classId = courseClient.getClassIdByUserIdAndCourseId(userId, courseId);
-        List<FileInfo> fileInfoList = fileMapper.getRootFoldersByClassId(classId);
+        List<FileInfo> fileInfoList = fileMapper.getRootFoldersByUserId(userId);
         return fileInfoList.stream()
                 .map(this::convertToResponseDTO)
                 .collect(Collectors.toList());
@@ -138,7 +142,7 @@ public class FileQueryServiceImpl implements FileQueryService {
     // 4. 获取文件的版本列表
     @Override
     public List<FileResponseDTO> getFileVersions(Long userId, Long courseId, String baseName) {
-        Long classId = courseClient.getClassIdByUserandCourse(userId, courseId);
+        Long classId = courseClient.getClassIdByUserIdAndCourseId(userId, courseId);
         FileInfo root = fileMapper.getRootFolderByClassId(classId);
         if (root == null) return Collections.emptyList();
         return fileMapper.getVersionsByBaseName(baseName, root.getId()).stream()

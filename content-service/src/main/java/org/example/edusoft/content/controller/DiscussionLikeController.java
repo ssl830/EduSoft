@@ -33,13 +33,13 @@ public class DiscussionLikeController {
             return ResponseEntity.status(401).body(response);
         }
         try {
-            Map<String, Object> validate = userClient.validateToken(token);
-            if (validate == null || validate.get("code") == null || ((Number) validate.get("code")).intValue() != 200) {
+            boolean validate = userClient.validateToken("http://localhost:8081", token);
+            if (validate == false) {
                 Map<String, String> response = new HashMap<>();
                 response.put("error", "登录状态无效");
                 return ResponseEntity.status(401).body(response);
             }
-            Map<String, Object> userData = (Map<String, Object>) validate.get("data");
+            Map<String, Object> userData = userClient.fetchCurrentUser("http://localhost:8081", token);
             Long userId = ((Number) userData.get("id")).longValue();
             DiscussionLike like = discussionLikeService.likeDiscussion(discussionId, userId);
             return ResponseEntity.ok(like);
@@ -67,13 +67,13 @@ public class DiscussionLikeController {
             return ResponseEntity.status(401).body(response);
         }
         try {
-            Map<String, Object> validate = userClient.validateToken(token);
-            if (validate == null || validate.get("code") == null || ((Number) validate.get("code")).intValue() != 200) {
+            boolean validate = userClient.validateToken("http://localhost:8081", token);
+            if (validate == false) {
                 Map<String, String> response = new HashMap<>();
                 response.put("error", "登录状态无效");
                 return ResponseEntity.status(401).body(response);
             }
-            Map<String, Object> userData = (Map<String, Object>) validate.get("data");
+            Map<String, Object> userData = userClient.fetchCurrentUser("http://localhost:8081", token);
             Long userId = ((Number) userData.get("id")).longValue();
             discussionLikeService.unlikeDiscussion(discussionId, userId);
             Map<String, String> response = new HashMap<>();
@@ -135,13 +135,13 @@ public class DiscussionLikeController {
             return ResponseEntity.status(401).body(response);
         }
         try {
-            Map<String, Object> validate = userClient.validateToken(token);
-            if (validate == null || validate.get("code") == null || ((Number) validate.get("code")).intValue() != 200) {
+            boolean validate = userClient.validateToken("http://localhost:8081", token);
+            if (validate == false) {
                 Map<String, String> response = new HashMap<>();
                 response.put("error", "登录状态无效");
                 return ResponseEntity.status(401).body(response);
             }
-            Map<String, Object> userData = (Map<String, Object>) validate.get("data");
+            Map<String, Object> userData = userClient.fetchCurrentUser("http://localhost:8081", token);
             Long userId = ((Number) userData.get("id")).longValue();
             Boolean hasLiked = discussionLikeService.hasLiked(discussionId, userId);
             return ResponseEntity.ok(hasLiked);

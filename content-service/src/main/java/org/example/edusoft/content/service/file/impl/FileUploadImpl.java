@@ -1,7 +1,8 @@
 package org.example.edusoft.content.service.file.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.example.edusoft.content.common.domain.FileBo;
-import org.example.edusoft.content.common.domain.Result;
+import org.example.edusoft.content.common.Result;
 import org.example.edusoft.content.mapper.FileMapper;
 import org.example.edusoft.content.service.file.FileUpload;
 import org.example.edusoft.content.common.storage.IFileStorageProvider;
@@ -48,13 +49,13 @@ public class FileUploadImpl implements FileUpload {
     private String userBaseUrl;
 
     @Override
-    public Result<?> uploadFile(MultipartFile file, String title, Long courseId, Long sectionId, String visibility, Long uploaderId, String type) {
+    public Result<?> uploadFile(MultipartFile file, String title, Long courseId, Long sectionId, String visibility, Long uploaderId, String type) throws JsonProcessingException {
         return uploadFile(file, title, courseId, sectionId, visibility, uploaderId, type, false);
     }
     
     // done
     @Override
-    public Result<?> uploadFile(MultipartFile file, String title, Long courseId, Long sectionId, String visibility, Long uploaderId, String type, boolean uploadToKnowledgeBase) {
+    public Result<?> uploadFile(MultipartFile file, String title, Long courseId, Long sectionId, String visibility, Long uploaderId, String type, boolean uploadToKnowledgeBase) throws JsonProcessingException {
         // 转换前端传来的type为枚举类，便于之后进行筛选 
         FileType filetype = FileType.getByName(type);
         Result<?> result = null;
@@ -109,14 +110,14 @@ public class FileUploadImpl implements FileUpload {
                 return Result.error("部分班级上传失败: " + failedClasses);
             }
             
-            result = Result.ok("上传成功");
+            result = Result.success("上传成功");
 
         } else if("CLASS_ONLY".equals(visibility)) {
             // 从请求参数中获取 classId，必须传递
             Long classId = null;
             try {
                 // 这里使用根据课程ID和用户ID获取班级ID的方法，确保用户在该班级中
-                classId = courseClient.getClassIdByUserandCourse(uploaderId, courseId);
+                classId = courseClient.getClassIdByUserIdAndCourseId(uploaderId, courseId);
                 if (classId == null) {
                     // 尝试获取课程的默认班级
                     List<Long> classIds = courseClient.getAllClassIdsByCourseId(courseId);
@@ -308,7 +309,7 @@ public class FileUploadImpl implements FileUpload {
             fileMapper.updateNode(oldInfo);
         }
 
-        return Result.ok("上传成功");
+        return Result.success("上传成功");
     }
 
     //  同文件夹中重名文件加标号，用于前端展示，OSS库中会自动生成不重复的文件名，不需要这里处理

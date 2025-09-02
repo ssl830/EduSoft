@@ -5,12 +5,15 @@ import org.example.edusoft.content.entity.resource.LearningProgress;
 import org.example.edusoft.content.dto.resource.ResourceProgressDTO;
 import org.example.edusoft.content.mapper.resource.TeachingResourceMapper;
 import org.example.edusoft.content.service.resource.TeachingResourceService;
-import org.example.edusoft.content.service.FileUploadService;
+import org.example.edusoft.content.service.file.FileUpload;
 import org.example.edusoft.content.exception.BusinessException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import org.example.edusoft.content.entity.file.FileType;
+import org.example.edusoft.content.entity.file.FileInfo;
+import org.example.edusoft.content.common.Result;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -24,7 +27,7 @@ public class TeachingResourceServiceImpl implements TeachingResourceService {
     private TeachingResourceMapper teachingResourceMapper;
     
     @Autowired
-    private FileUploadService fileUploadService;
+    private FileUpload fileUploadService;
     
     @Override
     public TeachingResource createResource(TeachingResource resource) {
@@ -44,11 +47,16 @@ public class TeachingResourceServiceImpl implements TeachingResourceService {
         if (file == null || file.isEmpty()) {
             throw new BusinessException("上传文件不能为空");
         }
-        
-        // 上传文件到阿里云OSS
-        String folder = "teaching-resources/" + courseId + "/" + chapterId;
-        String fileUrl = fileUploadService.uploadFile(file, folder);
-        
+
+        // 使用新的上传接口
+        Result<?> result = fileUploadService.upload(file, title, null, courseId, null, "private", chapterId, FileType.OTHER, createdBy);
+        String fileUrl = null;
+        String fileName = null;
+        if (result.getData() instanceof FileInfo fileInfo) {
+            fileUrl = fileInfo.getUrl();
+            fileName = fileInfo.getName();
+        }
+
         TeachingResource resource = new TeachingResource();
         resource.setTitle(title);
         resource.setDescription(description);

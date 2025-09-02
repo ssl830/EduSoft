@@ -40,13 +40,13 @@ public class DiscussionReplyController {
             return ResponseEntity.status(401).body(resp);
         }
         try {
-            Map<String, Object> validate = userClient.validateToken(token);
-            if (validate == null || validate.get("code") == null || ((Number) validate.get("code")).intValue() != 200) {
-                Map<String, String> resp = new HashMap<>();
-                resp.put("error", "登录状态无效");
-                return ResponseEntity.status(401).body(resp);
+            boolean validate = userClient.validateToken("http://localhost:8081", token);
+            if (validate == false) {
+                Map<String, String> response = new HashMap<>();
+                response.put("error", "登录状态无效");
+                return ResponseEntity.status(401).body(response);
             }
-            Map<String, Object> userData = (Map<String, Object>) validate.get("data");
+            Map<String, Object> userData = userClient.fetchCurrentUser("http://localhost:8081", token);
             Long creatorId = ((Number) userData.get("id")).longValue();
             // user-service 校验返回中，用户的学号/工号字段为 userId（与 DiscussionController 一致用作 creator_num）
             String userNum = (String) userData.get("userId");
@@ -123,11 +123,11 @@ public class DiscussionReplyController {
             return ResponseEntity.status(401).body(resp);
         }
         try {
-            Map<String, Object> validate = userClient.validateToken(token);
-            if (validate == null || validate.get("code") == null || ((Number) validate.get("code")).intValue() != 200) {
-                Map<String, String> resp = new HashMap<>();
-                resp.put("error", "登录状态无效");
-                return ResponseEntity.status(401).body(resp);
+            boolean validate = userClient.validateToken("http://localhost:8081", token);
+            if (validate == false) {
+                Map<String, String> response = new HashMap<>();
+                response.put("error", "登录状态无效");
+                return ResponseEntity.status(401).body(response);
             }
             boolean success = discussionReplyService.deleteReply(id);
             if (success) {

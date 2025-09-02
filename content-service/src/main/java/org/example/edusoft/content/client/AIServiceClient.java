@@ -1,5 +1,6 @@
 package org.example.edusoft.content.client;
 
+import org.example.edusoft.content.service.MultipartInputStreamFileResource;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;

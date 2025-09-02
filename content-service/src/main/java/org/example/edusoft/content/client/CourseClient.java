@@ -1,5 +1,6 @@
 package org.example.edusoft.content.client;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,7 +20,7 @@ import java.util.Map;
 public class CourseClient extends BaseServiceClient {
     private static final Logger logger = LoggerFactory.getLogger(CourseClient.class);
 
-    @Value("${service.course.url}")
+    @Value("${course.service.url}")
     private String courseServiceUrl;
 
     protected String getServiceName() {
@@ -146,7 +147,10 @@ public class CourseClient extends BaseServiceClient {
         return result;
     }
 
-    public List<Map<String, Object>> getAllClassIdsByCourseId(Long courseId) {
+    /**
+     * 根据课程ID获取所有班级ID
+     */
+    public List<Long> getAllClassIdsByCourseId(Long courseId) throws JsonProcessingException {
         if (courseId == null) {
             throw new IllegalArgumentException("课程ID不能为空");
         }
@@ -163,11 +167,22 @@ public class CourseClient extends BaseServiceClient {
             entity,
             String.class
         );
-        // 假设返回的是JSON字符串，解析为List<Map>
         String body = response.getBody();
         if (body != null && !body.isEmpty()) {
+            // 假设返回的是 List<Map>，每个Map有id字段
             List<Map<String, Object>> list = new com.fasterxml.jackson.databind.ObjectMapper().readValue(body, List.class);
-            return list;
+            List<Long> classIds = new java.util.ArrayList<>();
+            for (Map<String, Object> item : list) {
+                Object idObj = item.get("id");
+                if (idObj instanceof Number) {
+                    classIds.add(((Number) idObj).longValue());
+                } else if (idObj != null) {
+                    try {
+                        classIds.add(Long.valueOf(idObj.toString()));
+                    } catch (Exception ignore) {}
+                }
+            }
+            return classIds;
         }
         return java.util.Collections.emptyList();
     }

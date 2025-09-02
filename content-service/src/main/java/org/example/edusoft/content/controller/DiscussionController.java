@@ -65,13 +65,13 @@ public class DiscussionController {
         }
         
         // 调用 user-service 校验 token 并获取用户信息
-        Map<String, Object> validate = userClient.validateToken(token);
-        if (validate == null || validate.get("code") == null || ((Number) validate.get("code")).intValue() != 200) {
+        boolean validate = userClient.validateToken("http://localhost:8081", token);
+        if (validate == false) {
             Map<String, String> response = new HashMap<>();
             response.put("error", "登录状态无效");
             return ResponseEntity.status(401).body(response);
         }
-        Map<String, Object> userData = (Map<String, Object>) validate.get("data");
+        Map<String, Object> userData = userClient.fetchCurrentUser("http://localhost:8081", token);
         if (userData == null) {
             Map<String, String> response = new HashMap<>();
             response.put("error", "用户不存在");
@@ -106,13 +106,13 @@ public class DiscussionController {
             response.put("error", "请先登录");
             return ResponseEntity.status(401).body(response);
         }
-        Map<String, Object> validate = userClient.validateToken(token);
-        if (validate == null || validate.get("code") == null || ((Number) validate.get("code")).intValue() != 200) {
+        boolean validate = userClient.validateToken("http://localhost:8081", token);
+        if (validate == false) {
             Map<String, String> response = new HashMap<>();
             response.put("error", "登录状态无效");
             return ResponseEntity.status(401).body(response);
         }
-        Map<String, Object> userData = (Map<String, Object>) validate.get("data");
+        Map<String, Object> userData = userClient.fetchCurrentUser("http://localhost:8081", token);
         Long loginId = ((Number) userData.get("id")).longValue();
         // 验证是否是讨论创建者
         Discussion existingDiscussion = discussionService.getDiscussion(id);
@@ -150,13 +150,13 @@ public class DiscussionController {
             response.put("error", "请先登录");
             return ResponseEntity.status(401).body(response);
         }
-        Map<String, Object> validate = userClient.validateToken(token);
-        if (validate == null || validate.get("code") == null || ((Number) validate.get("code")).intValue() != 200) {
+        boolean validate = userClient.validateToken("http://localhost:8081", token);
+        if (validate == false) {
             Map<String, String> response = new HashMap<>();
             response.put("error", "登录状态无效");
             return ResponseEntity.status(401).body(response);
         }
-        Map<String, Object> userData = (Map<String, Object>) validate.get("data");
+        Map<String, Object> userData = userClient.fetchCurrentUser("http://localhost:8081", token);
         Long loginId = ((Number) userData.get("id")).longValue();
         // 验证是否是讨论创建者
         Discussion discussion = discussionService.getDiscussion(id);
@@ -258,13 +258,13 @@ public class DiscussionController {
             response.put("error", "请先登录");
             return ResponseEntity.status(401).body(response);
         }
-        Map<String, Object> validate = userClient.validateToken(token);
-        if (validate == null || validate.get("code") == null || ((Number) validate.get("code")).intValue() != 200) {
+        boolean validate = userClient.validateToken("http://localhost:8081", token);
+        if (validate == false) {
             Map<String, String> response = new HashMap<>();
             response.put("error", "登录状态无效");
             return ResponseEntity.status(401).body(response);
         }
-        Map<String, Object> userData = (Map<String, Object>) validate.get("data");
+        Map<String, Object> userData = userClient.fetchCurrentUser("http://localhost:8081", token);
         if (userData == null) {
             Map<String, String> response = new HashMap<>();
             response.put("error", "用户不存在");
@@ -308,13 +308,13 @@ public class DiscussionController {
             response.put("error", "请先登录");
             return ResponseEntity.status(401).body(response);
         }
-        Map<String, Object> validate = userClient.validateToken(token);
-        if (validate == null || validate.get("code") == null || ((Number) validate.get("code")).intValue() != 200) {
+        boolean validate = userClient.validateToken("http://localhost:8081", token);
+        if (validate == false) {
             Map<String, String> response = new HashMap<>();
             response.put("error", "登录状态无效");
             return ResponseEntity.status(401).body(response);
         }
-        Map<String, Object> userData = (Map<String, Object>) validate.get("data");
+        Map<String, Object> userData = userClient.fetchCurrentUser("http://localhost:8081", token);
         if (userData == null) {
             Map<String, String> response = new HashMap<>();
             response.put("error", "用户不存在");

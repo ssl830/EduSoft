@@ -1,9 +1,8 @@
 package org.example.edusoft.content.controller;
 
-import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.example.edusoft.content.common.Result;
 import org.example.edusoft.content.dto.file.FileQueryRequest;
 import org.example.edusoft.content.dto.file.FileResponseDTO;
@@ -16,14 +15,9 @@ import org.example.edusoft.content.service.file.FileQueryService;
 import org.example.edusoft.content.service.file.FolderService;
 import org.example.edusoft.content.service.file.FileAccessService;
 import org.springframework.web.multipart.MultipartFile;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.RequiredArgsConstructor;
 
 import org.example.edusoft.content.client.UserClient;
 
@@ -100,7 +94,7 @@ public class FileController {
      * @return Result<?> 响应结果
      */
     @PostMapping("courses/{courseId}/upload")
-    public Result<?> uploadFile(
+    public Result<Object> uploadFile(
         @PathVariable("courseId") Long courseId,
         @RequestParam("file") MultipartFile file,
         @RequestParam("title") String title,
@@ -109,7 +103,7 @@ public class FileController {
         @RequestParam(name = "visibility", required = false, defaultValue = "CLASS_ONLY") String visibility,
         @RequestParam(name = "type", required = false) String type,
         @RequestParam(name = "uploadToKnowledgeBase", required = false, defaultValue = "false") Boolean uploadToKnowledgeBase
-    ) {
+    ) throws JsonProcessingException {
         // 参数校验
         if (file == null || file.isEmpty()) {
             return Result.error("上传文件不能为空");
@@ -124,7 +118,7 @@ public class FileController {
         }
 
         // 调用 FileUploadService 进行文件上传逻辑处理
-        return fileUploadService.uploadFile(file, title, courseId, sectionId, visibility, uploaderId, type, uploadToKnowledgeBase);
+        return (Result<Object>) fileUploadService.uploadFile(file, title, courseId, sectionId, visibility, uploaderId, type, uploadToKnowledgeBase);
     }
 
 

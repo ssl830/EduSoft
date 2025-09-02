@@ -1,6 +1,7 @@
 package org.example.edusoft.content.service.file;
 
-import org.example.edusoft.content.common.domain.Result;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import org.example.edusoft.content.common.Result;
 import org.example.edusoft.content.entity.file.FileInfo;
 import org.example.edusoft.content.entity.file.FileType;
 import org.springframework.web.multipart.MultipartFile;
@@ -10,13 +11,13 @@ public interface FileUpload {
     /**
      * 上传文件
      */
-    public Result<?> uploadFile(MultipartFile file, String title, Long courseId, Long sectionId, String visibility, Long uploaderId, String type);
-    
+    public Result<?> uploadFile(MultipartFile file, String title, Long courseId, Long sectionId, String visibility, Long uploaderId, String type) throws JsonProcessingException;
+
     /**
      * 上传文件，并指定是否上传到知识库
      */
-    public Result<?> uploadFile(MultipartFile file, String title, Long courseId, Long sectionId, String visibility, Long uploaderId, String type, boolean uploadToKnowledgeBase);
-    
+    public Result<?> uploadFile(MultipartFile file, String title, Long courseId, Long sectionId, String visibility, Long uploaderId, String type, boolean uploadToKnowledgeBase) throws JsonProcessingException;
+
     /**
      * 上传文件
      */
