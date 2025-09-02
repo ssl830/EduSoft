@@ -185,4 +185,9 @@ public class ClassController {
         return classService.getClassesByUserIdAndCourseIds(userId, List.of(courseId));
     }
     
+    @GetMapping("/list")
+    public Result<List<Map<String, Object>>> getAllClasses() {
+        return Result.success(classService.getAllClasses());
+    }
+
 }

@@ -49,6 +49,7 @@ export default defineConfig({
       '/api/selfpractice': { target: 'http://localhost:8084', changeOrigin: true },
       '/api/submission': { target: 'http://localhost:8084', changeOrigin: true },
       '/api/learning': { target: 'http://localhost:8084', changeOrigin: true },
+      '/api/admin': { target: 'http://localhost:8084', changeOrigin: true },
     }
   },
   optimizeDeps: {

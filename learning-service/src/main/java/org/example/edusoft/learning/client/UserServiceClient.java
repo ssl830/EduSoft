@@ -11,6 +11,8 @@ import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Map;
+import java.util.List;
+import java.util.ArrayList;
 
 @Component
 public class UserServiceClient {
@@ -198,5 +200,75 @@ public class UserServiceClient {
 			logger.debug("检查用户是否存在失败: {}", ex.getMessage());
 			return false;
 		}
+	}
+
+	/**
+	 * 获取全部老师信息
+	 * @param baseUrl 用户服务基础URL
+	 * @param token 认证token
+	 * @return 老师信息列表（List<Map>），失败返回空列表
+	 */
+	public List<Map<String, Object>> fetchAllTeachers(String baseUrl, String token) {
+		if (token == null || token.trim().isEmpty()) {
+			logger.warn("Token为空，无法获取老师信息");
+			return new ArrayList<>();
+		}
+		String pureToken = token.replace("Bearer ", "");
+		try {
+			HttpHeaders headers = new HttpHeaders();
+			headers.set("satoken", pureToken);
+			HttpEntity<Void> entity = new HttpEntity<>(headers);
+			ResponseEntity<Map> response = restTemplate.exchange(
+				baseUrl + "/api/user/teachers",
+				HttpMethod.GET,
+				entity,
+				Map.class
+			);
+			Map<String, Object> result = response.getBody();
+			if (result != null && result.get("code") instanceof Integer && (Integer) result.get("code") == 200) {
+				Object data = result.get("data");
+				if (data instanceof List) {
+					return (List<Map<String, Object>>) data;
+				}
+			}
+		} catch (Exception ex) {
+			logger.warn("获取老师列表失败: {}", ex.getMessage());
+		}
+		return new ArrayList<>();
+	}
+
+	/**
+	 * 获取全部学生信息
+	 * @param baseUrl 用户服务基础URL
+	 * @param token 认证token
+	 * @return 学生信息列表（List<Map>），失败返回空列表
+	 */
+	public List<Map<String, Object>> fetchAllStudents(String baseUrl, String token) {
+		if (token == null || token.trim().isEmpty()) {
+			logger.warn("Token为空，无法获取学生信息");
+			return new ArrayList<>();
+		}
+		String pureToken = token.replace("Bearer ", "");
+		try {
+			HttpHeaders headers = new HttpHeaders();
+			headers.set("satoken", pureToken);
+			HttpEntity<Void> entity = new HttpEntity<>(headers);
+			ResponseEntity<Map> response = restTemplate.exchange(
+				baseUrl + "/api/user/students",
+				HttpMethod.GET,
+				entity,
+				Map.class
+			);
+			Map<String, Object> result = response.getBody();
+			if (result != null && result.get("code") instanceof Integer && (Integer) result.get("code") == 200) {
+				Object data = result.get("data");
+				if (data instanceof List) {
+					return (List<Map<String, Object>>) data;
+				}
+			}
+		} catch (Exception ex) {
+			logger.warn("获取学生列表失败: {}", ex.getMessage());
+		}
+		return new ArrayList<>();
 	}
 }
