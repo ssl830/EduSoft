@@ -35,6 +35,20 @@ export default defineConfig({
     },
     hmr: {
       overlay: false // 禁用热更新错误覆盖
+    },
+    proxy: {
+      '/api/user': { target: 'http://localhost:8081', changeOrigin: true },
+      '/api/imports': { target: 'http://localhost:8082', changeOrigin: true },
+      '/api/courses': { target: 'http://localhost:8082', changeOrigin: true },
+      '/api/classes': { target: 'http://localhost:8082', changeOrigin: true },
+      // TODO: 按实际路径调整 service3 前缀
+      '/service3': { target: 'http://localhost:8083', changeOrigin: true },
+      '/api/judge': { target: 'http://localhost:8084', changeOrigin: true },
+      '/api/record': { target: 'http://localhost:8084', changeOrigin: true },
+      '/api/practice': { target: 'http://localhost:8084', changeOrigin: true },
+      '/api/selfpractice': { target: 'http://localhost:8084', changeOrigin: true },
+      '/api/submission': { target: 'http://localhost:8084', changeOrigin: true },
+      '/api/learning': { target: 'http://localhost:8084', changeOrigin: true },
     }
   },
   optimizeDeps: {
