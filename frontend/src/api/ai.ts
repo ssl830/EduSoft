@@ -153,7 +153,7 @@ export function getSelfPracticeHistory() {
 }
 
 export function getSelfPracticeDetail(pid: number | string) {
-  return http.get(`/api/selfpractice/history/${pid}`)
+  return http.get(`/api/selfpractice/detail/${pid}`)
 }
 
 // AI学情分析（练习得分率分析）
