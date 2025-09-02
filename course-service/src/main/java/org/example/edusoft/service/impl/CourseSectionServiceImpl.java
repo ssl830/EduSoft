@@ -26,7 +26,6 @@ public class CourseSectionServiceImpl implements CourseSectionService {
                         .orderByAsc("sort_order")
         );
     }
-
     @Override
     @Transactional
     public CourseSection createSection(CourseSection section) {

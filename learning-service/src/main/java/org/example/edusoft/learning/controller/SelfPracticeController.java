@@ -203,13 +203,17 @@ public class SelfPracticeController {
                 return Result.error("AI服务生成失败，请稍后重试");
             }
 
-            String result = (String) aiResult.get("result");
-            if (result != null && !result.trim().isEmpty()) {
-                // 保存生成的练习
-                selfPracticeService.saveGeneratedPractice(prompt, result, studentId);
+            Long practiceId = null;
+            // 保存生成的练习并获取practiceId
+            practiceId = selfPracticeService.saveGeneratedPractice(studentId, aiResult);
+
+            // 在返回结果中添加practiceId
+            Map<String, Object> responseData = new HashMap<>(aiResult);
+            if (practiceId != null) {
+                responseData.put("practiceId", practiceId);
             }
 
-            return Result.success(aiResult, "练习生成成功");
+            return Result.success(responseData, "练习生成成功");
         } catch (Exception e) {
             logger.error("生成练习失败 - 学生ID: {}, 错误: {}", studentId, e.getMessage(), e);
             return Result.error("生成练习失败：" + e.getMessage());

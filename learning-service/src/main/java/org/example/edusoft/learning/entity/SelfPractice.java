@@ -13,6 +13,5 @@ public class SelfPractice {
     private Long id;
     private Long studentId;
     private String title;
-    private String prompt;  // AI生成提示词
     private LocalDateTime createdAt;
 }

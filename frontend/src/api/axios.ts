@@ -34,6 +34,11 @@ instance.interceptors.request.use(
         console.log('未找到token，请求:', config.url)
       }
 
+      // 添加用户ID请求头（如果用户已登录）
+      if (authStore.user?.id) {
+        config.headers['X-User-Id'] = authStore.user.id.toString()
+      }
+
       return config
     },
     error => {

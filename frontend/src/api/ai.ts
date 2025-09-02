@@ -76,6 +76,16 @@ export interface StudentExerciseResponse {
   }
 }
 
+// ========== 自测练习相关 ==========
+export interface SelfPracticeGenerateRequest {
+  prompt: string
+}
+
+// 生成自测练习（保存到数据库）
+export function generateSelfPracticeExercise(data: SelfPracticeGenerateRequest) {
+  return http.post('/api/selfpractice/generate', data)
+}
+
 export interface SelfPracticeProgressRequest {
   practiceId: number
   answers: any[]
