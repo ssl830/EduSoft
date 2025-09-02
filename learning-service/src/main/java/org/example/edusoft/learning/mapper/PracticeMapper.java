@@ -10,6 +10,7 @@ import org.apache.ibatis.annotations.Options;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
+import org.example.edusoft.learning.dto.PracticeDTO;
 import org.example.edusoft.learning.entity.Practice;
 
 @Mapper
@@ -47,4 +48,17 @@ public interface PracticeMapper {
     
     @Update("UPDATE practice_question SET score = #{score} WHERE practice_id = #{practiceId} AND question_id = #{questionId}")
     int updateQuestionScore(@Param("practiceId") Long practiceId, @Param("questionId") Long questionId, @Param("score") Integer score);
+
+    @Select("""
+            SELECT 
+                p.*,
+                CASE WHEN s.id IS NOT NULL THEN TRUE ELSE FALSE END as isCompleted,
+                (SELECT COUNT(*) FROM submission s2 WHERE s2.practice_id = p.id AND s2.student_id = #{studentId}) as submissionCount,
+                (SELECT MAX(score) FROM submission s3 WHERE s3.practice_id = p.id AND s3.student_id = #{studentId}) as score
+            FROM practice p
+            LEFT JOIN submission s ON p.id = s.practice_id AND s.student_id = #{studentId}
+            WHERE p.class_id = #{classId}
+            ORDER BY p.created_at DESC
+            """)
+    List<PracticeDTO> getStudentPracticeList(Long studentId, Long classId);
 }
