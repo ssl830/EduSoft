@@ -9,7 +9,7 @@ public interface DiscussionReplyService {
     /**
      * 创建回复
      */
-    DiscussionReply createReply(Long discussionId, Long parentReplyId, Long creatorId, String content);
+    DiscussionReply createReply(Long discussionId, Long parentReplyId, Long creatorId, String content, String userNum);
     
     /**
      * 获取回复详情

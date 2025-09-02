@@ -5,9 +5,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.example.edusoft.content.entity.discussion.Discussion;
-// import org.example.edusoft.content.entity.user.User; // 已删除，使用Object代替
 import org.example.edusoft.content.service.discussion.DiscussionService;
-import org.example.edusoft.content.service.user.UserService;
+import org.example.edusoft.content.client.UserClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -19,19 +18,17 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import cn.dev33.satoken.annotation.SaCheckLogin;
-import cn.dev33.satoken.stp.StpUtil;
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
-@RequestMapping("/api/content/discussion")
+@RequestMapping("/api/discussion")
 public class DiscussionController {
 
     @Autowired
     private DiscussionService discussionService;
     
     @Autowired
-    private UserService userService;
+    private UserClient userClient;
 
     /**
      * 创建讨论
@@ -42,12 +39,13 @@ public class DiscussionController {
      * @param discussion 讨论内容
      */
     @PostMapping("/course/{courseId}/class/{classId}")
-    @SaCheckLogin
     public ResponseEntity<?> createDiscussion(
             @PathVariable(required = true) Long courseId,
             @PathVariable(required = true) Long classId,
-            @RequestBody Discussion discussion) {
-        if (!StpUtil.isLogin()) {
+            @RequestBody Discussion discussion,
+            HttpServletRequest request) {
+        String token = request.getHeader("satoken");
+        if (token == null || token.isEmpty()) {
             Map<String, String> response = new HashMap<>();
             response.put("error", "请先登录");
             return ResponseEntity.status(401).body(response);
@@ -66,19 +64,28 @@ public class DiscussionController {
             return ResponseEntity.badRequest().body(response);
         }
         
-        // 获取当前登录用户信息
-        Long loginId = StpUtil.getLoginIdAsLong();
-        Object user = userService.findById(loginId);
-        if (user == null) {
+        // 调用 user-service 校验 token 并获取用户信息
+        Map<String, Object> validate = userClient.validateToken(token);
+        if (validate == null || validate.get("code") == null || ((Number) validate.get("code")).intValue() != 200) {
+            Map<String, String> response = new HashMap<>();
+            response.put("error", "登录状态无效");
+            return ResponseEntity.status(401).body(response);
+        }
+        Map<String, Object> userData = (Map<String, Object>) validate.get("data");
+        if (userData == null) {
             Map<String, String> response = new HashMap<>();
             response.put("error", "用户不存在");
             return ResponseEntity.status(404).body(response);
         }
+        Long loginId = ((Number) userData.get("id")).longValue();
+        String userNum = (String) userData.get("userId");
         
         discussion.setCourseId(courseId);
         discussion.setClassId(classId);
         discussion.setCreatorId(loginId);
-        // discussion.setCreatorNum(user.getUserId()); // 暂时注释掉，因为User类型已删除
+        if (userNum != null) {
+            discussion.setCreatorNum(userNum);
+        }
         return ResponseEntity.ok(discussionService.createDiscussion(discussion));
     }
 
@@ -89,15 +96,24 @@ public class DiscussionController {
      * 返回：403 - 无权限修改；404 - 讨论不存在
      */
     @PutMapping("/{id}")
-    @SaCheckLogin
     public ResponseEntity<?> updateDiscussion(
             @PathVariable Long id,
-            @RequestBody Discussion discussion) {
-        if (!StpUtil.isLogin()) {
+            @RequestBody Discussion discussion,
+            HttpServletRequest request) {
+        String token = request.getHeader("satoken");
+        if (token == null || token.isEmpty()) {
             Map<String, String> response = new HashMap<>();
             response.put("error", "请先登录");
             return ResponseEntity.status(401).body(response);
         }
+        Map<String, Object> validate = userClient.validateToken(token);
+        if (validate == null || validate.get("code") == null || ((Number) validate.get("code")).intValue() != 200) {
+            Map<String, String> response = new HashMap<>();
+            response.put("error", "登录状态无效");
+            return ResponseEntity.status(401).body(response);
+        }
+        Map<String, Object> userData = (Map<String, Object>) validate.get("data");
+        Long loginId = ((Number) userData.get("id")).longValue();
         // 验证是否是讨论创建者
         Discussion existingDiscussion = discussionService.getDiscussion(id);
         if (existingDiscussion == null) {
@@ -105,7 +121,7 @@ public class DiscussionController {
             response.put("error", "讨论不存在");
             return ResponseEntity.status(404).body(response);
         }
-        if (!existingDiscussion.getCreatorId().equals(StpUtil.getLoginIdAsLong())) {
+        if (!existingDiscussion.getCreatorId().equals(loginId)) {
             Map<String, String> response = new HashMap<>();
             response.put("error", "您没有权限修改此讨论");
             return ResponseEntity.status(403).body(response);
@@ -127,13 +143,21 @@ public class DiscussionController {
      * 返回：403 - 无权限删除；404 - 讨论不存在
      */
     @DeleteMapping("/{id}")
-    @SaCheckLogin
-    public ResponseEntity<?> deleteDiscussion(@PathVariable Long id) {
-        if (!StpUtil.isLogin()) {
+    public ResponseEntity<?> deleteDiscussion(@PathVariable Long id, HttpServletRequest request) {
+        String token = request.getHeader("satoken");
+        if (token == null || token.isEmpty()) {
             Map<String, String> response = new HashMap<>();
             response.put("error", "请先登录");
             return ResponseEntity.status(401).body(response);
         }
+        Map<String, Object> validate = userClient.validateToken(token);
+        if (validate == null || validate.get("code") == null || ((Number) validate.get("code")).intValue() != 200) {
+            Map<String, String> response = new HashMap<>();
+            response.put("error", "登录状态无效");
+            return ResponseEntity.status(401).body(response);
+        }
+        Map<String, Object> userData = (Map<String, Object>) validate.get("data");
+        Long loginId = ((Number) userData.get("id")).longValue();
         // 验证是否是讨论创建者
         Discussion discussion = discussionService.getDiscussion(id);
         if (discussion == null) {
@@ -141,7 +165,7 @@ public class DiscussionController {
             response.put("error", "讨论不存在");
             return ResponseEntity.status(404).body(response);
         }
-        if (!discussion.getCreatorId().equals(StpUtil.getLoginIdAsLong())) {
+        if (!discussion.getCreatorId().equals(loginId)) {
             Map<String, String> response = new HashMap<>();
             response.put("error", "您没有权限删除此讨论");
             return ResponseEntity.status(403).body(response);
@@ -159,9 +183,9 @@ public class DiscussionController {
      * 返回：404 - 讨论不存在
      */
     @GetMapping("/{id}")
-    @SaCheckLogin
-    public ResponseEntity<?> getDiscussion(@PathVariable Long id) {
-        if (!StpUtil.isLogin()) {
+    public ResponseEntity<?> getDiscussion(@PathVariable Long id, HttpServletRequest request) {
+        String token = request.getHeader("satoken");
+        if (token == null || token.isEmpty()) {
             Map<String, String> response = new HashMap<>();
             response.put("error", "请先登录");
             return ResponseEntity.status(401).body(response);
@@ -182,7 +206,6 @@ public class DiscussionController {
      * 功能说明：获取指定课程ID下的所有讨论列表
      */
     @GetMapping("/course/{courseId}")
-    @SaCheckLogin
     public ResponseEntity<List<Discussion>> getDiscussionsByCourse(@PathVariable Long courseId) {
         return ResponseEntity.ok(discussionService.getDiscussionsByCourse(courseId));
     }
@@ -193,7 +216,6 @@ public class DiscussionController {
      * 功能说明：获取指定班级ID下的所有讨论列表
      */
     @GetMapping("/class/{classId}")
-    @SaCheckLogin
     public ResponseEntity<List<Discussion>> getDiscussionsByClass(@PathVariable Long classId) {
         return ResponseEntity.ok(discussionService.getDiscussionsByClass(classId));
     }
@@ -204,7 +226,6 @@ public class DiscussionController {
      * 功能说明：获取指定用户ID创建的所有讨论列表
      */
     @GetMapping("/creator/{creatorId}")
-    @SaCheckLogin
     public ResponseEntity<List<Discussion>> getDiscussionsByCreator(@PathVariable Long creatorId) {
         return ResponseEntity.ok(discussionService.getDiscussionsByCreator(creatorId));
     }
@@ -215,7 +236,6 @@ public class DiscussionController {
      * 功能说明：获取指定课程ID和班级ID下的所有讨论列表
      */
     @GetMapping("/course/{courseId}/class/{classId}")
-    @SaCheckLogin
     public ResponseEntity<List<Discussion>> getDiscussionsByCourseAndClass(
             @PathVariable Long courseId,
             @PathVariable Long classId) {
@@ -230,17 +250,34 @@ public class DiscussionController {
     @PutMapping("/{id}/pin")
     public ResponseEntity<?> updatePinnedStatus(
             @PathVariable Long id,
-            @RequestParam Boolean isPinned) {
-        // 获取当前登录用户信息
-        Long loginId = StpUtil.getLoginIdAsLong();
-        Object user = userService.findById(loginId);
-        if (user == null) {
+            @RequestParam Boolean isPinned,
+            HttpServletRequest request) {
+        String token = request.getHeader("satoken");
+        if (token == null || token.isEmpty()) {
+            Map<String, String> response = new HashMap<>();
+            response.put("error", "请先登录");
+            return ResponseEntity.status(401).body(response);
+        }
+        Map<String, Object> validate = userClient.validateToken(token);
+        if (validate == null || validate.get("code") == null || ((Number) validate.get("code")).intValue() != 200) {
+            Map<String, String> response = new HashMap<>();
+            response.put("error", "登录状态无效");
+            return ResponseEntity.status(401).body(response);
+        }
+        Map<String, Object> userData = (Map<String, Object>) validate.get("data");
+        if (userData == null) {
             Map<String, String> response = new HashMap<>();
             response.put("error", "用户不存在");
             return ResponseEntity.status(404).body(response);
         }
         
-        // TODO: 验证用户角色，暂时跳过权限检查
+        // 验证用户角色（仅教师可操作）
+        String role = (String) userData.get("role");
+        if (role == null || !"teacher".equals(role)) {
+            Map<String, String> response = new HashMap<>();
+            response.put("error", "只有教师才能执行此操作");
+            return ResponseEntity.status(403).body(response);
+        }
         
         Discussion discussion = discussionService.getDiscussion(id);
         if (discussion == null) {
@@ -263,17 +300,34 @@ public class DiscussionController {
     @PutMapping("/{id}/close")
     public ResponseEntity<?> updateClosedStatus(
             @PathVariable Long id,
-            @RequestParam Boolean isClosed) {
-        // 获取当前登录用户信息
-        Long loginId = StpUtil.getLoginIdAsLong();
-        Object user = userService.findById(loginId);
-        if (user == null) {
+            @RequestParam Boolean isClosed,
+            HttpServletRequest request) {
+        String token = request.getHeader("satoken");
+        if (token == null || token.isEmpty()) {
+            Map<String, String> response = new HashMap<>();
+            response.put("error", "请先登录");
+            return ResponseEntity.status(401).body(response);
+        }
+        Map<String, Object> validate = userClient.validateToken(token);
+        if (validate == null || validate.get("code") == null || ((Number) validate.get("code")).intValue() != 200) {
+            Map<String, String> response = new HashMap<>();
+            response.put("error", "登录状态无效");
+            return ResponseEntity.status(401).body(response);
+        }
+        Map<String, Object> userData = (Map<String, Object>) validate.get("data");
+        if (userData == null) {
             Map<String, String> response = new HashMap<>();
             response.put("error", "用户不存在");
             return ResponseEntity.status(404).body(response);
         }
         
-        // TODO: 验证用户角色，暂时跳过权限检查
+        // 验证用户角色（仅教师可操作）
+        String role = (String) userData.get("role");
+        if (role == null || !"teacher".equals(role)) {
+            Map<String, String> response = new HashMap<>();
+            response.put("error", "只有教师才能执行此操作");
+            return ResponseEntity.status(403).body(response);
+        }
         
         Discussion discussion = discussionService.getDiscussion(id);
         if (discussion == null) {
@@ -294,7 +348,6 @@ public class DiscussionController {
      * 功能说明：统计指定课程ID下的讨论总数
      */
     @GetMapping("/course/{courseId}/count")
-    @SaCheckLogin
     public ResponseEntity<Integer> countDiscussionsByCourse(@PathVariable Long courseId) {
         return ResponseEntity.ok(discussionService.countDiscussionsByCourse(courseId));
     }
@@ -305,7 +358,6 @@ public class DiscussionController {
      * 功能说明：统计指定班级ID下的讨论总数
      */
     @GetMapping("/class/{classId}/count")
-    @SaCheckLogin
     public ResponseEntity<Integer> countDiscussionsByClass(@PathVariable Long classId) {
         return ResponseEntity.ok(discussionService.countDiscussionsByClass(classId));
     }

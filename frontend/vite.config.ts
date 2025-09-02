@@ -50,6 +50,9 @@ export default defineConfig({
       '/api/submission': { target: 'http://localhost:8084', changeOrigin: true },
       '/api/learning': { target: 'http://localhost:8084', changeOrigin: true },
       '/api/admin': { target: 'http://localhost:8084', changeOrigin: true },
+      '/api/discussion':{target: 'http://localhost:8083', changeOrigin: true },
+      '/api/discussion-like':{target: 'http://localhost:8083', changeOrigin: true },
+      '/api/discussion-reply':{target: 'http://localhost:8083', changeOrigin: true },
     }
   },
   optimizeDeps: {
