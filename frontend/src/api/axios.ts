@@ -28,6 +28,10 @@ instance.interceptors.request.use(
 
       const authStore = useAuthStore()
       if (authStore.token) {
+        // 后端期望的头：satoken 或 Authorization
+        config.headers['satoken'] = authStore.token
+        config.headers['Authorization'] = authStore.token
+        // 兼容历史自定义头
         config.headers['free-fs-token'] = authStore.token
       } else if (!config.url?.includes('/login') && !config.url?.includes('/register')) {
         // 对于非登录和注册请求，如果没有token，记录日志

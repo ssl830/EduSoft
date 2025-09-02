@@ -216,8 +216,8 @@ public class UserController {
     }
 
     // 更新用户信息 - 修改为PUT方法，符合README规范
-    @PutMapping("/{userId}")
-    public SaResult updateUserInfo(@PathVariable String userId, @Valid @RequestBody UserUpdate updateDTO) {
+    @PostMapping("/{userId}")
+    public SaResult updateUserInfo(@Valid @RequestBody UserUpdate updateDTO) {
         try {
             // 检查登录状态
             StpUtil.checkLogin();
@@ -226,7 +226,7 @@ public class UserController {
             Long currentUserId = Long.parseLong(loginIdStr);
             
             // 根据userId查找用户
-            User currentUser = userService.findByUserId(userId);
+            User currentUser = userService.findById(currentUserId);
             if (currentUser == null) {
                 return SaResult.error("用户不存在");
             }
