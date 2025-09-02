@@ -8,6 +8,7 @@ import org.example.edusoft.learning.entity.Practice;
 import org.example.edusoft.learning.entity.ai.AiServiceCallLog;
 import org.example.edusoft.learning.mapper.ai.AiServiceCallLogMapper;
 import org.example.edusoft.learning.mapper.PracticeMapper;
+import org.example.edusoft.learning.mapper.PracticeQuestionStatMapper;
 import org.example.edusoft.learning.mapper.QuestionMapper;
 import org.example.edusoft.learning.mapper.SubmissionMapper;
 import org.example.edusoft.learning.service.SelfPracticeService;
@@ -59,6 +60,9 @@ public class AiAssistantService implements AiServiceCaller {
 
     @Autowired
     private PracticeMapper practiceMapper;
+
+    @Autowired
+    private PracticeQuestionStatMapper practiceQuestionStatMapper;
 
     @Autowired
     private QuestionMapper questionMapper;
@@ -392,81 +396,50 @@ public class AiAssistantService implements AiServiceCaller {
         Long userId = getCurrentUserId();
         
         try {
-            // 从数据库查询练习题目的真实统计信息
-            logger.debug("Analyzing exercise for practice_id: {}", practiceId);
-            
-            // 查询练习基本信息
-            Practice practice = practiceMapper.getPracticeById(practiceId);
-            if (practice == null) {
-                return Map.of(
-                    "status", "fail",
-                    "message", "找不到指定的练习: " + practiceId
-                );
+            // 1. 查询所有题目统计信息
+            List<Map<String, Object>> statList = practiceQuestionStatMapper.getPracticeQuestionStats(practiceId);
+            if (statList == null || statList.isEmpty()) {
+                return Map.of("status", "fail", "message", "未找到练习题目");
             }
             
-            // 查询练习中的题目及其统计信息
-            // TODO: 需要实现查询题目统计的具体方法，这里先用基础查询
+            // 2. 组装参数
             List<Map<String, Object>> exerciseQuestions = new ArrayList<>();
-            
-            // 查询该练习的题目（需要根据实际的数据库表结构调整）
-            try {
-                // 这里需要根据实际的练习-题目关联表来查询
-                // 暂时构造一些基于练习ID的示例数据，实际应该查询 practice_question 关联表
-                exerciseQuestions = List.of(
-                    Map.of(
-                        "content", "练习" + practiceId + "中的第一题",
-                        "error_rate", 0.25,
-                        "type", "选择题",
-                        "score", 5.0,
-                        "student_count", 20,
-                        "correct_count", 15
-                    ),
-                    Map.of(
-                        "content", "练习" + practiceId + "中的第二题", 
-                        "error_rate", 0.35,
-                        "type", "填空题",
-                        "score", 3.0,
-                        "student_count", 20,
-                        "correct_count", 13
-                    )
-                );
-                
-                logger.debug("Found {} questions for practice {}", exerciseQuestions.size(), practiceId);
-                
-            } catch (Exception e) {
-                logger.error("Failed to query questions for practice {}: {}", practiceId, e.getMessage());
-                return Map.of(
-                    "status", "fail",
-                    "message", "查询练习题目失败: " + e.getMessage()
-                );
+            for (Map<String, Object> stat : statList) {
+                Map<String, Object> q = new HashMap<>();
+                q.put("content", stat.getOrDefault("content", ""));
+                Double scoreRate = stat.get("score_rate") instanceof Number ? ((Number)stat.get("score_rate")).doubleValue() : null;
+                double errorRate = 1.0;
+                if (scoreRate != null) {
+                    errorRate = 1 - scoreRate;
+                }
+                q.put("error_rate", errorRate);
+                q.put("type", stat.getOrDefault("type", ""));
+                q.put("score", stat.get("score"));
+                q.put("student_count", stat.get("student_count"));
+                q.put("correct_count", stat.get("correct_count"));
+                q.put("additional_info", null);
+                exerciseQuestions.add(q);
             }
-            
-            if (exerciseQuestions.isEmpty()) {
-                return Map.of(
-                    "status", "fail",
-                    "message", "该练习中没有找到题目"
-                );
-            }
-            
-            Map<String, Object> request = Map.of("exercise_questions", exerciseQuestions);
-            
+            Map<String, Object> req = new HashMap<>();
+            req.put("exercise_questions", exerciseQuestions);
+
+            // 调试输出：打印传给AI微服务的请求体
+            logger.debug("[AI调试] analyzeExercise 请求体: {}", req);
+
+            // 3. 调用微服务分析
             String url = buildUrl(endpoint);
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
-
-            HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(request, headers);
+            HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(req, headers);
             ResponseEntity<Map> response = restTemplate.postForEntity(url, requestEntity, Map.class);
-
+            
             long duration = System.currentTimeMillis() - startTime;
             logAiServiceCall(userId, endpoint, duration, "success", null);
             return response.getBody();
         } catch (Exception e) {
             long duration = System.currentTimeMillis() - startTime;
             logAiServiceCall(userId, endpoint, duration, "fail", e.getMessage());
-            return Map.of(
-                "status", "fail",
-                "message", "AI学情分析服务调用失败: " + e.getMessage()
-            );
+            return Map.of("status", "fail", "message", "AI学情分析服务调用失败: " + e.getMessage());
         }
     }
 
