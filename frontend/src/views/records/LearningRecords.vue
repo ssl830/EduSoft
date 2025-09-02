@@ -62,11 +62,12 @@
               <span class="course-exercise-count">({{ course.exerciseCount }}个练习)</span>
             </div>            <div class="course-actions">
               <button
+                v-if="false"
                 @click.stop="exportCourseRecords(course.id)"
                 class="btn btn-export-course"
                 :disabled="downloadStatus.loading"
               >
-                <i class="fa fa-download"></i> 导出记录
+                <i class="fa fa-download"></i> 导出学习记录
               </button>
               <button
                 @click.stop="exportCoursePracticeRecords(course.id)"
