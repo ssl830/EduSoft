@@ -6,6 +6,7 @@ import org.example.edusoft.service.CourseSectionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 
@@ -35,6 +36,17 @@ public class CourseSectionServiceImpl implements CourseSectionService {
         if (section.getTitle() == null || section.getTitle().trim().isEmpty()) {
             throw new IllegalArgumentException("章节标题不能为空");
         }
+
+        // 获取当前课程的最大排序号
+        Long courseId = section.getCourseId();
+        List<CourseSection> existingSections = courseSectionMapper.getSectionsByCourseId(courseId);
+        int maxSortOrder = existingSections.stream()
+                .mapToInt(CourseSection::getSortOrder)
+                .max()
+                .orElse(0);
+
+        maxSortOrder++;
+        section.setSortOrder(maxSortOrder);
 
         courseSectionMapper.insert(section);
         return section;

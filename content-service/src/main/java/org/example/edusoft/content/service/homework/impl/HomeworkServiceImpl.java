@@ -8,6 +8,7 @@ import org.example.edusoft.content.entity.homework.HomeworkSubmission;
 import org.example.edusoft.content.mapper.homework.HomeworkMapper;
 import org.example.edusoft.content.mapper.homework.HomeworkSubmissionMapper;
 import org.example.edusoft.content.service.homework.HomeworkService;
+import org.example.edusoft.content.service.FileUploadService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,6 +33,9 @@ public class HomeworkServiceImpl implements HomeworkService {
     
     @Autowired
     private HomeworkSubmissionMapper submissionMapper;
+    
+    @Autowired
+    private FileUploadService fileUploadService;
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
@@ -49,14 +53,7 @@ public class HomeworkServiceImpl implements HomeworkService {
         homework.setClassId(classId);
         homework.setTitle(title);
         homework.setDescription(description);
-        homework.setCreatedBy(1L);
-        homework.setCreatedByName("张老师"); // 简化处理
-        homework.setStatus("published");
-
-        // 设置截止时间
-        if (endTime != null && !endTime.trim().isEmpty()) {
-            homework.setDeadline(LocalDateTime.parse(endTime, DATE_TIME_FORMATTER));
-        }
+        homework.setEndTime(endTime);
 
         // 设置创建时间和更新时间
         LocalDateTime now = LocalDateTime.now();
@@ -65,11 +62,11 @@ public class HomeworkServiceImpl implements HomeworkService {
 
         // 上传附件（如果有）
         if (file != null && !file.isEmpty()) {
-            // 简化的文件处理逻辑
-            String fileName = file.getOriginalFilename();
-            homework.setObjectName("homework/" + classId + "/" + fileName);
-            homework.setAttachmentUrl("/uploads/homework/" + fileName);
-            homework.setFileName(fileName);
+            // 上传到阿里云OSS
+            String folder = "homework/" + classId;
+            String fileUrl = fileUploadService.uploadFile(file, folder);
+            homework.setFileUrl(fileUrl);
+            homework.setFileName(file.getOriginalFilename());
         }
 
         // 保存作业信息
@@ -85,14 +82,13 @@ public class HomeworkServiceImpl implements HomeworkService {
         }
         
         HomeworkDTO dto = new HomeworkDTO();
-        dto.setHomeworkId(homework.getId());
+        dto.setId(homework.getId());
         dto.setTitle(homework.getTitle());
         dto.setDescription(homework.getDescription());
         dto.setClassId(homework.getClassId());
-        dto.setCreatedBy(homework.getCreatedBy());
-        dto.setFileUrl(homework.getAttachmentUrl());
-        dto.setFileName(homework.getObjectName());
-        dto.setEndTime(homework.getDeadline());
+        dto.setFileUrl(homework.getFileUrl());
+        dto.setFileName(homework.getFileName());
+        dto.setEndTime(homework.getEndTime());
         dto.setCreatedAt(homework.getCreatedAt());
         dto.setUpdatedAt(homework.getUpdatedAt());
         
@@ -104,14 +100,13 @@ public class HomeworkServiceImpl implements HomeworkService {
         List<Homework> homeworkList = homeworkMapper.selectByClassId(classId);
         return homeworkList.stream().map(homework -> {
             HomeworkDTO dto = new HomeworkDTO();
-            dto.setHomeworkId(homework.getId());
+            dto.setId(homework.getId());
             dto.setTitle(homework.getTitle());
             dto.setDescription(homework.getDescription());
             dto.setClassId(homework.getClassId());
-            dto.setCreatedBy(homework.getCreatedBy());
-            dto.setFileUrl(homework.getAttachmentUrl());
-            dto.setFileName(homework.getObjectName());
-            dto.setEndTime(homework.getDeadline());
+            dto.setFileUrl(homework.getFileUrl());
+            dto.setFileName(homework.getFileName());
+            dto.setEndTime(homework.getEndTime());
             dto.setCreatedAt(homework.getCreatedAt());
             dto.setUpdatedAt(homework.getUpdatedAt());
             return dto;
@@ -120,7 +115,7 @@ public class HomeworkServiceImpl implements HomeworkService {
 
     @Override
     @Transactional
-    public Long submitHomework(Long homeworkId, Long studentId, MultipartFile file) {
+    public Long submitHomework(Long homeworkId, Long studentId, String content, MultipartFile file) {
         // 参数校验
         if (file == null || file.isEmpty()) {
             throw new RuntimeException("提交的文件不能为空");
@@ -133,7 +128,7 @@ public class HomeworkServiceImpl implements HomeworkService {
         }
 
         // 检查是否已过截止时间
-        if (homework.getDeadline() != null && LocalDateTime.now().isAfter(homework.getDeadline())) {
+        if (homework.getEndTime() != null && LocalDateTime.now().isAfter(LocalDateTime.parse(homework.getEndTime()))) {
             throw new RuntimeException("作业已过截止时间");
         }
 
@@ -148,11 +143,16 @@ public class HomeworkServiceImpl implements HomeworkService {
         submission.setHomeworkId(homeworkId);
         submission.setStudentId(studentId);
         submission.setStudentName("学生" + studentId); // 简化处理
+        submission.setContent(content);
 
         // 处理文件上传
         String fileName = file.getOriginalFilename();
-        submission.setObjectName("homework/submission/" + homeworkId + "/" + studentId + "_" + fileName);
-        submission.setFileUrl("/uploads/submission/" + fileName);
+        submission.setFileName(fileName);
+        
+        // 上传到阿里云OSS
+        String folder = "homework-submission/" + homeworkId + "/" + studentId;
+        String fileUrl = fileUploadService.uploadFile(file, folder);
+        submission.setFileUrl(fileUrl);
         submission.setSubmittedAt(LocalDateTime.now());
 
         // 保存提交记录
@@ -165,13 +165,13 @@ public class HomeworkServiceImpl implements HomeworkService {
         List<HomeworkSubmission> submissions = submissionMapper.selectByHomeworkId(homeworkId);
         return submissions.stream().map(submission -> {
             HomeworkSubmissionDTO dto = new HomeworkSubmissionDTO();
-            dto.setSubmissionId(submission.getId());
+            dto.setId(submission.getId());
             dto.setHomeworkId(submission.getHomeworkId());
             dto.setStudentId(submission.getStudentId());
             dto.setStudentName(submission.getStudentName());
             dto.setFileUrl(submission.getFileUrl());
-            dto.setObjectName(submission.getObjectName());
-            dto.setSubmitTime(submission.getSubmittedAt());
+            dto.setFileName(submission.getFileName());
+            dto.setSubmittedAt(submission.getSubmittedAt());
             return dto;
         }).collect(Collectors.toList());
     }
@@ -184,17 +184,34 @@ public class HomeworkServiceImpl implements HomeworkService {
         }
         
         HomeworkSubmissionDTO dto = new HomeworkSubmissionDTO();
-        dto.setSubmissionId(submission.getId());
+        dto.setId(submission.getId());
         dto.setHomeworkId(submission.getHomeworkId());
         dto.setStudentId(submission.getStudentId());
         dto.setStudentName(submission.getStudentName());
         dto.setFileUrl(submission.getFileUrl());
-        dto.setObjectName(submission.getObjectName());
-        dto.setSubmitTime(submission.getSubmittedAt());
+        dto.setFileName(submission.getFileName());
+        dto.setSubmittedAt(submission.getSubmittedAt());
         
         return dto;
     }
 
+    @Override
+    public void exportSubmissions(Long homeworkId, HttpServletResponse response) {
+        // TODO: 实现导出功能
+        log.info("导出作业提交列表，作业ID: {}", homeworkId);
+    }
+    
+    @Override
+    public void gradeHomework(Long submissionId, String feedback, Integer score) {
+        HomeworkSubmission submission = submissionMapper.selectById(submissionId);
+        if (submission != null) {
+            submission.setFeedback(feedback);
+            submission.setScore(score);
+            submission.setUpdatedAt(LocalDateTime.now());
+            submissionMapper.updateById(submission);
+        }
+    }
+    
     @Override
     public void downloadHomeworkFile(Long homeworkId, HttpServletResponse response) {
         Homework homework = homeworkMapper.selectById(homeworkId);
@@ -212,7 +229,7 @@ public class HomeworkServiceImpl implements HomeworkService {
             String content = String.format("作业标题: %s\n作业描述: %s\n截止时间: %s\n创建时间: %s\n\n这是一个模拟的作业文件内容。",
                 homework.getTitle(),
                 homework.getDescription() != null ? homework.getDescription() : "无描述",
-                homework.getDeadline() != null ? homework.getDeadline().toString() : "无截止时间",
+                homework.getEndTime() != null ? homework.getEndTime() : "无截止时间",
                 homework.getCreatedAt() != null ? homework.getCreatedAt().toString() : "未知"
             );
             

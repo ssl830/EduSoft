@@ -60,14 +60,26 @@ const fetchPractices = async () => {
         if(isStudent.value){ // 学生视图
             // 调用新的API端点
             const response = await ExerciseApi.getPracticeList(authStore.user?.id, props.classId)
-            // 更新数据结构处理
-            practices.value = response.data
-            console.log("Hereeeeeeeeeeeeeeeeeeee", response.data)
+            // 根据id去重
+            const unique = Object.values(
+                response.data.reduce((acc: any, cur: any) => {
+                    acc[cur.id] = cur
+                    return acc
+                }, {})
+            )
+            practices.value = unique
+            console.log("Hereeeeeeeeeeeeeeeeeeee", unique)
         }else{ // 老师视图
             // 调用新的API端点
             const response = await ExerciseApi.getPracticeTeachList(props.classId)
-            // 更新数据结构处理
-            practices.value = response.data
+            // 根据id去重
+            const unique = Object.values(
+                response.data.reduce((acc: any, cur: any) => {
+                    acc[cur.id] = cur
+                    return acc
+                }, {})
+            )
+            practices.value = unique
         }
 
         console.log("practices.value:",practices.value)

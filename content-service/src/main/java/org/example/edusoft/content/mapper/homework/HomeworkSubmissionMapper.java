@@ -56,6 +56,12 @@ public interface HomeworkSubmissionMapper {
      */
     @Delete("DELETE FROM homeworksubmission WHERE homework_id = #{homeworkId}")
     void deleteByHomeworkId(Long homeworkId);
+    
+    /**
+     * 更新提交记录
+     */
+    @Update("UPDATE homeworksubmission SET feedback = #{feedback}, score = #{score}, updated_at = #{updatedAt} WHERE id = #{id}")
+    int updateById(HomeworkSubmission submission);
 
 
 }

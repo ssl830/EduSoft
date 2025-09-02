@@ -383,7 +383,13 @@ const fetchHomeworks = async () => {
     try {
         console.log(props.classId)
         const response = await ClassApi.getHomeworkList(props.classId)
-        homeworks.value = response.data
+        console.log(response.data)
+        // 检查是否为 HTML 响应
+        if (typeof response.data === 'string' && response.data.startsWith('<!DOCTYPE html>')) {
+            homeworks.value = []
+        } else {
+            homeworks.value = response.data
+        }
         // 新增：学生端查提交状态
         await fetchStudentSubmissions()
     } catch (err) {
@@ -482,7 +488,7 @@ const viewHomework = async (hw: Homework) => {
     }
 }
 
-// 获取作业提交列表（教师）
+// ��取作业提交列表（教师）
 const fetchSubmissions = async (homeworkId: number) => {
     submissionsLoading.value = true
     submissionsError.value = null

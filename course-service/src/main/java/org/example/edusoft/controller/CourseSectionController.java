@@ -46,6 +46,8 @@ public class CourseSectionController {
             for (CourseSection section : sections) {
                 section.setCourseId(courseId);
                 courseSectionService.createSection(section);
+                System.out.println("section==========================================");
+                System.out.println(section);
             }
             return Result.success(sections);
         } catch (Exception e) {

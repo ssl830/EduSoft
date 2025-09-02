@@ -648,18 +648,28 @@ public class RecordServiceImpl implements RecordService {
                 System.out.println("提交记录不存在，返回null");
                 return null;
             }
-            
-            System.out.println("提交记录ID: " + submission.getId());
-            System.out.println("课程ID: " + submission.getCourseId());
-            System.out.println("班级ID: " + submission.getClassId());
-            
-            // 通过 courseId/classId 调用 client 获取 name 并补全
+
+            // 课程名称
             if (submission.getCourseId() != null) {
                 try {
                     System.out.println("正在获取课程信息...");
                     Map<String, Object> course = courseClient.getCourseById(submission.getCourseId());
-                    if (course != null && course.get("name") != null) {
-                        submission.setCourseName(course.get("name").toString());
+                    Object dataObj = (course != null) ? course.get("data") : null;
+                    Map<String, Object> courseData;
+                    if (dataObj instanceof Map<?, ?> m) {
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> tmp = (Map<String, Object>) m;
+                        courseData = tmp;
+                    } else {
+                        courseData = course;
+                    }
+                    String courseName = null;
+                    if (courseData != null) {
+                        Object n = courseData.get("name");
+                        if (n != null) courseName = String.valueOf(n);
+                    }
+                    if (courseName != null && !courseName.isEmpty()) {
+                        submission.setCourseName(courseName);
                         System.out.println("课程名称: " + submission.getCourseName());
                     } else {
                         submission.setCourseName("未知课程");
@@ -673,13 +683,29 @@ public class RecordServiceImpl implements RecordService {
                 submission.setCourseName("未知课程");
                 System.out.println("课程ID为空，设置课程名称为: 未知课程");
             }
-            
+
+            // 班级名称
             if (submission.getClassId() != null) {
                 try {
                     System.out.println("正在获取班级信息...");
                     Map<String, Object> classInfo = courseClient.getClassById(submission.getClassId());
-                    if (classInfo != null && classInfo.get("name") != null) {
-                        submission.setClassName(classInfo.get("name").toString());
+                    Object dataObj = (classInfo != null) ? classInfo.get("data") : null;
+                    Map<String, Object> classData;
+                    if (dataObj instanceof Map<?, ?> m) {
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> tmp = (Map<String, Object>) m;
+                        classData = tmp;
+                    } else {
+                        classData = classInfo;
+                    }
+                    String className = null;
+                    if (classData != null) {
+                        Object n = classData.get("name");
+                        if (n == null) n = classData.get("className");
+                        if (n != null) className = String.valueOf(n);
+                    }
+                    if (className != null && !className.isEmpty()) {
+                        submission.setClassName(className);
                         System.out.println("班级名称: " + submission.getClassName());
                     } else {
                         submission.setClassName("未知班级");
@@ -693,9 +719,10 @@ public class RecordServiceImpl implements RecordService {
                 submission.setClassName("未知班级");
                 System.out.println("班级ID为空，设置班级名称为: 未知班级");
             }
-            
+
+            // 写入提交信息
             report.put("submissionInfo", submission);
-            
+
             // 获取题目和答案信息
             try {
                 System.out.println("正在获取题目信息...");

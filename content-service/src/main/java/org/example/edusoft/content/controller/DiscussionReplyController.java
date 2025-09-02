@@ -1,146 +1,113 @@
 package org.example.edusoft.content.controller;
 
-import org.example.edusoft.content.entity.DiscussionReply;
-import org.example.edusoft.content.service.DiscussionReplyService;
+import org.example.edusoft.content.dto.reply.CreateReplyRequest;
+import org.example.edusoft.content.dto.reply.DiscussionReplyDTO;
+import org.example.edusoft.content.entity.reply.DiscussionReply;
+import org.example.edusoft.content.service.reply.DiscussionReplyService;
+import org.example.edusoft.content.client.UserClient;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.HashMap;
+import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
+import org.springframework.http.ResponseEntity;
+import jakarta.servlet.http.HttpServletRequest;
 
+/**
+ * 讨论回复管理控制器
+ */
 @RestController
-@RequestMapping("/api/content/discussion-reply")
+@RequestMapping("/api/discussion-reply")
 @CrossOrigin(origins = "*")
 public class DiscussionReplyController {
 
     @Autowired
     private DiscussionReplyService discussionReplyService;
+    
+    @Autowired
+    private UserClient userClient;
 
     /**
      * 创建回复
      */
     @PostMapping
-    public ResponseEntity<Map<String, Object>> createReply(@RequestBody DiscussionReply reply) {
+    public ResponseEntity<?> createReply(@Valid @RequestBody CreateReplyRequest request, HttpServletRequest httpRequest) {
+        String token = httpRequest.getHeader("satoken");
+        if (token == null || token.isEmpty()) {
+            Map<String, String> resp = new HashMap<>();
+            resp.put("error", "请先登录");
+            return ResponseEntity.status(401).body(resp);
+        }
         try {
-            DiscussionReply created = discussionReplyService.createReply(reply);
-            Map<String, Object> response = new HashMap<>();
-            response.put("code", 200);
-            response.put("msg", "回复创建成功");
-            response.put("data", created);
-            return ResponseEntity.ok(response);
+            Map<String, Object> validate = userClient.validateToken(token);
+            if (validate == null || validate.get("code") == null || ((Number) validate.get("code")).intValue() != 200) {
+                Map<String, String> resp = new HashMap<>();
+                resp.put("error", "登录状态无效");
+                return ResponseEntity.status(401).body(resp);
+            }
+            Map<String, Object> userData = (Map<String, Object>) validate.get("data");
+            Long creatorId = ((Number) userData.get("id")).longValue();
+            // user-service 校验返回中，用户的学号/工号字段为 userId（与 DiscussionController 一致用作 creator_num）
+            String userNum = (String) userData.get("userId");
+            DiscussionReply reply = discussionReplyService.createReply(
+                request.getDiscussionId(),
+                request.getParentReplyId(),
+                creatorId,
+                request.getContent(),
+                userNum
+            );
+            return ResponseEntity.ok(reply);
+        } catch (IllegalArgumentException e) {
+            Map<String, String> resp = new HashMap<>();
+            resp.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(resp);
         } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("code", 500);
-            response.put("msg", "回复创建失败: " + e.getMessage());
-            return ResponseEntity.ok(response);
+            Map<String, String> resp = new HashMap<>();
+            resp.put("error", "回复创建失败: " + e.getMessage());
+            return ResponseEntity.status(400).body(resp);
         }
     }
 
     /**
-     * 根据ID获取回复
+     * 获取回复详情
      */
     @GetMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> getReply(@PathVariable Long id) {
-        try {
-            DiscussionReply reply = discussionReplyService.getReplyById(id);
-            Map<String, Object> response = new HashMap<>();
-            if (reply != null) {
-                response.put("code", 200);
-                response.put("msg", "获取成功");
-                response.put("data", reply);
-            } else {
-                response.put("code", 404);
-                response.put("msg", "回复不存在");
-            }
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("code", 500);
-            response.put("msg", "获取回复失败: " + e.getMessage());
-            return ResponseEntity.ok(response);
+    public ResponseEntity<?> getReply(@PathVariable Long id) {
+        DiscussionReply reply = discussionReplyService.getReply(id);
+        if (reply != null) {
+            return ResponseEntity.ok(reply);
+        } else {
+            return ResponseEntity.status(404).body(Map.of("error", "回复不存在"));
         }
     }
 
     /**
-     * 根据讨论ID获取回复列表
+     * 获取讨论的所有回复
      */
     @GetMapping("/discussion/{discussionId}")
-    public ResponseEntity<Map<String, Object>> getRepliesByDiscussion(@PathVariable Long discussionId) {
-        try {
-            List<DiscussionReply> replies = discussionReplyService.getRepliesByDiscussionId(discussionId);
-            Map<String, Object> response = new HashMap<>();
-            response.put("code", 200);
-            response.put("msg", "获取成功");
-            response.put("data", replies);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("code", 500);
-            response.put("msg", "获取回复列表失败: " + e.getMessage());
-            return ResponseEntity.ok(response);
-        }
+    public ResponseEntity<List<DiscussionReplyDTO>> getDiscussionReplies(@PathVariable Long discussionId) {
+        return ResponseEntity.ok(discussionReplyService.getDiscussionReplies(discussionId));
     }
 
     /**
-     * 根据用户ID获取回复列表
-     */
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<Map<String, Object>> getRepliesByUser(@PathVariable Long userId) {
-        try {
-            List<DiscussionReply> replies = discussionReplyService.getRepliesByUserId(userId);
-            Map<String, Object> response = new HashMap<>();
-            response.put("code", 200);
-            response.put("msg", "获取成功");
-            response.put("data", replies);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("code", 500);
-            response.put("msg", "获取回复列表失败: " + e.getMessage());
-            return ResponseEntity.ok(response);
-        }
-    }
-
-    /**
-     * 根据父回复ID获取回复列表
-     */
-    @GetMapping("/parent/{parentReplyId}")
-    public ResponseEntity<Map<String, Object>> getRepliesByParent(@PathVariable Long parentReplyId) {
-        try {
-            List<DiscussionReply> replies = discussionReplyService.getRepliesByParentReplyId(parentReplyId);
-            Map<String, Object> response = new HashMap<>();
-            response.put("code", 200);
-            response.put("msg", "获取成功");
-            response.put("data", replies);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("code", 500);
-            response.put("msg", "获取回复列表失败: " + e.getMessage());
-            return ResponseEntity.ok(response);
-        }
+     * 获取回复的子回复
+    */
+    @GetMapping("/{id}/children")
+    public ResponseEntity<List<DiscussionReplyDTO>> getChildReplies(@PathVariable Long id) {
+        return ResponseEntity.ok(discussionReplyService.getChildReplies(id));
     }
 
     /**
      * 更新回复
      */
     @PutMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> updateReply(@PathVariable Long id, @RequestBody DiscussionReply reply) {
-        try {
-            reply.setId(id);
-            DiscussionReply updated = discussionReplyService.updateReply(reply);
-            Map<String, Object> response = new HashMap<>();
-            response.put("code", 200);
-            response.put("msg", "回复更新成功");
-            response.put("data", updated);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("code", 500);
-            response.put("msg", "回复更新失败: " + e.getMessage());
-            return ResponseEntity.ok(response);
+    public ResponseEntity<?> updateReply(@PathVariable Long id, @RequestBody String content) {
+        DiscussionReply reply = discussionReplyService.updateReply(id, content);
+        if (reply != null) {
+            return ResponseEntity.ok(reply);
+        } else {
+            return ResponseEntity.status(404).body(Map.of("error", "回复不存在"));
         }
     }
 
@@ -148,38 +115,71 @@ public class DiscussionReplyController {
      * 删除回复
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> deleteReply(@PathVariable Long id) {
+    public ResponseEntity<?> deleteReply(@PathVariable Long id, HttpServletRequest httpRequest) {
+        String token = httpRequest.getHeader("satoken");
+        if (token == null || token.isEmpty()) {
+            Map<String, String> resp = new HashMap<>();
+            resp.put("error", "请先登录");
+            return ResponseEntity.status(401).body(resp);
+        }
         try {
-            discussionReplyService.deleteReply(id);
-            Map<String, Object> response = new HashMap<>();
-            response.put("code", 200);
-            response.put("msg", "回复删除成功");
-            return ResponseEntity.ok(response);
+            Map<String, Object> validate = userClient.validateToken(token);
+            if (validate == null || validate.get("code") == null || ((Number) validate.get("code")).intValue() != 200) {
+                Map<String, String> resp = new HashMap<>();
+                resp.put("error", "登录状态无效");
+                return ResponseEntity.status(401).body(resp);
+            }
+            boolean success = discussionReplyService.deleteReply(id);
+            if (success) {
+                return ResponseEntity.ok(Map.of("message", "回复删除成功"));
+            } else {
+                return ResponseEntity.status(400).body(Map.of("error", "回复删除失败"));
+            }
         } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("code", 500);
-            response.put("msg", "回复删除失败: " + e.getMessage());
-            return ResponseEntity.ok(response);
+            return ResponseEntity.status(400).body(Map.of("error", "回复删除失败: " + e.getMessage()));
         }
     }
 
     /**
-     * 标记为教师回复
+     * 点赞回复
      */
-    @PutMapping("/{id}/teacher")
-    public ResponseEntity<Map<String, Object>> markAsTeacherReply(@PathVariable Long id) {
-        try {
-            discussionReplyService.markAsTeacherReply(id);
-            Map<String, Object> response = new HashMap<>();
-            response.put("code", 200);
-            response.put("msg", "已标记为教师回复");
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("code", 500);
-            response.put("msg", "标记失败: " + e.getMessage());
-            return ResponseEntity.ok(response);
+    @PostMapping("/{id}/like")
+    public ResponseEntity<?> likeReply(@PathVariable Long id) {
+        boolean success = discussionReplyService.likeReply(id);
+        if (success) {
+            return ResponseEntity.ok(Map.of("message", "点赞成功"));
+        } else {
+            return ResponseEntity.status(400).body(Map.of("error", "点赞失败"));
         }
+    }
+
+    /**
+     * 取消点赞
+     */
+    @PostMapping("/{id}/unlike")
+    public ResponseEntity<?> unlikeReply(@PathVariable Long id) {
+        boolean success = discussionReplyService.unlikeReply(id);
+        if (success) {
+            return ResponseEntity.ok(Map.of("message", "取消点赞成功"));
+        } else {
+            return ResponseEntity.status(400).body(Map.of("error", "取消点赞失败"));
+        }
+    }
+
+    /**
+     * 获取用户的回复列表
+     */
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<DiscussionReplyDTO>> getUserReplies(@PathVariable Long userId) {
+        return ResponseEntity.ok(discussionReplyService.getUserReplies(userId));
+    }
+
+    /**
+     * 搜索回复
+     */
+    @GetMapping("/search")
+    public ResponseEntity<List<DiscussionReplyDTO>> searchReplies(@RequestParam String keyword) {
+        return ResponseEntity.ok(discussionReplyService.searchReplies(keyword));
     }
 }
 

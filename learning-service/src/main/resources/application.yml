@@ -8,6 +8,7 @@ spring:
     username: root
     password: 20240323 # 请替换为你的数据库密码
 
+
     driver-class-name: com.mysql.cj.jdbc.Driver
 mybatis:
   mapper-locations: classpath:mapper/*.xml
@@ -17,6 +18,8 @@ logging:
   level:
     '[org.example.edusoft.learning.mapper]': debug
     '[org.example.edusoft.learning.client]': debug
+    '[org.example.edusoft.learning.service.impl]': debug
+    '[org.example.edusoft.learning.controller]': debug
 
 # 微服务地址配置
 service:

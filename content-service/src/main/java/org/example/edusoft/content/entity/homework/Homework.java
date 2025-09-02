@@ -1,97 +1,57 @@
 package org.example.edusoft.content.entity.homework;
 
+import jakarta.persistence.*;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 import java.time.LocalDateTime;
 
-import lombok.Data;
-
-/**
- * 作业实体类
- */
+@Entity
+@Table(name = "homework")
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Homework {
-    /**
-     * 作业ID
-     */
+    
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    /**
-     * 作业标题
-     */
-    private String title;
-    
-    /**
-     * 作业描述
-     */
-    private String description;
-    
-    /**
-     * 课程ID
-     */
-    private Long courseId;
-    
-    /**
-     * 章节ID
-     */
-    private Long chapterId;
-    
-    /**
-     * 章节名称
-     */
-    private String chapterName;
-    
-    /**
-     * 班级ID
-     */
+    @Column(name = "class_id", nullable = false)
     private Long classId;
     
-    /**
-     * 创建者ID（教师）
-     */
-    private Long createdBy;
+    @Column(name = "title", nullable = false, length = 255)
+    private String title;
     
-    /**
-     * 创建者姓名
-     */
-    private String createdByName;
+    @Column(name = "description", columnDefinition = "TEXT")
+    private String description;
     
-    /**
-     * 作业附件URL（阿里云OSS）
-     */
-    private String attachmentUrl;
+    @Column(name = "end_time")
+    private String endTime;
     
-    /**
-     * 对象存储中的文件路径
-     * 格式：homework/{classId}/{fileName}
-     */
-    private String objectName;
+    @Column(name = "file_url")
+    private String fileUrl;
     
-    /**
-     * 文件名
-     */
+    @Column(name = "file_name")
     private String fileName;
     
-    /**
-     * 截止时间
-     */
-    private LocalDateTime deadline;
+    @Column(name = "is_active", nullable = false)
+    private Boolean isActive = true;
     
-    /**
-     * 状态
-     */
-    private String status;
-    
-    /**
-     * 提交数量
-     */
-    private Integer submissionCount;
-    
-    /**
-     * 创建时间
-     */
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
     
-    /**
-     * 更新时间
-     */
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+    
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+    
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 } 

@@ -54,6 +54,7 @@ const uploadSections = async () => {
 
     try {
         const response = await CourseApi.uploadSections(props.course.id, {sections: uploadForm.value.sections})
+      console.log(uploadForm.value)
         console.log(response)
         console.log("Hereeeeeeeeee")
         showSectionForm.value = !showSectionForm.value

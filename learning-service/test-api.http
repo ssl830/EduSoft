@@ -23,7 +23,7 @@ userId=T002&password=123456
 ### 1. 获取待批改提交列表
 POST http://localhost:8084/api/judge/pendinglist
 Content-Type: application/json
-satoken: ae86391d-84ff-4924-b8d8-4764e918c820
+satoken: a5579c85-2999-4383-ace2-b4b4cd126283
 
 {
   "practiceId": 1,
@@ -33,7 +33,7 @@ satoken: ae86391d-84ff-4924-b8d8-4764e918c820
 ### 2. 获取提交详情
 POST http://localhost:8084/api/judge/pending
 Content-Type: application/json
-satoken: ae86391d-84ff-4924-b8d8-4764e918c820
+satoken: a5579c85-2999-4383-ace2-b4b4cd126283
 
 {
   "submissionId": 3
@@ -42,7 +42,7 @@ satoken: ae86391d-84ff-4924-b8d8-4764e918c820
 ### 3. 判题操作
 POST http://localhost:8084/api/judge/judge
 Content-Type: application/json
-satoken: ae86391d-84ff-4924-b8d8-4764e918c820
+satoken: a5579c85-2999-4383-ace2-b4b4cd126283
 
 {
   "submissionId": 1,
@@ -67,7 +67,7 @@ satoken: ae86391d-84ff-4924-b8d8-4764e918c820
 ### 1. 提交练习答案
 POST http://localhost:8084/api/submission/submit
 Content-Type: application/json
-satoken: ae86391d-84ff-4924-b8d8-4764e918c820
+satoken: a5579c85-2999-4383-ace2-b4b4cd126283
 
 {
   "practiceId": 1,
@@ -82,11 +82,11 @@ satoken: ae86391d-84ff-4924-b8d8-4764e918c820
 
 ### 获取题目列表（带 courseId）
 GET http://localhost:8084/api/learning/question/list?courseId=4
-satoken: ae86391d-84ff-4924-b8d8-4764e918c820
+satoken: a5579c85-2999-4383-ace2-b4b4cd126283
 
 ### 获取题目列表（不带 courseId，返回全部题目）
 GET http://localhost:8084/api/learning/question/list
-satoken: ae86391d-84ff-4924-b8d8-4764e918c820
+satoken: a5579c85-2999-4383-ace2-b4b4cd126283
 
 
 # ��习相关接口 PracticeController
@@ -95,7 +95,7 @@ satoken: ae86391d-84ff-4924-b8d8-4764e918c820
 POST http://localhost:8084/api/practice/create
 Content-Type: application/json
 X-User-Id: 1
-satoken: ae86391d-84ff-4924-b8d8-4764e918c820
+satoken: a5579c85-2999-4383-ace2-b4b4cd126283
 
 {
   "startTime": null,
@@ -110,7 +110,7 @@ satoken: ae86391d-84ff-4924-b8d8-4764e918c820
 ### 更新练习 200
 PUT http://localhost:8084/api/practice/17
 Content-Type: application/json
-satoken: ae86391d-84ff-4924-b8d8-4764e918c820
+satoken: a5579c85-2999-4383-ace2-b4b4cd126283
 
 {
   "startTime": null,
@@ -124,48 +124,48 @@ satoken: ae86391d-84ff-4924-b8d8-4764e918c820
 
 ### 获取练习列表 200
 GET http://localhost:8084/api/practice/list?classId=1
-satoken: ae86391d-84ff-4924-b8d8-4764e918c820
+satoken: a5579c85-2999-4383-ace2-b4b4cd126283
 
 ### 获取练习详情 200
 GET http://localhost:8084/api/practice/17
-satoken: ae86391d-84ff-4924-b8d8-4764e918c820
+satoken: a5579c85-2999-4383-ace2-b4b4cd126283
 
 ### 删除练习 200
 DELETE http://localhost:8084/api/practice/10
-satoken: ae86391d-84ff-4924-b8d8-4764e918c820
+satoken: a5579c85-2999-4383-ace2-b4b4cd126283
 
 ### 添加题目到练习 200
 POST http://localhost:8084/api/practice/17/questions/3?score=10
-satoken: ae86391d-84ff-4924-b8d8-4764e918c820
+satoken: a5579c85-2999-4383-ace2-b4b4cd126283
 
 ### 移除练习中的题目 200
 DELETE http://localhost:8084/api/practice/17/questions/3
-satoken: ae86391d-84ff-4924-b8d8-4764e918c820
+satoken: a5579c85-2999-4383-ace2-b4b4cd126283
 
 ### 获取练习题目列表 200
 GET http://localhost:8084/api/practice/1/questions
-satoken: ae86391d-84ff-4924-b8d8-4764e918c820
+satoken: a5579c85-2999-4383-ace2-b4b4cd126283
 
 ### 收藏题目 200
 POST http://localhost:8084/api/practice/questions/1/favorite
 X-User-Id: 1
-satoken: ae86391d-84ff-4924-b8d8-4764e918c820
+satoken: a5579c85-2999-4383-ace2-b4b4cd126283
 
 ### 取消收藏题目 200
 DELETE http://localhost:8084/api/practice/questions/1/favorite
 X-User-Id: 1
-satoken: ae86391d-84ff-4924-b8d8-4764e918c820
+satoken: a5579c85-2999-4383-ace2-b4b4cd126283
 
 ### 获取收藏题目列表 200
 GET http://localhost:8084/api/practice/questions/favorites
 X-User-Id: 1
-satoken: ae86391d-84ff-4924-b8d8-4764e918c820
+satoken: a5579c85-2999-4383-ace2-b4b4cd126283
 
 ### 添加错题
 POST http://localhost:8084/api/practice/questions/1/wrong
 Content-Type: application/json
 X-User-Id: 1
-satoken: ae86391d-84ff-4924-b8d8-4764e918c820
+satoken: a5579c85-2999-4383-ace2-b4b4cd126283
 
 {
   "wrongAnswer": "错误答案示例"
@@ -174,34 +174,51 @@ satoken: ae86391d-84ff-4924-b8d8-4764e918c820
 ### 获取错题列表
 GET http://localhost:8084/api/practice/questions/wrong
 X-User-Id: 1
-satoken: ae86391d-84ff-4924-b8d8-4764e918c820
+satoken: a5579c85-2999-4383-ace2-b4b4cd126283
 
 ### 获取某课程错题列表
 GET http://localhost:8084/api/practice/questions/wrong/course/1
 X-User-Id: 1
-satoken: ae86391d-84ff-4924-b8d8-4764e918c820
+satoken: a5579c85-2999-4383-ace2-b4b4cd126283
 
 ### 删除错题
 DELETE http://localhost:8084/api/practice/questions/1/wrong
-satoken: ae86391d-84ff-4924-b8d8-4764e918c820
+satoken: a5579c85-2999-4383-ace2-b4b4cd126283
 
 ### 获取学生练习列表
 GET http://localhost:8084/api/practice/student/list?classId=1
 X-User-Id: 1
-satoken: ae86391d-84ff-4924-b8d8-4764e918c820
+satoken: a5579c85-2999-4383-ace2-b4b4cd126283
 
 ### 获取教师练习列表 200
 GET http://localhost:8084/api/practice/teacher/practices
-satoken: ae86391d-84ff-4924-b8d8-4764e918c820
+satoken: a5579c85-2999-4383-ace2-b4b4cd126283
 
 ### 获取练习统计信息 200
 GET http://localhost:8084/api/practice/stats/1
-satoken: ae86391d-84ff-4924-b8d8-4764e918c820
+satoken: a5579c85-2999-4383-ace2-b4b4cd126283
 
 ### 手动统计并写入练习每题得分率 200
 POST http://localhost:8084/api/practice/update-score-rate/1
-satoken: ae86391d-84ff-4924-b8d8-4764e918c820
+satoken: a5579c85-2999-4383-ace2-b4b4cd126283
 
 ### 获取课程的所有练习
 GET http://localhost:8084/api/practice/course/1
-satoken: ae86391d-84ff-4924-b8d8-4764e918c820
+satoken: a5579c85-2999-4383-ace2-b4b4cd126283
+
+### DashboardController 概览数据接口测试
+GET http://localhost:8084/api/admin/dashboard/overview
+satoken: a5579c85-2999-4383-ace2-b4b4cd126283
+
+### 课程优化建议接口测试
+POST http://localhost:8084/api/admin/dashboard/optimize
+Content-Type: application/json
+satoken: a5579c85-2999-4383-ace2-b4b4cd126283
+
+{
+  "courseId": 4,
+  "sectionId": 6,
+  "averageScore": 75.5,
+  "errorRate": 0.18,
+  "studentCount": 30
+}

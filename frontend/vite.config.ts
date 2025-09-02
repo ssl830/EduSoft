@@ -97,6 +97,11 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/ai\/health/, '/api/learning/ai/health')
       },
+      '/api/admin': { target: 'http://localhost:8084', changeOrigin: true },
+      '/api/discussion':{target: 'http://localhost:8083', changeOrigin: true },
+      '/api/discussion-like':{target: 'http://localhost:8083', changeOrigin: true },
+      '/api/discussion-reply':{target: 'http://localhost:8083', changeOrigin: true },
+
     }
   },
   optimizeDeps: {

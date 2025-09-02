@@ -82,12 +82,13 @@ public abstract class BaseServiceClient {
                 headers.set("satoken", pureToken);
                 // 同时设置Authorization头作为备选
                 headers.set("Authorization", "Bearer " + pureToken);
-                logger.debug("Forwarding token to {}: {}", getServiceName(), pureToken);
+                logger.debug("[BaseServiceClient] -> {} {} (service={}) token=present", method, url, getServiceName());
             } else {
-                logger.warn("No authentication token found for request to {}", getServiceName());
+                logger.warn("[BaseServiceClient] -> {} {} (service={}) token=absent", method, url, getServiceName());
             }
             
             HttpEntity<?> entity = new HttpEntity<>(requestBody, headers);
+            logger.debug("[BaseServiceClient] sending request: method={} url={} headers={}", method, url, headers.keySet());
             ResponseEntity<T> response = restTemplate.exchange(url, method, entity, responseType);
             
             return response.getBody();

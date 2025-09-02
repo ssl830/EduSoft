@@ -5,7 +5,7 @@
       {{ downloadStatus.error }}
       <button class="alert-close" @click="downloadStatus.error = null">&times;</button>
     </div>
-    
+
     <header class="page-header">
       <h1>练习记录</h1>
       <p>查看您的练习记录和反馈，帮助您更好地评估和调整学习计划。</p>
@@ -19,7 +19,7 @@
         <span class="error-text">{{ classError }}</span>
       </div>
     </header>
-    
+
     <section class="filter-section">
       <div class="filter-controls">
         <input type="text" v-model="filters.exerciseName" placeholder="练习名称" class="filter-input">
@@ -29,7 +29,7 @@
             {{ course.name }}
           </option>
         </select>
-        <select v-model="filters.status" class="filter-select">
+        <select v-if="false" v-model="filters.status" class="filter-select">
           <option value="">所有完成状态</option>
           <option value="completed">已完成</option>
           <option value="in-progress">进行中</option>
@@ -41,7 +41,7 @@
         <button @click="loadCoursesList" class="btn btn-primary">筛选</button>
       </div>
     </section>
-    
+
     <section class="records-list-section">
       <div v-if="loading" class="loading-indicator">加载中...</div>
       <div v-else-if="error" class="error-message">{{ error }}</div>
@@ -50,9 +50,9 @@
       </div>
       <div v-else class="courses-container">
         <!-- 课程列表 -->
-        <div 
-          v-for="course in coursesList" 
-          :key="course.id" 
+        <div
+          v-for="course in coursesList"
+          :key="course.id"
           class="course-item"
         >
           <div class="course-header" @click="toggleCourseExpand(course.id)">
@@ -61,15 +61,16 @@
               <span class="course-name">{{ course.name }}</span>
               <span class="course-exercise-count">({{ course.exerciseCount }}个练习)</span>
             </div>            <div class="course-actions">
-              <button 
-                @click.stop="exportCourseRecords(course.id)" 
+              <button
+                v-if="false"
+                @click.stop="exportCourseRecords(course.id)"
                 class="btn btn-export-course"
                 :disabled="downloadStatus.loading"
               >
-                <i class="fa fa-download"></i> 导出记录
+                <i class="fa fa-download"></i> 导出学习记录
               </button>
-              <button 
-                @click.stop="exportCoursePracticeRecords(course.id)" 
+              <button
+                @click.stop="exportCoursePracticeRecords(course.id)"
                 class="btn btn-export-practice"
                 :disabled="downloadStatus.loading"
               >
@@ -77,7 +78,7 @@
               </button>
             </div>
           </div>
-          
+
           <!-- 展开的练习列表 -->
           <div v-if="expandedCourses.includes(course.id)" class="exercises-list">
             <table class="records-table">
@@ -101,14 +102,14 @@
                     </div>
                   </td>
                   <td>{{ record.score !== undefined ? record.score : '-' }}</td>                  <td class="actions-cell actions-cell-center">
-                    <button 
-                      @click="viewSubmissionReport(record.submission_id, record)" 
+                    <button
+                      @click="viewSubmissionReport(record.submission_id, record)"
                       class="btn btn-action btn-view"
                       :disabled="false"
                       title="查看练习记录详情"
                     >查看记录</button>
-                    <button 
-                      @click="downloadReport(record.id)" 
+                    <button
+                      @click="downloadReport(record.id)"
                       class="btn btn-action btn-export"
                       :disabled="downloadStatus.loading || !record.submission_id"
                       :title="!record.submission_id ? '暂无提交记录' : '导出报告'"
@@ -127,7 +128,7 @@
           <h3>练习记录详情</h3>
           <button class="modal-close" @click="closeSubmissionReportModal">&times;</button>
         </div>
-        
+
         <div class="modal-body">
           <!-- 加载状态 -->
           <div v-if="submissionReportModal.loading" class="modal-loading">
@@ -140,7 +141,7 @@
             <p>{{ submissionReportModal.error }}</p>
             <button @click="closeSubmissionReportModal" class="btn btn-primary">关闭</button>
           </div>
-          
+
           <!-- 数据为空状态 -->
           <div v-else-if="!submissionReportModal.data" class="modal-empty">
             <i class="fa fa-info-circle"></i>
@@ -190,8 +191,8 @@
             <div class="report-section" v-if="submissionReportModal.data.scoreDistribution && submissionReportModal.data.scoreDistribution.length > 0">
               <h4><i class="fa fa-chart-pie"></i> 班级分数分布</h4>
               <div class="score-distribution">
-                <div 
-                  v-for="item in submissionReportModal.data.scoreDistribution" 
+                <div
+                  v-for="item in submissionReportModal.data.scoreDistribution"
                   :key="item.score_range"
                   class="distribution-item"
                   :class="getDistributionClass(item.score_range)"
@@ -205,8 +206,8 @@
             <div class="report-section" v-if="submissionReportModal.data.questions && submissionReportModal.data.questions.length > 0">
               <h4><i class="fa fa-list-alt"></i> 题目详情</h4>
               <div class="questions-list">
-                <div 
-                  v-for="(question, index) in submissionReportModal.data.questions" 
+                <div
+                  v-for="(question, index) in submissionReportModal.data.questions"
                   :key="question.id"
                   class="question-item"
                   :class="{ 'correct': question.isCorrect, 'incorrect': !question.isCorrect }"
@@ -223,7 +224,7 @@
                       {{ question.score || 0 }}分
                     </span>
                   </div>
-                  
+
                   <div class="question-content">
                     <p><strong>题目:</strong> {{ question.content }}</p>
                     <p v-if="question.options"><strong>选项:</strong> {{ question.options }}</p>
@@ -340,21 +341,21 @@ const fetchCourses = async () => {
     coursesLoading.value = true;
     const response = await CourseApi.getUserCourses(authStore.user?.id.toString() || '');
     const coursesData = response.data && response.data.data ? response.data.data : response.data;
-    
+
     if (!Array.isArray(coursesData)) {
       console.error('获取课程列表失败：数据格式不正确', coursesData);
       return [];
     }
-    
+
     const courses = coursesData.map(course => ({
       id: course.id,
       name: course.name,
       code: course.code
     }));
-    
+
     // 保存所有可用课程
     availableCourses.value = courses;
-    
+
     return courses;
   } catch (err: any) {
     console.error('获取课程列表失败:', err);
@@ -370,19 +371,19 @@ const loadCoursesList = async () => {
   try {
     loading.value = true;
     error.value = null;
-    
+
     // 获取课程
     const courses = await fetchCourses();
     console.log('获取到的课程列表:', courses);
-    
+
     // 获取所有记录
     await fetchRecords();
     console.log('获取到的记录列表:', records.value);
-    
+
     // 整理课程数据，并统计每个课程的练习数量
     const coursesWithExercises: Record<number, CourseItem> = {};
     const exercisesByCourse: Record<number, RecordDisplay[]> = {};
-    
+
     // 首先初始化所有课程
     courses.forEach(course => {
       coursesWithExercises[course.id] = {
@@ -391,11 +392,11 @@ const loadCoursesList = async () => {
       };
       exercisesByCourse[course.id] = [];
     });
-    
+
     // 处理记录
     records.value.forEach(record => {
       console.log('处理记录:', record.title, '课程ID:', record.courseId, '课程名称:', record.courseName);
-      
+
       // 如果记录没有courseId，尝试通过courseName匹配
       if (!record.courseId && record.courseName) {
         const matchedCourse = courses.find(c => c.name === record.courseName);
@@ -413,14 +414,14 @@ const loadCoursesList = async () => {
           record.courseId = newCourseId;
         }
       }
-      
+
       if (record.courseId) {
         // 添加到对应课程的练习列表
         if (!exercisesByCourse[record.courseId]) {
           exercisesByCourse[record.courseId] = [];
         }
         exercisesByCourse[record.courseId].push(record);
-        
+
         // 更新课程信息
         if (!coursesWithExercises[record.courseId]) {
           coursesWithExercises[record.courseId] = {
@@ -433,26 +434,26 @@ const loadCoursesList = async () => {
         }
       }
     });
-    
+
     // 保存课程练习数据
     courseExercises.value = exercisesByCourse;
-    
+
     // 转换为数组并根据筛选条件过滤
     let filteredCourses = Object.values(coursesWithExercises);
-    
+
     // 根据课程ID筛选
     if (filters.value.courseId) {
       const selectedCourseId = parseInt(filters.value.courseId);
       filteredCourses = filteredCourses.filter(course => course.id === selectedCourseId);
     }
-    
+
     // 根据练习名称筛选
     if (filters.value.exerciseName.trim()) {
       const searchTerm = filters.value.exerciseName.trim().toLowerCase();
       // 过滤每个课程的练习
       Object.keys(exercisesByCourse).forEach(courseId => {
         const courseIdNum = parseInt(courseId);
-        exercisesByCourse[courseIdNum] = exercisesByCourse[courseIdNum].filter((record: RecordDisplay) => 
+        exercisesByCourse[courseIdNum] = exercisesByCourse[courseIdNum].filter((record: RecordDisplay) =>
           record.title.toLowerCase().includes(searchTerm)
         );
       });
@@ -479,7 +480,7 @@ const loadCoursesList = async () => {
         exerciseCount: exercisesByCourse[course.id]?.length || 0
       }));
     }
-    
+
     // 根据状态筛选
     if (filters.value.status) {
       // 过滤每个课程的练习
@@ -517,14 +518,14 @@ const loadCoursesList = async () => {
         exerciseCount: exercisesByCourse[course.id]?.length || 0
       }));
     }
-    
+
     // 根据学生姓名筛选（仅教师/助教可见）
     if (filters.value.studentName.trim() && (userRole.value === 'teacher' || userRole.value === 'assistant')) {
       const searchTerm = filters.value.studentName.trim().toLowerCase();
       // 过滤每个课程的练习
       Object.keys(exercisesByCourse).forEach(courseId => {
         const courseIdNum = parseInt(courseId);
-        exercisesByCourse[courseIdNum] = exercisesByCourse[courseIdNum].filter((record: RecordDisplay) => 
+        exercisesByCourse[courseIdNum] = exercisesByCourse[courseIdNum].filter((record: RecordDisplay) =>
           record.student_name?.toLowerCase().includes(searchTerm)
         );
       });
@@ -535,7 +536,7 @@ const loadCoursesList = async () => {
       // 移除没有练习的课程
       filteredCourses = filteredCourses.filter(course => course.exerciseCount > 0);
     }
-    
+
     // 如果没有应用任何筛选条件，显示所有课程
     if (!filters.value.courseId && !filters.value.exerciseName.trim() && !filters.value.status && !filters.value.studentName.trim()) {
       filteredCourses = courses.map(course => ({
@@ -543,10 +544,10 @@ const loadCoursesList = async () => {
         exerciseCount: exercisesByCourse[course.id]?.length || 0
       }));
     }
-    
+
     coursesList.value = filteredCourses;
     console.log('最终生成的课程列表:', coursesList.value);
-    
+
   } catch (err: any) {
     console.error('获取课程和练习列表失败:', err);
     error.value = err.response?.data?.message || err.message || '获取数据失败，请稍后再试';
@@ -581,7 +582,7 @@ const exportCourseRecords = async (courseId: number) => {
     // 直接调用课程学习记录导出API，获取Excel文件
     const response = await StudyRecordsApi.exportCourseStudyRecords(courseId.toString());
     console.log('导出课程记录响应:', response);
-    
+
     // 检查响应数据
     if (!response) {
       throw new Error('服务器返回的数据为空');
@@ -596,28 +597,28 @@ const exportCourseRecords = async (courseId: number) => {
     console.log('Blob数据:', response.data);
     console.log('Blob类型:', response.data.type);
     console.log('Blob大小:', response.data.size);
-    
+
     if (response.data.size > 0) {
       console.log('开始创建下载链接');
       const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
       const courseName = coursesList.value.find(c => c.id === courseId)?.name || '课程';
       const filename = `${courseName}_学习记录_${timestamp}.xlsx`;
-      
+
       // 创建下载链接
       const url = window.URL.createObjectURL(response.data);
       console.log('创建的对象URL:', url);
-      
+
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', filename);
       document.body.appendChild(link);
       console.log('触发下载');
       link.click();
-      
+
       // 清理
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-      
+
       console.log(`成功导出课程学习记录: ${filename}`);
     } else {
       console.error('Blob数据检查失败:', {
@@ -628,7 +629,7 @@ const exportCourseRecords = async (courseId: number) => {
       });
       throw new Error('服务器返回的数据为空');
     }
-    
+
   } catch (err: any) {
     console.error('导出课程记录失败:', err);
     handleExportError(err);
@@ -645,54 +646,54 @@ const exportCoursePracticeRecords = async (courseId: number) => {
 
     const response = await StudyRecordsApi.exportPracticeRecordsByCourse(courseId.toString());
     console.log('导出课程练习记录响应:', response);
-    
+
     // 检查响应数据
     if (!response) {
       throw new Error('服务器返回的数据为空');
     }
 
     // 确保response是Blob类型
-    if (!(response instanceof Blob)) {
-      console.error('响应数据不是Blob类型:', response);
+    if (!(response.data instanceof Blob)) {
+      console.error('响应数据不是Blob类型:', response.data);
       throw new Error('服务器返回的数据格式不正确');
     }
 
-    console.log('Blob数据:', response);
-    console.log('Blob类型:', response.type);
-    console.log('Blob大小:', response.size);
-    
-    if (response.size > 0) {
+    console.log('Blob数据:', response.data);
+    console.log('Blob类型:', response.data.type);
+    console.log('Blob大小:', response.data.size);
+
+    if (response.data.size > 0) {
       console.log('开始创建下载链接');
       const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
       const courseName = coursesList.value.find(c => c.id === courseId)?.name || '课程';
       const filename = `${courseName}_练习记录_${timestamp}.xlsx`;
-      
+
       // 创建下载链接
-      const url = window.URL.createObjectURL(response);
+      const url = window.URL.createObjectURL(response.data);
       console.log('创建的对象URL:', url);
-      
+
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', filename);
       document.body.appendChild(link);
       console.log('触发下载');
       link.click();
-      
+
       // 清理
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-      
+
       console.log(`成功导出课程练习记录: ${filename}`);
     } else {
       console.error('Blob数据检查失败:', {
-        hasBlob: !!response,
-        isBlob: response instanceof Blob,
-        size: response.size,
-        type: response.type
+        hasBlob: !!response.data,
+        isBlob: response.data instanceof Blob,
+        size: response.data.size,
+        type: response.data.type
       });
       throw new Error('服务器返回的数据为空');
     }
-    
+
   } catch (err: any) {
     console.error('导出课程练习记录失败:', err);
     handleExportError(err);
@@ -735,7 +736,7 @@ const viewSubmissionReport = async (recordIdOrSubmissionId: string | undefined, 
     submissionReportModal.value.data = null;
 
     let submissionId = recordIdOrSubmissionId;
-    
+
     // 如果有submission_id，直接使用
     if (record && record.submission_id) {
       submissionId = record.submission_id;
@@ -750,11 +751,11 @@ const viewSubmissionReport = async (recordIdOrSubmissionId: string | undefined, 
 
     console.log('尝试获取练习提交报告，ID:', submissionId);
     console.log('记录对象:', record);
-    
+
     // 获取提交报告
     const response = await StudyRecordsApi.getSubmissionReport(submissionId);
     console.log('练习提交报告API响应:', response);
-    
+
     if (response.data) {
       // 检查响应格式
       let reportData;
@@ -763,21 +764,21 @@ const viewSubmissionReport = async (recordIdOrSubmissionId: string | undefined, 
       } else {
         reportData = response.data;
       }
-      
+
       console.log('处理后的报告数据:', reportData);
-      
+
       if (!reportData) {
         throw new Error('API返回的数据为空');
       }
-      
+
       // 设置报告数据
       submissionReportModal.value.data = reportData;
       console.log('成功设置练习提交报告数据:', submissionReportModal.value.data);
-      
+
     } else {
       throw new Error('API响应数据格式不正确');
     }
-    
+
   } catch (err: any) {
     console.error('获取练习提交报告失败:', err);
     submissionReportModal.value.error = err.response?.data?.message || err.message || '获取记录失败，请稍后再试';
@@ -796,7 +797,7 @@ const closeSubmissionReportModal = () => {
 // 获取分数分布项的样式类
 const getDistributionClass = (scoreRange: string) => {
   if (!scoreRange) return '';
-  
+
   // 根据分数段返回对应的样式类
   if (scoreRange.includes('90') || scoreRange.includes('100')) {
     return 'excellent';
@@ -860,7 +861,7 @@ const handleFileDownload = async (blob: Blob, filename?: string, response?: any)
     if (!downloadFilename) {
       const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
       downloadFilename = `下载文件_${timestamp}`;
-      
+
       // 根据blob类型推断文件扩展名
       if (blob.type.includes('pdf')) {
         downloadFilename += '.pdf';
@@ -879,13 +880,13 @@ const handleFileDownload = async (blob: Blob, filename?: string, response?: any)
     link.setAttribute('download', downloadFilename);
     document.body.appendChild(link);
     link.click();
-    
+
     // 安全地移除DOM元素和释放URL对象
     if (link.parentNode) {
       document.body.removeChild(link);
     }
     window.URL.revokeObjectURL(url);
-    
+
     // 显示成功消息
     downloadStatus.value.error = null;
     console.log(`文件下载成功: ${downloadFilename}, 大小: ${blob.size} 字节`);
@@ -903,7 +904,7 @@ const downloadReport = async (recordIdOrSubmissionId: string) => {
 
     // 如果传入的是记录ID，需要查找对应的提交ID
     let submissionId = recordIdOrSubmissionId;
-    
+
     // 检查是否是记录ID，如果是则查找对应的提交ID
     const record = records.value.find(r => r.id === recordIdOrSubmissionId);
     if (record && record.submission_id) {
@@ -919,7 +920,7 @@ const downloadReport = async (recordIdOrSubmissionId: string) => {
     // 使用提交报告导出API
     const response = await StudyRecordsApi.exportSubmissionReport(submissionId);
     console.log('导出报告响应:', response);
-    
+
     // 检查响应数据
     if (!response) {
       throw new Error('服务器返回的数据为空');
@@ -934,27 +935,27 @@ const downloadReport = async (recordIdOrSubmissionId: string) => {
     console.log('Blob数据:', response.data);
     console.log('Blob类型:', response.data.type);
     console.log('Blob大小:', response.data.size);
-    
+
     if (response.data.size > 0) {
       console.log('开始创建下载链接');
       const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
       const filename = `提交报告_${submissionId}_${timestamp}.pdf`;
-      
+
       // 创建下载链接
       const url = window.URL.createObjectURL(response.data);
       console.log('创建的对象URL:', url);
-      
+
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', filename);
       document.body.appendChild(link);
       console.log('触发下载');
       link.click();
-      
+
       // 清理
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-      
+
       console.log(`成功导出提交报告: ${filename}`);
     } else {
       console.error('Blob数据检查失败:', {
@@ -965,10 +966,10 @@ const downloadReport = async (recordIdOrSubmissionId: string) => {
       });
       throw new Error('服务器返回的数据为空');
     }
-    
+
   } catch (err: any) {
     console.error('下载报告失败:', err);
-    
+
     // 处理不同类型的错误
     if (err.response?.status === 401) {
       downloadStatus.value.error = '未登录或登录已过期，请重新登录';
@@ -989,14 +990,14 @@ const fetchUserClass = async () => {
   try {
     classLoading.value = true
     classError.value = null
-    
+
     // 尝试获取用户的默认班级
     const response = await CourseApi.getUserDefaultClass()
     currentClass.value = response.data
   } catch (err: any) {
     console.error('获取用户班级失败:', err)
     classError.value = '获取班级信息失败'
-    
+
     // 如果获取默认班级失败，尝试获取用户所有班级中的第一个
     try {
       const classesResponse = await CourseApi.getUserClasses()
@@ -1022,12 +1023,12 @@ const fetchRecords = async () => {
   try {
     loading.value = true
     error.value = null
-    
+
     const allRecords: RecordDisplay[] = [];
-    
+
     // 根据是否选择了课程筛选来决定调用哪个API
     const courseId = filters.value.courseId;
-    
+
     // 获取学习记录
     try {
       let studyResponse;
@@ -1036,13 +1037,13 @@ const fetchRecords = async () => {
       } else {
         studyResponse = await StudyRecordsApi.getAllStudyRecords();
       }
-      
+
       console.log('学习记录API原始响应:', studyResponse);
       console.log('学习记录响应数据:', studyResponse.data);
-      
+
       // 解析API响应数据
       let studyRecords = [];
-      
+
       if (studyResponse.data && studyResponse.data.code === 200) {
         // 检查data是否是数组
         if (Array.isArray(studyResponse.data.data)) {
@@ -1058,7 +1059,7 @@ const fetchRecords = async () => {
           console.warn('学习记录API响应data格式不正确:', typeof studyResponse.data.data, studyResponse.data.data);
           studyRecords = [];
         }
-        
+
         // 处理学习记录数据
         studyRecords.forEach((record: any) => {
           allRecords.push({
@@ -1073,7 +1074,7 @@ const fetchRecords = async () => {
             percent: record.completed ? 100 : 50,
           });
         });
-        
+
         console.log('处理后的学习记录数量:', allRecords.length);
       } else {
         console.warn('学习记录API响应格式不正确:', studyResponse.data);
@@ -1084,7 +1085,7 @@ const fetchRecords = async () => {
         console.error('学习记录API错误响应:', studyErr.response.status, studyErr.response.data);
       }
     }
-    
+
     // 获取练习记录
     try {
       let practiceResponse;
@@ -1093,13 +1094,13 @@ const fetchRecords = async () => {
       } else {
         practiceResponse = await StudyRecordsApi.getAllPracticeRecords();
       }
-      
+
       console.log('练习记录API原始响应:', practiceResponse);
       console.log('练习记录响应数据:', practiceResponse.data);
-      
+
       // 根据API文档解析练习记录
       let practiceRecords = [];
-    
+
     // 检查响应数据
       if (practiceResponse.data) {
         // 如果响应是数组，直接使用
@@ -1121,11 +1122,11 @@ const fetchRecords = async () => {
           console.warn('练习记录API响应格式不正确:', typeof practiceResponse.data, practiceResponse.data);
           practiceRecords = [];
         }
-        
+
         practiceRecords.forEach((record: any) => {
           // 从记录中提取课程ID
           const courseId = record.courseId || (record.questions && record.questions[0]?.courseId);
-          
+
           allRecords.push({
             id: record.id?.toString() || record.practiceId?.toString() || '',
             title: record.practiceTitle || record.title || '未知练习',
@@ -1149,40 +1150,40 @@ const fetchRecords = async () => {
         console.error('练习记录API错误响应:', practiceErr.response.status, practiceErr.response.data);
       }
     }
-    
+
     console.log('已启用练习记录获取，显示学习记录和练习记录');
-    
+
     // 应用其他筛选条件
     let filteredRecords = allRecords;
-    
+
     // 按练习名称筛选
     if (filters.value.exerciseName.trim()) {
       const searchTerm = filters.value.exerciseName.trim().toLowerCase();
-      filteredRecords = filteredRecords.filter(record => 
+      filteredRecords = filteredRecords.filter(record =>
         record.title.toLowerCase().includes(searchTerm)
       );
     }
-    
+
     // 按状态筛选
     if (filters.value.status) {
-      filteredRecords = filteredRecords.filter(record => 
+      filteredRecords = filteredRecords.filter(record =>
         record.status === filters.value.status
       );
     }
-    
+
     // 按学生姓名筛选（仅教师/助教可见）
     if (filters.value.studentName.trim() && (userRole.value === 'teacher' || userRole.value === 'assistant')) {
       const searchTerm = filters.value.studentName.trim().toLowerCase();
-      filteredRecords = filteredRecords.filter(record => 
+      filteredRecords = filteredRecords.filter(record =>
         record.student_name?.toLowerCase().includes(searchTerm)
       );
     }
-    
+
     records.value = filteredRecords;
     totalRecords.value = filteredRecords.length;
-    
+
     console.log('获取学习记录成功:', records.value.length, '条记录');
-    
+
   } catch (err: any) {
     console.error('获取学习记录失败:', err);
     error.value = err.response?.data?.message || err.message || '获取学习记录失败，请稍后再试';
@@ -1242,10 +1243,10 @@ const fetchSubmissionReport = async (submissionId: string, record: RecordDisplay
   try {
     submissionReportModal.value.loading = true;
     submissionReportModal.value.error = null;
-    
+
     // 获取提交报告
     const response = await StudyRecordsApi.getSubmissionReport(submissionId);
-    
+
     if (response.data) {
       // 检查响应格式
       let reportData;
@@ -1254,18 +1255,18 @@ const fetchSubmissionReport = async (submissionId: string, record: RecordDisplay
       } else {
         reportData = response.data;
       }
-      
+
       if (!reportData) {
         throw new Error('API返回的数据为空');
       }
-      
+
       // 设置报告数据
       submissionReportModal.value.data = reportData;
-      
+
     } else {
       throw new Error('API响应数据格式不正确');
     }
-    
+
   } catch (err: any) {
     submissionReportModal.value.error = err.response?.data?.message || err.message || '获取记录失败，请稍后再试';
   } finally {
@@ -1688,40 +1689,40 @@ const fetchSubmissionReport = async (submissionId: string, record: RecordDisplay
   .learning-records-container {
     padding: 1rem;
   }
-  
+
   .page-header {
     padding: 1.5rem;
   }
-  
+
   .page-header h1 {
     font-size: 1.5rem;
   }
-  
+
   .filter-controls {
     flex-direction: column;
     align-items: stretch;
   }
-  
+
   .filter-input,
   .filter-select {
     min-width: auto;
     width: 100%;
   }
-  
+
   .records-table {
     font-size: 0.8rem;
   }
-  
+
   .records-table th,
   .records-table td {
     padding: 0.8rem 0.5rem;
   }
-  
+
   .actions-cell {
     flex-direction: column;
     gap: 0.25rem;
   }
-  
+
   .btn-action {
     font-size: 0.7rem;
     padding: 0.4rem 0.8rem;
@@ -1797,11 +1798,11 @@ const fetchSubmissionReport = async (submissionId: string, record: RecordDisplay
     gap: 1rem;
     align-items: stretch;
   }
-  
+
   .course-actions {
     justify-content: center;
   }
-  
+
   .btn-export-course,
   .btn-export-practice {
     flex: 1;
@@ -2288,34 +2289,34 @@ const fetchSubmissionReport = async (submissionId: string, record: RecordDisplay
     width: 95%;
     margin: 1rem;
   }
-  
+
   .modal-header,
   .modal-footer {
     padding: 1rem;
   }
-  
+
   .report-section {
     padding: 1rem;
   }
-  
+
   .info-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .score-overview {
     flex-direction: column;
   }
-  
+
   .score-distribution {
     grid-template-columns: 1fr;
   }
-  
+
   .question-header {
     flex-direction: column;
     gap: 0.5rem;
     align-items: flex-start;
   }
-  
+
   .modal-footer {
     flex-direction: column;
   }
