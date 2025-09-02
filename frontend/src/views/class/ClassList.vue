@@ -78,7 +78,7 @@ const fetchClasses = async () => {
             id: classItem.id || classItem.classId, // 兼容老师/学生接口，统一id字段，避免跳转出错
             name: classItem.className || classItem.name || '未命名班级',
             code: classItem.classCode || classItem.code || '无代码',
-            courseName: classItem.courseName || '未知课程',
+            courseName: classItem.name || '未知课程',
             createdAt: classItem.createdAt || classItem.joinedAt || new Date().toISOString()
         }))
         console.log('处理后的班级数据:', classes.value)
