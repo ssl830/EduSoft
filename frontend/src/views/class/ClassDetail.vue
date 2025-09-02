@@ -33,7 +33,7 @@ onMounted(async () => {
         ...response.data,
         name: response.data.className || response.data.name || '未命名班级',
         code: response.data.classCode || response.data.code || '无代码',
-        courseName: response.data.courseName || '未知课程'
+        courseName: response.data.name || '未知课程'
       }
       console.log('处理后的班级数据:', aclass.value)
     } else {

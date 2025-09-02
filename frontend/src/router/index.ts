@@ -462,8 +462,7 @@ router.beforeEach( async (to, _from, next) => {
     to.meta.title === '错误题库' || to.meta.title === '学习记录' || to.meta.title === '自测历史' ||
     to.meta.title === 'AI自测' || to.meta.title === '自测详情' || to.meta.title === '教师列表' ||
     to.meta.title === '学生列表' || to.meta.title === '管理员列表' || to.meta.title === '资源列表' ||
-    to.meta.title === '系统概览' || to.meta.title === '练习列表' ||
-    to.meta.title === '课表'
+    to.meta.title === '系统概览' || to.meta.title === '练习列表'
   )) {
     next({name: 'Home'})
     return
