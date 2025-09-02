@@ -747,7 +747,87 @@ public class PracticeServiceImpl implements PracticeService {
 
     @Override
     public Map<String, Object> getSubmissionStats(Long practiceId) {
-        return practiceRecordMapper.getSubmissionStatsByPracticeId(practiceId);
+        Map<String, Object> stats = practiceRecordMapper.getSubmissionStatsByPracticeId(practiceId);
+        if (stats == null) stats = new java.util.HashMap<>();
+        try {
+            Practice practice = practiceMapper.getPracticeById(practiceId);
+            if (practice != null) {
+                // 填入课程与班级ID，便于前端使用
+                if (practice.getCourseId() != null) stats.putIfAbsent("course_id", practice.getCourseId());
+                if (practice.getClassId() != null) stats.putIfAbsent("class_id", practice.getClassId());
+
+                // 课程名称
+                try {
+                    if (practice.getCourseId() != null) {
+                        log.debug("[Stats] 解析课程名称 courseId={}", practice.getCourseId());
+                        Map<String, Object> course = courseClient.getCourseById(practice.getCourseId());
+                        if (course != null) {
+                            Object data = course.get("data");
+                            Map<String, Object> courseData = (data instanceof Map) ? (Map<String, Object>) data : course;
+                            log.debug("[Stats] course raw keys={} wrappedKeys={}", course.keySet(), courseData.keySet());
+                            Object nameObj = courseData.get("name");
+                            if (nameObj == null) nameObj = courseData.get("title");
+                            if (nameObj == null) nameObj = courseData.get("course_name");
+                            if (nameObj == null) nameObj = courseData.get("courseName");
+                            if (nameObj != null) {
+                                stats.put("course_name", nameObj.toString());
+                                log.info("[Stats] 解析课程名称成功 practiceId={} courseId={} name={}", practiceId, practice.getCourseId(), nameObj);
+                            } else {
+                                log.debug("[Stats] 未从课程响应中解析到名称 practiceId={} courseId={} keys={}", practiceId, practice.getCourseId(), courseData.keySet());
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    log.debug("[Stats] 获取课程名称失败 practiceId={} err={}", practiceId, e.getMessage());
+                }
+
+                // 班级名称
+                try {
+                    if (practice.getClassId() != null) {
+                        log.debug("[Stats] 解析班级名称 classId={}", practice.getClassId());
+                        Map<String, Object> cls = courseClient.getClassById(practice.getClassId());
+                        if (cls != null) {
+                            Object data = cls.get("data");
+                            Map<String, Object> clsData = (data instanceof Map) ? (Map<String, Object>) data : cls;
+                            log.debug("[Stats] class raw keys={} wrappedKeys={}", cls.keySet(), clsData.keySet());
+                            Object nameObj = clsData.get("name");
+                            if (nameObj == null) nameObj = clsData.get("class_name");
+                            if (nameObj == null) nameObj = clsData.get("className");
+                            if (nameObj == null) nameObj = clsData.get("title");
+                            if (nameObj != null) {
+                                stats.put("class_name", nameObj.toString());
+                                log.info("[Stats] 解析班级名称成功 practiceId={} classId={} name={}", practiceId, practice.getClassId(), nameObj);
+                            } else {
+                                log.debug("[Stats] 未从班级响应中解析到名称 practiceId={} classId={} keys={}", practiceId, practice.getClassId(), clsData.keySet());
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    log.debug("[Stats] 获取班级名称失败 practiceId={} err={}", practiceId, e.getMessage());
+                }
+
+                // 规范化输出字段：同时提供 snake_case 与 camelCase，并设置缺省值
+                try {
+                    Object courseNameObj = stats.get("course_name");
+                    if (courseNameObj == null) courseNameObj = stats.get("courseName");
+                    String courseName = courseNameObj != null ? courseNameObj.toString() : "未知课程";
+                    stats.put("course_name", courseName);
+                    stats.put("courseName", courseName);
+                    Object classNameObj = stats.get("class_name");
+                    if (classNameObj == null) classNameObj = stats.get("className");
+                    String className = classNameObj != null ? classNameObj.toString() : "未知班级";
+                    stats.put("class_name", className);
+                    stats.put("className", className);
+                    log.info("[Stats] 规范化名称输出 practiceId={} course_name='{}' class_name='{}'", practiceId, courseName, className);
+                } catch (Exception ignore) {}
+            }
+        } catch (Exception ex) {
+            log.warn("[Stats] 丰富统计信息失败 practiceId={} err={}", practiceId, ex.getMessage());
+        }
+        try {
+            log.info("[Stats] 返回前最终stats practiceId={} keys={} course_name='{}' class_name='{}'", practiceId, stats.keySet(), stats.get("course_name"), stats.get("class_name"));
+        } catch (Exception ignore) {}
+        return stats;
     }
 
 

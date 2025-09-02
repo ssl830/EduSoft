@@ -156,7 +156,8 @@ const discussionApi = {
 
   // 1. 创建回复
   createReply: (discussionId: number, data: CreateReplyRequest) => {
-    return apiClient.post<BackendDiscussionReply>(`/api/discussion-reply/discussion/${discussionId}`, data);
+    // 后端接口定义为 POST /api/discussion-reply，Body 需包含 discussionId
+    return apiClient.post<BackendDiscussionReply>(`/api/discussion-reply`, { discussionId, ...data });
   },
 
   // 2. 更新回复

@@ -86,9 +86,24 @@ public class AiAssistantController {
     }
 
     @PostMapping("/rag/generate_student_exercise")
-    public Map<String, Object> generateStudentExercise(@RequestBody Map<String, Object> req) {
-        logger.info("收到学生自测练习生成请求: {}", req);
-        return aiAssistantService.generateStudentExercise(req);
+    public Map<String, Object> generateStudentExercise(@RequestBody Map<String, Object> req, 
+            @RequestHeader(value = "free-fs-token", required = false) String token,
+            @RequestHeader(value = "X-User-Id", required = false) Long userId) {
+        logger.info("收到学生自测练习生成请求: {}, Token: {}, 用户ID: {}", req, token != null ? "存在" : "无", userId);
+        
+        if (userId == null) {
+            if (token != null && !token.trim().isEmpty()) {
+                // 这里需要解析 token 获取用户ID
+                // 暂时返回一个测试用户ID
+                userId = 1L; // TODO: 从 token 中解析真实的用户ID
+                logger.info("从 token 解析到用户ID: {}", userId);
+            } else {
+                logger.warn("没有提供有效的用户认证信息");
+                return Map.of("status", "fail", "message", "用户未登录");
+            }
+        }
+        
+        return aiAssistantService.generateStudentExercise(req, userId);
     }
 
     @PostMapping("/rag/optimize_course")

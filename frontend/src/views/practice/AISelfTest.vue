@@ -53,7 +53,7 @@
 
             <!-- 已选择题目列表 -->
             <div v-if="selectedIds.length" class="selected-list">
-                <label class="form-label-lg">已选择 {{ selectedIds.length }} 题</label>
+                <label class="form-label-lg">已选择 {{ selectedIds.length }} 题 </label>
                 <ul>
                     <li v-for="id in selectedIds" :key="id">
                         <span>{{ findQuestionContent(id)?.slice(0,50) || '题目 ' + id }}</span>
@@ -250,9 +250,11 @@ async function generate() {
         } else {
             practiceId.value = null
         }
-    } catch (e: any) {
+    }
+    catch (e: any) {
         ElMessage.error(e?.message || '生成失败')
-    } finally {
+    } 
+    finally {
         loading.value = false
     }
 }

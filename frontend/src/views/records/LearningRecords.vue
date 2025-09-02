@@ -29,7 +29,7 @@
             {{ course.name }}
           </option>
         </select>
-        <select v-model="filters.status" class="filter-select">
+        <select v-if="false" v-model="filters.status" class="filter-select">
           <option value="">所有完成状态</option>
           <option value="completed">已完成</option>
           <option value="in-progress">进行中</option>
@@ -62,11 +62,12 @@
               <span class="course-exercise-count">({{ course.exerciseCount }}个练习)</span>
             </div>            <div class="course-actions">
               <button
+                v-if="false"
                 @click.stop="exportCourseRecords(course.id)"
                 class="btn btn-export-course"
                 :disabled="downloadStatus.loading"
               >
-                <i class="fa fa-download"></i> 导出记录
+                <i class="fa fa-download"></i> 导出学习记录
               </button>
               <button
                 @click.stop="exportCoursePracticeRecords(course.id)"

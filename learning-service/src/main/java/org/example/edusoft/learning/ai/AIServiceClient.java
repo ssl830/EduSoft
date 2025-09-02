@@ -244,15 +244,15 @@ public class AIServiceClient {
     /**
      * 获取课程优化建议（调用/rag/optimize_course）
      */
-    public Map<String, Object> optimizeCourse(String courseData) {
+    public Map<String, Object> optimizeCourse(Map<String, Object> courseData) {
         String url = aiServiceUrl + "/rag/optimize_course";
-        
+
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        
-        Map<String, Object> body = Map.of("courseData", courseData);
-        HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(body, headers);
-        
+
+        // 直接传递扁平结构，不嵌套 courseData
+        HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(courseData, headers);
+
         ResponseEntity<Map> response = restTemplate.postForEntity(url, requestEntity, Map.class);
         return response.getBody();
     }

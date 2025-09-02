@@ -268,6 +268,7 @@ Content-Type: {{contentType}}
 
 ----------------
 由于视频摘要等还不确定位置，我们先不测试
+
 ### 15. 视频摘要生成 - POST /video/summary
 ### 前端发送视频摘要生成请求
 POST {{baseUrl}}/api/learning/ai/video/summary

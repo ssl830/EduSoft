@@ -8,35 +8,35 @@ import java.util.List;
 @Mapper
 public interface DiscussionReplyMapper {
     
-    @Insert("INSERT INTO discussion_replies (discussion_id, parent_reply_id, creator_id, creator_name, content, like_count, created_at, updated_at, is_deleted) " +
-            "VALUES (#{discussionId}, #{parentReplyId}, #{creatorId}, #{creatorName}, #{content}, #{likeCount}, #{createdAt}, #{updatedAt}, #{isDeleted})")
+    @Insert("INSERT INTO discussionreply (discussion_id, parent_reply_id, user_id, user_num, content, created_at, updated_at) " +
+            "VALUES (#{discussionId}, #{parentReplyId}, #{creatorId}, #{creatorName}, #{content}, NOW(), NOW())")
     @Options(useGeneratedKeys = true, keyProperty = "id")
     int insert(DiscussionReply reply);
-    
-    @Select("SELECT * FROM discussion_replies WHERE id = #{id} AND is_deleted = FALSE")
+        
+    @Select("SELECT id, discussion_id AS discussionId, parent_reply_id AS parentReplyId, user_id AS creatorId, user_num AS creatorName, content, NULL AS likeCount, created_at AS createdAt, updated_at AS updatedAt, NULL AS isDeleted FROM discussionreply WHERE id = #{id}")
     DiscussionReply selectById(@Param("id") Long id);
-    
-    @Select("SELECT * FROM discussion_replies WHERE discussion_id = #{discussionId} AND is_deleted = FALSE ORDER BY created_at ASC")
+        
+    @Select("SELECT id, discussion_id AS discussionId, parent_reply_id AS parentReplyId, user_id AS creatorId, user_num AS creatorName, content, NULL AS likeCount, NULL AS isLiked, created_at AS createdAt, updated_at AS updatedAt, NULL AS isDeleted FROM discussionreply WHERE discussion_id = #{discussionId} ORDER BY created_at ASC")
     List<DiscussionReplyDTO> selectByDiscussionId(@Param("discussionId") Long discussionId);
-    
-    @Select("SELECT * FROM discussion_replies WHERE parent_reply_id = #{parentReplyId} AND is_deleted = FALSE ORDER BY created_at ASC")
+        
+    @Select("SELECT id, discussion_id AS discussionId, parent_reply_id AS parentReplyId, user_id AS creatorId, user_num AS creatorName, content, NULL AS likeCount, NULL AS isLiked, created_at AS createdAt, updated_at AS updatedAt, NULL AS isDeleted FROM discussionreply WHERE parent_reply_id = #{parentReplyId} ORDER BY created_at ASC")
     List<DiscussionReplyDTO> selectByParentReplyId(@Param("parentReplyId") Long parentReplyId);
-    
-    @Update("UPDATE discussion_replies SET content = #{content}, updated_at = #{updatedAt} WHERE id = #{id}")
+        
+    @Update("UPDATE discussionreply SET content = #{content}, updated_at = NOW() WHERE id = #{id}")
     int updateContent(@Param("id") Long id, @Param("content") String content, @Param("updatedAt") String updatedAt);
-    
-    @Update("UPDATE discussion_replies SET is_deleted = TRUE, updated_at = #{updatedAt} WHERE id = #{id}")
+        
+    @Update("DELETE FROM discussionreply WHERE id = #{id}")
     int softDelete(@Param("id") Long id, @Param("updatedAt") String updatedAt);
-    
-    @Update("UPDATE discussion_replies SET like_count = like_count + 1 WHERE id = #{id}")
+        
+    @Update("UPDATE discussionreply SET updated_at = NOW() WHERE id = #{id}")
     int incrementLikeCount(@Param("id") Long id);
-    
-    @Update("UPDATE discussion_replies SET like_count = GREATEST(like_count - 1, 0) WHERE id = #{id}")
+        
+    @Update("UPDATE discussionreply SET updated_at = NOW() WHERE id = #{id}")
     int decrementLikeCount(@Param("id") Long id);
-    
-    @Select("SELECT * FROM discussion_replies WHERE creator_id = #{creatorId} AND is_deleted = FALSE ORDER BY created_at DESC")
+        
+    @Select("SELECT id, discussion_id AS discussionId, parent_reply_id AS parentReplyId, user_id AS creatorId, user_num AS creatorName, content, NULL AS likeCount, NULL AS isLiked, created_at AS createdAt, updated_at AS updatedAt, NULL AS isDeleted FROM discussionreply WHERE user_id = #{creatorId} ORDER BY created_at DESC")
     List<DiscussionReplyDTO> selectByCreatorId(@Param("creatorId") Long creatorId);
-    
-    @Select("SELECT * FROM discussion_replies WHERE content LIKE CONCAT('%', #{keyword}, '%') AND is_deleted = FALSE ORDER BY created_at DESC")
+        
+    @Select("SELECT id, discussion_id AS discussionId, parent_reply_id AS parentReplyId, user_id AS creatorId, user_num AS creatorName, content, NULL AS likeCount, NULL AS isLiked, created_at AS createdAt, updated_at AS updatedAt, NULL AS isDeleted FROM discussionreply WHERE content LIKE CONCAT('%', #{keyword}, '%') ORDER BY created_at DESC")
     List<DiscussionReplyDTO> searchByKeyword(@Param("keyword") String keyword);
 }

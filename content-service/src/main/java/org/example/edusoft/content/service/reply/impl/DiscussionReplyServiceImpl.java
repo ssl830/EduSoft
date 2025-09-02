@@ -18,11 +18,13 @@ public class DiscussionReplyServiceImpl implements DiscussionReplyService {
     private DiscussionReplyMapper discussionReplyMapper;
     
     @Override
-    public DiscussionReply createReply(Long discussionId, Long parentReplyId, Long creatorId, String content) {
+    public DiscussionReply createReply(Long discussionId, Long parentReplyId, Long creatorId, String content, String userNum) {
         DiscussionReply reply = new DiscussionReply();
         reply.setDiscussionId(discussionId);
         reply.setParentReplyId(parentReplyId);
         reply.setCreatorId(creatorId);
+        // user_num 映射到实体的 creatorName 字段（Mapper 使用 #{creatorName} 写入 user_num）
+        reply.setCreatorName(userNum);
         reply.setContent(content);
         reply.setLikeCount(0);
         reply.setCreatedAt(LocalDateTime.now());

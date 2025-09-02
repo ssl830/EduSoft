@@ -90,4 +90,7 @@ public interface ClassMapper extends BaseMapper<Class> {
     
     @Delete("DELETE FROM courseclass WHERE class_id = #{classId}")
     int deleteCourseClassRelationByClassId(Long classId);
+
+    @Select("SELECT id as class_id, name as class_name FROM class")
+    List<java.util.Map<String, Object>> getAllClasses();
 }

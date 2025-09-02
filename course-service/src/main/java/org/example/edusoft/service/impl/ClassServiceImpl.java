@@ -444,6 +444,11 @@ public class ClassServiceImpl implements ClassService {
         return classMapper.getClassStudentCount(classId);
     }
 
+    @Override
+    public List<java.util.Map<String, Object>> getAllClasses() {
+        return classMapper.getAllClasses();
+    }
+
     // 检查班级代码是否存在
     private boolean isClassCodeExists(String classCode) {
         return classMapper.selectCount(
