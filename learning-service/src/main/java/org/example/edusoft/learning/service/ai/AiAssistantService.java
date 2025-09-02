@@ -10,6 +10,7 @@ import org.example.edusoft.learning.mapper.ai.AiServiceCallLogMapper;
 import org.example.edusoft.learning.mapper.PracticeMapper;
 import org.example.edusoft.learning.mapper.QuestionMapper;
 import org.example.edusoft.learning.mapper.SubmissionMapper;
+import org.example.edusoft.learning.service.SelfPracticeService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,6 +65,9 @@ public class AiAssistantService implements AiServiceCaller {
 
     @Autowired
     private SubmissionMapper submissionMapper;
+
+    @Autowired
+    private SelfPracticeService selfPracticeService;
 
     // Helper method to log AI service calls
     private void logAiServiceCall(Long userId, String endpoint, long durationMs, String status, String errorMessage) {
@@ -269,8 +273,60 @@ public class AiAssistantService implements AiServiceCaller {
         return callAiServiceMethod("/rag/regenerate", req);
     }
 
-    public Map<String, Object> generateStudentExercise(Map<String, Object> req) {
-        return callAiServiceMethod("/rag/generate_student_exercise", req);
+    public Map<String, Object> generateStudentExercise(Map<String, Object> req, Long userId) {
+        if (userId == null) {
+            return Map.of("status", "fail", "message", "用户未登录");
+        }
+
+        try {
+            // 1. 调用AI服务生成练习题
+            Map<String, Object> aiResult = callAiServiceMethod("/rag/generate_student_exercise", req);
+            
+            logger.info("AI服务返回结果: {}", aiResult);
+            
+            // 检查AI服务是否成功调用
+            if (aiResult == null) {
+                logger.error("AI服务返回null结果");
+                return Map.of("status", "fail", "message", "AI生成练习失败");
+            }
+            
+            // 检查是否包含习题数据 - 根据实际返回格式调整
+            // AI服务可能返回 {exercises: [...]} 或 {data: {exercises: [...]}} 格式
+            boolean hasExercises = false;
+            if (aiResult.containsKey("exercises") && aiResult.get("exercises") instanceof List) {
+                hasExercises = !((List<?>) aiResult.get("exercises")).isEmpty();
+            } else if (aiResult.containsKey("data") && aiResult.get("data") instanceof Map) {
+                Map<?, ?> data = (Map<?, ?>) aiResult.get("data");
+                if (data.containsKey("exercises") && data.get("exercises") instanceof List) {
+                    hasExercises = !((List<?>) data.get("exercises")).isEmpty();
+                }
+            }
+            
+            if (!hasExercises) {
+                logger.error("AI服务返回结果中没有有效的习题数据: {}", aiResult);
+                return Map.of("status", "fail", "message", "AI生成练习失败");
+            }
+
+            // 2. 保存生成的练习到数据库（直接传递AI结果）
+            Long practiceId = selfPracticeService.saveGeneratedPractice(userId, aiResult);
+
+            if (practiceId == null) {
+                return Map.of("status", "fail", "message", "保存练习到数据库失败");
+            }
+
+            // 3. 构造返回结果，包含practiceId
+            Map<String, Object> result = new HashMap<>(aiResult);
+            result.put("practiceId", practiceId);
+            result.put("status", "success");
+            result.put("message", "练习生成并保存成功");
+            
+            logger.info("AI自测练习生成成功 - 用户ID: {}, 练习ID: {}", userId, practiceId);
+            return result;
+            
+        } catch (Exception e) {
+            logger.error("生成学生自测练习失败", e);
+            return Map.of("status", "fail", "message", "生成练习失败: " + e.getMessage());
+        }
     }
 
     public Map<String, Object> optimizeCourse(Map<String, Object> req) {

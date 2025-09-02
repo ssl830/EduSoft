@@ -50,146 +50,68 @@ public class SelfPracticeServiceImpl implements SelfPracticeService {
 
     @Override
     @Transactional
-    public void saveGeneratedPractice(String prompt, String result, Long studentId) {
+    public Long saveGeneratedPractice(Long studentId, Map<String, Object> aiResult) {
         try {
-            logger.info("开始保存AI生成的练习 - 用户ID: {}, prompt: {}", studentId, prompt);
-
-            if (result == null || result.trim().isEmpty()) {
-                logger.warn("AI返回结果为空 - 用户ID: {}", studentId);
-                return;
-            }
-
-            // 解析AI结果
-            String[] parts = result.split("\\[\\[QUESTION\\]\\]");
-            if (parts.length < 2) {
-                logger.warn("AI结果格式不正确，没有找到问题分隔符 - 用户ID: {}", studentId);
-                return;
-            }
+            logger.info("开始保存AI生成的练习 - 用户ID: {}, AI结果: {}", studentId, aiResult);
 
             // 创建练习记录
             SelfPractice practice = new SelfPractice();
             practice.setStudentId(studentId);
-            practice.setTitle("AI自测练习");
-            practice.setPrompt(prompt);
+            practice.setTitle("AI自测 " + LocalDateTime.now());
             practice.setCreatedAt(LocalDateTime.now());
             selfPracticeMapper.insert(practice);
 
             logger.info("练习记录已创建 - 练习ID: {}", practice.getId());
 
-            // 解析并保存每个问题
-            for (int i = 1; i < parts.length; i++) {
-                String questionBlock = parts[i].trim();
-                if (questionBlock.isEmpty()) continue;
-
-                try {
-                    Question question = parseQuestionFromAI(questionBlock);
-                    if (question != null) {
-                        question.setCreatorId(studentId);
-                        // 确保设置必要的字段以通过验证
-                        if (question.getCourseId() == null) {
-                            question.setCourseId(0L); // 默认课程ID，表示AI生成的题目
-                        }
-                        questionMapper.createQuestion(question);
-
-                        // 创建练习-问题关联
-                        SelfPracticeQuestion spq = new SelfPracticeQuestion();
-                        spq.setSelfPracticeId(practice.getId());
-                        spq.setQuestionId(question.getId());
-                        spq.setSortOrder(i);
-                        spqMapper.insert(spq);
-
-                        logger.debug("问题已保存 - 问题ID: {}, 练习ID: {}", question.getId(), practice.getId());
-                    }
-                } catch (Exception e) {
-                    logger.error("解析问题时出错 - 练习ID: {}, 问题块: {}", practice.getId(), questionBlock, e);
-                }
+            // 兼容两种结构：直接包含 exercises，或包在 data.exercises
+            List<Map<String, Object>> exercises = (List<Map<String, Object>>) aiResult.get("exercises");
+            if (exercises == null && aiResult.get("data") instanceof Map) {
+                exercises = (List<Map<String, Object>>) ((Map<?, ?>) aiResult.get("data")).get("exercises");
+            }
+            if (exercises == null) {
+                logger.warn("AI自测练习创建警告 - 未找到练习题数据, 练习ID: {}", practice.getId());
+                return practice.getId();
             }
 
-            logger.info("AI生成的练习保存完成 - 练习ID: {}", practice.getId());
+            logger.info("开始保存AI自测练习题目 - 练习ID: {}, 题目数量: {}", practice.getId(), exercises.size());
+            int order = 1;
+            for (Map<String, Object> ex : exercises) {
+                Question question = new Question();
+                question.setCreatorId(studentId);
+                question.setType(Question.QuestionType.valueOf(ex.get("type").toString()));
+                question.setContent(ex.get("question").toString());
+                question.setAnswer(ex.get("answer").toString());
+                question.setAnalysis(ex.getOrDefault("explanation", "").toString());
+                if (ex.containsKey("options")) {
+                    List<String> opts = (List<String>) ex.get("options");
+                    question.setOptionsList(opts);
+                }
+                // 直接保存题目避免严格校验字段
+                question.setCreatedAt(LocalDateTime.now());
+                // 修复：学生自建题目，course_id设为0，section_id不设置
+                question.setCourseId(0L);
+                questionMapper.createQuestion(question);
+                logger.debug("AI自测练习 - 保存题目 - 题目ID: {}, 练习ID: {}", question.getId(), practice.getId());
+
+                // 将新题目的ID写回原始列表，便于前端提交作答时使用
+                ex.put("id", question.getId());
+                ex.put("score", 10);
+
+                // 创建练习-问题关联
+                SelfPracticeQuestion spq = new SelfPracticeQuestion();
+                spq.setSelfPracticeId(practice.getId());
+                spq.setQuestionId(question.getId());
+                spq.setSortOrder(order++);
+                spq.setScore(10);
+                spqMapper.insert(spq);
+            }
+
+            logger.info("AI自测练习创建完成 - ID: {}, 总题目数: {}", practice.getId(), exercises.size());
+            return practice.getId();
 
         } catch (Exception e) {
             logger.error("保存AI生成的练习时出错 - 用户ID: {}", studentId, e);
             throw new RuntimeException("保存练习失败", e);
-        }
-    }
-
-    private Question parseQuestionFromAI(String questionBlock) {
-        try {
-            // 解析问题格式：题目\n选项\n答案\n解析
-            String[] lines = questionBlock.split("\\n");
-            if (lines.length < 3) {
-                logger.warn("问题格式不完整: {}", questionBlock);
-                return null;
-            }
-
-            Question question = new Question();
-            
-            // 解析题目
-            String content = lines[0].trim();
-            if (content.startsWith("题目:") || content.startsWith("问题:")) {
-                content = content.substring(3).trim();
-            }
-            question.setContent(content);
-
-            // 解析选项
-            StringBuilder optionsBuilder = new StringBuilder();
-            String answer = "";
-            String analysis = "";
-            
-            boolean isOptions = false;
-            boolean isAnswer = false;
-            boolean isAnalysis = false;
-
-            for (int i = 1; i < lines.length; i++) {
-                String line = lines[i].trim();
-                
-                if (line.startsWith("选项:") || line.startsWith("A.") || line.startsWith("A)")) {
-                    isOptions = true;
-                    isAnswer = false;
-                    isAnalysis = false;
-                    if (line.startsWith("选项:")) {
-                        continue;
-                    }
-                } else if (line.startsWith("答案:") || line.startsWith("正确答案:")) {
-                    isOptions = false;
-                    isAnswer = true;
-                    isAnalysis = false;
-                    answer = line.substring(line.indexOf(":") + 1).trim();
-                    continue;
-                } else if (line.startsWith("解析:") || line.startsWith("分析:")) {
-                    isOptions = false;
-                    isAnswer = false;
-                    isAnalysis = true;
-                    analysis = line.substring(line.indexOf(":") + 1).trim();
-                    continue;
-                }
-
-                if (isOptions && !line.isEmpty()) {
-                    if (optionsBuilder.length() > 0) {
-                        optionsBuilder.append("\n");
-                    }
-                    optionsBuilder.append(line);
-                } else if (isAnswer && !line.isEmpty()) {
-                    answer = line;
-                } else if (isAnalysis && !line.isEmpty()) {
-                    if (analysis.length() > 0) {
-                        analysis += "\n";
-                    }
-                    analysis += line;
-                }
-            }
-
-            question.setOptions(optionsBuilder.toString());
-            question.setAnswer(answer);
-            question.setAnalysis(analysis);
-            question.setType(Question.QuestionType.singlechoice); // 设置为枚举类型
-            question.setCreatedAt(LocalDateTime.now());
-
-            return question;
-
-        } catch (Exception e) {
-            logger.error("解析问题时出错: {}", questionBlock, e);
-            return null;
         }
     }
 
