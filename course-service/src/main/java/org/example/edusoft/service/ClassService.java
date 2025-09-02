@@ -77,4 +77,9 @@ public interface ClassService {
 
     // 获取班级学生总数
     int getClassStudentCount(Long classId);
+
+    /**
+     * 获取所有班级列表（只返回id和name）
+     */
+    List<java.util.Map<String, Object>> getAllClasses();
 }

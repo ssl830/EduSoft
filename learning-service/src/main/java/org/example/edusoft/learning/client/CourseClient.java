@@ -3,6 +3,7 @@ package org.example.edusoft.learning.client;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
@@ -225,7 +226,7 @@ public class CourseClient extends BaseServiceClient {
         }
         String token = getCurrentToken();
         logger.info("[CourseClient] 获取课程章节列表，课程ID: {}, token: {}", courseId, token);
-        
+
         org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
         if (token != null) {
             headers.set("satoken", token);
@@ -243,21 +244,18 @@ public class CourseClient extends BaseServiceClient {
                 Object.class
             );
             Object body = response.getBody();
-            if (body instanceof java.util.Map<?, ?> map) {
+            if (body instanceof Map<?, ?> map) {
                 Object data = map.get("data");
-                if (data instanceof java.util.List<?> list) {
+                if (data instanceof List<?> list) {
                     @SuppressWarnings("unchecked")
                     List<Map<String, Object>> res = (List<Map<String, Object>>) list;
-                    logger.info("[CourseClient] 课程章节列表(data)条数: {}", res.size());
                     return res;
                 }
-            } else if (body instanceof java.util.List<?> list) {
+            } else if (body instanceof List<?> list) {
                 @SuppressWarnings("unchecked")
                 List<Map<String, Object>> res = (List<Map<String, Object>>) list;
-                logger.info("[CourseClient] 课程章节列表(直接List)条数: {}", res.size());
                 return res;
             }
-            logger.warn("[CourseClient] 课程章节列表返回体异常: {}", String.valueOf(body));
             return java.util.List.of();
         } catch (Exception e) {
             logger.error("[CourseClient] 获取课程章节列表失败: {}", e.getMessage());
@@ -476,5 +474,78 @@ public class CourseClient extends BaseServiceClient {
             result.put(courseId, course);
         }
         return result;
+    }
+
+    /**
+     * 获取全部课程
+     */
+    public List<Map<String, Object>> getAllCourses() {
+        String token = getCurrentToken();
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        if (token != null) {
+            headers.set("satoken", token);
+        }
+        org.springframework.http.HttpEntity<Void> entity = new org.springframework.http.HttpEntity<>(headers);
+        String url = getBaseUrl() + "/api/courses/list";
+        org.springframework.http.ResponseEntity<Object> response = restTemplate.exchange(
+            url,
+            org.springframework.http.HttpMethod.GET,
+            entity,
+            Object.class
+        );
+        Object body = response.getBody();
+        if (body instanceof Map<?, ?> map) {
+            Object data = map.get("data");
+            if (data instanceof List<?> list) {
+                @SuppressWarnings("unchecked")
+                List<Map<String, Object>> res = (List<Map<String, Object>>) list;
+                return res;
+            }
+        } else if (body instanceof List<?> list) {
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> res = (List<Map<String, Object>>) list;
+            return res;
+        }
+        return java.util.List.of();
+    }
+
+    /**
+     * 获取全部班级
+     */
+    public List<Map<String, Object>> getAllClasses() {
+        String token = getCurrentToken();
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        if (token != null) {
+            headers.set("satoken", token);
+        }
+        org.springframework.http.HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        // 修正接口路径，避免 /list 导致参数类型错误
+        String url = getBaseUrl() + "/api/classes/list";
+        try {
+            org.springframework.http.ResponseEntity<Object> response = restTemplate.exchange(
+                url,
+                org.springframework.http.HttpMethod.GET,
+                entity,
+                Object.class
+            );
+            Object body = response.getBody();
+            if (body instanceof Map<?, ?> map) {
+                Object data = map.get("data");
+                if (data instanceof List<?> list) {
+                    @SuppressWarnings("unchecked")
+                    List<Map<String, Object>> res = (List<Map<String, Object>>) list;
+                    return res;
+                }
+            } else if (body instanceof List<?> list) {
+                @SuppressWarnings("unchecked")
+                List<Map<String, Object>> res = (List<Map<String, Object>>) list;
+                return res;
+            }
+            return java.util.List.of();
+        } catch (Exception e) {
+            logger.error("[CourseClient] 获取班级列表失败: {}", e.getMessage());
+            return java.util.List.of();
+        }
     }
 }
