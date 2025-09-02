@@ -51,13 +51,5 @@ public class FileInfo implements Serializable {
     @Transient
     private String dirIds;      // 目录ID拼接（非数据库字段）
 
-    public FileType getFileType() { return fileType; }
-    public void setFileType(FileType fileType) { this.fileType = fileType; }
-
-    public String getObjectName() {
-        return objectName;
-    }
-    public void setObjectName(String objectName) {
-        this.objectName = objectName;
-    }
+    // Getters and setters are handled by Lombok @Data
 }

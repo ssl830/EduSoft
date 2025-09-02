@@ -1,4 +1,4 @@
-package org.example.edusoft.learning.exception;
+package org.example.edusoft.content.exception;
 
 /**
  * 微服务调用异常
