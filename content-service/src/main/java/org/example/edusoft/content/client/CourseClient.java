@@ -1,115 +1,503 @@
 package org.example.edusoft.content.client;
 
-import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
+import org.example.edusoft.content.client.BaseServiceClient;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
- * Course Service Client
- * Used for communication with course-service
+ * 课程服务客户端
+ * 负责调用course-service的相关接口
  */
-@FeignClient(name = "course-service", url = "${course.service.url:http://localhost:8082}")
-public interface CourseClient {
+@Component
+public class CourseClient extends BaseServiceClient {
+    private static final Logger logger = LoggerFactory.getLogger(CourseClient.class);
+
+    @Value("${service.course.url}")
+    private String courseServiceUrl;
+
+    protected String getServiceName() {
+        return "course-service";
+    }
+
+    protected String getBaseUrl() {
+        return courseServiceUrl;
+    }
 
     /**
-     * Get course information
-     * @param courseId Course ID
-     * @return Course information
+     * 获取当前请求的token，兼容 satoken/Authorization/Cookie
      */
-    @GetMapping("/api/course/{courseId}")
-    Map<String, Object> getCourseInfo(@PathVariable Long courseId);
+    private String getCurrentToken() {
+        org.springframework.web.context.request.RequestAttributes attrs = org.springframework.web.context.request.RequestContextHolder.getRequestAttributes();
+        if (attrs instanceof org.springframework.web.context.request.ServletRequestAttributes servlet) {
+            jakarta.servlet.http.HttpServletRequest req = servlet.getRequest();
+            String satoken = req.getHeader("satoken");
+            if (satoken != null && !satoken.isEmpty()) return satoken;
+            String cookie = req.getHeader("Cookie");
+            if (cookie != null) {
+                for (String part : cookie.split(";")) {
+                    String p = part.trim();
+                    if (p.startsWith("satoken=")) return p.substring("satoken=".length());
+                }
+            }
+            String auth = req.getHeader("Authorization");
+            if (auth != null && !auth.isEmpty()) return auth.replace("Bearer ", "");
+        }
+        return null;
+    }
 
     /**
-     * Check user course permission
-     * @param courseId Course ID
-     * @param userId User ID
-     * @return Permission check result
+     * 根据课程ID获取课程信息
      */
-    @GetMapping("/api/course/{courseId}/user/{userId}/permission")
-    Map<String, Object> checkCoursePermission(@PathVariable Long courseId, @PathVariable Long userId);
+    public Map<String, Object> getCourseById(Long courseId) {
+        if (courseId == null) {
+            throw new IllegalArgumentException("课程ID不能为空");
+        }
+        String token = getCurrentToken();
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        if (token != null) {
+            headers.set("satoken", token);
+            headers.set("Authorization", "Bearer " + token);
+        }
+        org.springframework.http.HttpEntity<Void> entity = new org.springframework.http.HttpEntity<>(headers);
+        String url = getBaseUrl() + "/api/courses/" + courseId;
+        org.springframework.http.ResponseEntity<Map> response = restTemplate.exchange(
+            url, 
+            org.springframework.http.HttpMethod.GET, 
+            entity, 
+            Map.class
+        );
+        return response.getBody();
+    }
 
     /**
-     * Get course members list
-     * @param courseId Course ID
-     * @return Course members list
+     * 根据班级ID获取班级信息
      */
-    @GetMapping("/api/course/{courseId}/members")
-    Map<String, Object> getCourseMembers(@PathVariable Long courseId);
+    public Map<String, Object> getClassById(Long classId) {
+        if (classId == null) {
+            throw new IllegalArgumentException("班级ID不能为空");
+        }
+        return getForMap("/api/classes/" + classId);
+    }
 
     /**
-     * Validate chapter exists
-     * @param courseId Course ID
-     * @param chapterId Chapter ID
-     * @return Chapter information
+     * 根据用户ID和课程ID获取班级ID
      */
-    @GetMapping("/api/course/{courseId}/chapter/{chapterId}")
-    Map<String, Object> getChapterInfo(@PathVariable Long courseId, @PathVariable Long chapterId);
+    public Long getClassIdByUserIdAndCourseId(Long userId, Long courseId) {
+        if (userId == null || courseId == null) {
+            throw new IllegalArgumentException("用户ID和课程ID不能为空");
+        }
+        String token = getCurrentToken();
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        if (token != null) {
+            headers.set("satoken", token);
+        }
+        org.springframework.http.HttpEntity<Void> entity = new org.springframework.http.HttpEntity<>(headers);
+        String url = getBaseUrl() + "/api/classes/" + userId + "/" + courseId;
+        org.springframework.http.ResponseEntity<Long> response = restTemplate.exchange(
+            url,
+            org.springframework.http.HttpMethod.GET,
+            entity,
+            Long.class
+        );
+        return response.getBody();
+    }
 
     /**
-     * Check if user is course teacher
-     * @param courseId Course ID
-     * @param userId User ID
-     * @return Check result
+     * 根据用户ID和课程ID列表批量获取班级信息（循环调用单个GET接口，收集结果）
      */
-    @GetMapping("/api/course/{courseId}/teacher/{userId}")
-    Map<String, Object> isCourseTeacher(@PathVariable Long courseId, @PathVariable Long userId);
+    public List<Map<String, Object>> getClassesByUserIdAndCourseIds(Long userId, List<Long> courseIds) {
+        if (userId == null || courseIds == null || courseIds.isEmpty()) {
+            throw new IllegalArgumentException("用户ID和课程ID列表不能为空");
+        }
+        String token = getCurrentToken();
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        if (token != null) {
+            headers.set("satoken", token);
+        }
+        org.springframework.http.HttpEntity<Void> entity = new org.springframework.http.HttpEntity<>(headers);
+
+        List<Map<String, Object>> result = new java.util.ArrayList<>();
+        for (Long courseId : courseIds) {
+            String url = getBaseUrl() + "/api/classes/" + userId + "/" + courseId;
+            try {
+                org.springframework.http.ResponseEntity<String> response = restTemplate.exchange(
+                    url,
+                    org.springframework.http.HttpMethod.GET,
+                    entity,
+                    String.class
+                );
+                // 假设返回的是JSON字符串，解析为Map
+                String body = response.getBody();
+                if (body != null && !body.isEmpty()) {
+                    Map<String, Object> map = new com.fasterxml.jackson.databind.ObjectMapper().readValue(body, Map.class);
+                    result.add(map);
+                }
+            } catch (Exception ex) {
+                logger.warn("获取班级信息失败: userId={}, courseId={}, {}", userId, courseId, ex.getMessage());
+            }
+        }
+        return result;
+    }
+
+    public List<Map<String, Object>> getAllClassIdsByCourseId(Long courseId) {
+        if (courseId == null) {
+            throw new IllegalArgumentException("课程ID不能为空");
+        }
+        String token = getCurrentToken();
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        if (token != null) {
+            headers.set("satoken", token);
+        }
+        org.springframework.http.HttpEntity<Void> entity = new org.springframework.http.HttpEntity<>(headers);
+        String url = getBaseUrl() + "/api/classes/course/" + courseId;
+        org.springframework.http.ResponseEntity<String> response = restTemplate.exchange(
+            url,
+            org.springframework.http.HttpMethod.GET,
+            entity,
+            String.class
+        );
+        // 假设返回的是JSON字符串，解析为List<Map>
+        String body = response.getBody();
+        if (body != null && !body.isEmpty()) {
+            List<Map<String, Object>> list = new com.fasterxml.jackson.databind.ObjectMapper().readValue(body, List.class);
+            return list;
+        }
+        return java.util.Collections.emptyList();
+    }
 
     /**
-     * Check if user is course student
-     * @param courseId Course ID
-     * @param userId User ID
-     * @return Check result
+     * 根据章节ID获取章节信息
      */
-    @GetMapping("/api/course/{courseId}/student/{userId}")
-    Map<String, Object> isCourseStudent(@PathVariable Long courseId, @PathVariable Long userId);
+    public Map<String, Object> getSectionById(Long sectionId) {
+        if (sectionId == null) {
+            throw new IllegalArgumentException("章节ID不能为空");
+        }
+        String token = getCurrentToken();
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        if (token != null) {
+            headers.set("satoken", token);
+            headers.set("Authorization", "Bearer " + token);
+        }
+        org.springframework.http.HttpEntity<Void> entity = new org.springframework.http.HttpEntity<>(headers);
+        String url = getBaseUrl() + "/api/courses/section/" + sectionId;
+        logger.debug("[CourseClient] single section url: {}", url);
+        org.springframework.http.ResponseEntity<Object> response = restTemplate.exchange(
+            url,
+            org.springframework.http.HttpMethod.GET,
+            entity,
+            Object.class
+        );
+        Object body = response.getBody();
+        if (body instanceof java.util.Map<?, ?> map) {
+            // unwrap { data: {...} } or return map directly if it is already the section
+            Object data = map.get("data");
+            if (data instanceof java.util.Map<?, ?> inner) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> res = (Map<String, Object>) inner;
+                logger.debug("[CourseClient] single section parsed keys: {}", res.keySet());
+                logger.info("[CourseClient] section {} body: {}", sectionId, res);
+                return res;
+            }
+            @SuppressWarnings("unchecked")
+            Map<String, Object> res = (Map<String, Object>) map;
+            logger.debug("[CourseClient] single section (direct map) keys: {}", res.keySet());
+            logger.info("[CourseClient] section {} body: {}", sectionId, res);
+            return res;
+        }
+        logger.warn("[CourseClient] single section unexpected body: {}", String.valueOf(body));
+        return java.util.Map.of();
+
+    }
+    
+    /**
+     * 根据章节ID批量获取章节信息（逐个调用 /api/courses/section/{id}，避免与单体路由冲突）
+     */
+    public List<Map<String, Object>> getSectionsByIds(String sectionIds) {
+        if (sectionIds == null || sectionIds.trim().isEmpty()) {
+            throw new IllegalArgumentException("章节ID列表不能为空");
+        }
+        List<Map<String, Object>> result = new java.util.ArrayList<>();
+        String[] parts = sectionIds.split(",");
+        for (String p : parts) {
+            String trimmed = p.trim();
+            if (trimmed.isEmpty()) continue;
+            try {
+                Long sid = Long.valueOf(trimmed);
+                Map<String, Object> sec = getSectionById(sid);
+                if (sec != null && !sec.isEmpty()) result.add(sec);
+            } catch (Exception ex) {
+                logger.warn("[CourseClient] 获取章节 {} 失败: {}", trimmed, ex.getMessage());
+            }
+        }
+        return result;
+    }
 
     /**
-     * Get class information
-     * @param classId Class ID
-     * @return Class information
+     * 获取课程下的所有章节，已完成微服务化改造
      */
-    @GetMapping("/api/class/{classId}")
-    Map<String, Object> getClassInfo(@PathVariable Long classId);
+    public List<Map<String, Object>> getSectionsByCourseId(Long courseId) {
+        if (courseId == null) {
+            throw new IllegalArgumentException("课程ID不能为空");
+        }
+        String token = getCurrentToken();
+        logger.info("[CourseClient] 获取课程章节列表，课程ID: {}, token: {}", courseId, token);
+        
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        if (token != null) {
+            headers.set("satoken", token);
+            headers.set("Authorization", "Bearer " + token);
+        }
+        org.springframework.http.HttpEntity<Void> entity = new org.springframework.http.HttpEntity<>(headers);
+        String url = getBaseUrl() + "/api/courses/" + courseId + "/sections";
+
+        try {
+            logger.info("[CourseClient] 发送请求到: {}", url);
+            org.springframework.http.ResponseEntity<Object> response = restTemplate.exchange(
+                url,
+                org.springframework.http.HttpMethod.GET,
+                entity,
+                Object.class
+            );
+            Object body = response.getBody();
+            if (body instanceof java.util.Map<?, ?> map) {
+                Object data = map.get("data");
+                if (data instanceof java.util.List<?> list) {
+                    @SuppressWarnings("unchecked")
+                    List<Map<String, Object>> res = (List<Map<String, Object>>) list;
+                    logger.info("[CourseClient] 课程章节列表(data)条数: {}", res.size());
+                    return res;
+                }
+            } else if (body instanceof java.util.List<?> list) {
+                @SuppressWarnings("unchecked")
+                List<Map<String, Object>> res = (List<Map<String, Object>>) list;
+                logger.info("[CourseClient] 课程章节列表(直接List)条数: {}", res.size());
+                return res;
+            }
+            logger.warn("[CourseClient] 课程章节列表返回体异常: {}", String.valueOf(body));
+            return java.util.List.of();
+        } catch (Exception e) {
+            logger.error("[CourseClient] 获取课程章节列表失败: {}", e.getMessage());
+            throw e;
+        }
+    }
 
     /**
-     * Check if user is class member
-     * @param classId Class ID
-     * @param userId User ID
-     * @return Check result
+     * 获取班级下的所有学生
      */
-    @GetMapping("/api/class/{classId}/member/{userId}")
-    Map<String, Object> isClassMember(@PathVariable Long classId, @PathVariable Long userId);
+    public List<Map<String, Object>> getStudentsByClassId(Long classId) {
+        if (classId == null) {
+            throw new IllegalArgumentException("班级ID不能为空");
+        }
+        Object resp = get("/api/classes/" + classId + "/users", Object.class);
+        // 兼容Result对象包裹
+        if (resp instanceof Map) {
+            Object dataObj = ((Map<?, ?>) resp).get("data");
+            if (dataObj instanceof List) {
+                return (List<Map<String, Object>>) dataObj;
+            }
+        }
+        if (resp instanceof List) {
+            return (List<Map<String, Object>>) resp;
+        }
+        return List.of();
+    }
 
     /**
-     * Get course chapters list
-     * @param courseId Course ID
-     * @return Chapters list
+     * 验证用户是否可以访问指定课程
      */
-    @GetMapping("/api/course/{courseId}/chapters")
-    Map<String, Object> getCourseChapters(@PathVariable Long courseId);
+    public boolean canUserAccessCourse(Long userId, Long courseId) {
+        if (userId == null || courseId == null) {
+            throw new IllegalArgumentException("用户ID和课程ID不能为空");
+        }
+        try {
+            Map<String, Object> result = getForMap("/api/course/" + courseId + "/access?userId=" + userId);
+            return result != null && Boolean.TRUE.equals(result.get("canAccess"));
+        } catch (Exception ex) {
+            return false;
+        }
+    }
 
     /**
-     * Validate course is active
-     * @param courseId Course ID
-     * @return Validation result
+     * 验证用户是否属于指定班级
      */
-    @GetMapping("/api/course/{courseId}/status")
-    Map<String, Object> getCourseStatus(@PathVariable Long courseId);
+    public boolean isUserInClass(Long userId, Long classId) {
+        if (userId == null || classId == null) {
+            throw new IllegalArgumentException("用户ID和班级ID不能为空");
+        }
+        try {
+            Map<String, Object> result = getForMap("/api/class/" + classId + "/member?userId=" + userId);
+            return result != null && Boolean.TRUE.equals(result.get("isMember"));
+        } catch (Exception ex) {
+            return false;
+        }
+    }
 
     /**
-     * Get user enrolled courses list
-     * @param userId User ID
-     * @return Courses list
+     * 获取用户的所有课程
      */
-    @GetMapping("/api/user/{userId}/courses")
-    Map<String, Object> getUserCourses(@PathVariable Long userId);
+    public List<Map<String, Object>> getUserCourses(Long userId) {
+        if (userId == null) {
+            throw new IllegalArgumentException("用户ID不能为空");
+        }
+        return get("/api/user/" + userId + "/courses", List.class);
+    }
 
     /**
-     * Get user teaching courses list
-     * @param userId User ID
-     * @return Courses list
+     * 批量获取课程信息，已完成微服务化改造
      */
-    @GetMapping("/api/user/{userId}/teaching-courses")
-    Map<String, Object> getUserTeachingCourses(@PathVariable Long userId);
+    public List<Map<String, Object>> getCoursesByIds(String courseIds) {
+        if (courseIds == null || courseIds.trim().isEmpty()) {
+            throw new IllegalArgumentException("课程ID列表不能为空");
+        }
+        String token = getCurrentToken();
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        if (token != null) {
+            // 同时设置 satoken 和 Authorization，兼容下游
+            headers.set("satoken", token);
+            headers.set("Authorization", "Bearer " + token);
+        }
+        org.springframework.http.HttpEntity<Void> entity = new org.springframework.http.HttpEntity<>(headers);
+        String url = getBaseUrl() + "/api/courses/batch?ids=" + courseIds;
+
+        // 使用 Object.class 接收，兼容 Result 包裹或直接 List 返回
+        org.springframework.http.ResponseEntity<Object> response = restTemplate.exchange(
+            url,
+            org.springframework.http.HttpMethod.GET,
+            entity,
+            Object.class
+        );
+
+        Object body = response.getBody();
+        if (body instanceof java.util.Map<?, ?> map) {
+            Object data = map.get("data");
+            if (data instanceof java.util.List<?> list) {
+                // 安全转换
+                @SuppressWarnings("unchecked")
+                List<Map<String, Object>> res = (List<Map<String, Object>>) list;
+                return res;
+            }
+        } else if (body instanceof java.util.List<?> list) {
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> res = (List<Map<String, Object>>) list;
+            return res;
+        }
+        return java.util.List.of();
+    }
+
+    /**
+     * 批量获取课程信息（逐个调用 /api/courses/{id}）
+     */
+    public Map<Long, Map<String, Object>> getCoursesByIds(List<Long> courseIds) {
+        Map<Long, Map<String, Object>> result = new HashMap<>();
+        if (courseIds == null || courseIds.isEmpty()) {
+            return result;
+        }
+
+        String token = getCurrentToken();
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        if (token != null) {
+            headers.set("satoken", token);
+        }
+        org.springframework.http.HttpEntity<Void> entity = new org.springframework.http.HttpEntity<>(headers);
+
+        for (Long courseId : courseIds) {
+            try {
+                String url = getBaseUrl() + "/api/courses/" + courseId;
+                org.springframework.http.ResponseEntity<Map> response = restTemplate.exchange(
+                    url, 
+                    org.springframework.http.HttpMethod.GET, 
+                    entity, 
+                    Map.class
+                );
+
+                if (response.getBody() != null) {
+                    Object dataObj = response.getBody().get("data");
+                    if (dataObj instanceof Map) {
+                        result.put(courseId, (Map<String, Object>) dataObj);
+                    }
+                }
+            } catch (Exception ex) {
+                logger.error("获取课程 {} 失败: {}", courseId, ex.getMessage());
+                throw new RuntimeException("获取课程信息失败：" + ex.getMessage());
+            }
+        }
+        return result;
+    }
+
+    /**
+     * 批量获取练习信息
+     */
+    public Map<Long, Map<String, Object>> getPracticesByIds(List<Long> practiceIds) {
+        Map<Long, Map<String, Object>> result = new HashMap<>();
+        if (practiceIds == null || practiceIds.isEmpty()) {
+            return result;
+        }
+        
+        String ids = String.join(",", practiceIds.stream().map(String::valueOf).toList());
+        try {
+            List<Map<String, Object>> practices = get("/api/practices/batch?ids=" + ids, List.class);
+            if (practices != null) {
+                for (Map<String, Object> practice : practices) {
+                    Long id = ((Number) practice.get("id")).longValue();
+                    result.put(id, practice);
+                }
+            }
+        } catch (Exception ex) {
+            logger.error("批量获取练习信息失败: {}", ex.getMessage());
+            throw new RuntimeException("获取练习信息失败：" + ex.getMessage());
+        }
+        return result;
+    }
+
+    /**
+     * 批量获取课程信息（参考UserClient的fetchUserById实现，支持token传递，逐个调用course-service）
+     * @param baseUrl 课程服务基础URL
+     * @param token 认证token（支持satoken或Bearer前缀）
+     * @param courseIds 课程ID列表
+     * @return Map<课程ID, 课程详情Map>
+     */
+    public Map<Long, Map<String, Object>> getCoursesByIds(String baseUrl, String token, List<Long> courseIds) {
+        Map<Long, Map<String, Object>> result = new HashMap<>();
+        if (courseIds == null || courseIds.isEmpty()) {
+            return result;
+        }
+        String pureToken = token == null ? null : token.replace("Bearer ", "");
+        for (Long courseId : courseIds) {
+            try {
+                String url = baseUrl + "/api/courses/" + courseId;
+                org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+                if (pureToken != null && !pureToken.isEmpty()) {
+                    headers.set("satoken", pureToken);
+                    headers.set("Authorization", "Bearer " + pureToken);
+                }
+                org.springframework.http.HttpEntity<Void> entity = new org.springframework.http.HttpEntity<>(headers);
+                org.springframework.http.ResponseEntity<Map> response = restTemplate.exchange(url, org.springframework.http.HttpMethod.GET, entity, Map.class);
+                if (response.getBody() != null) {
+                    Map<String, Object> body = response.getBody();
+                    Object dataObj = body.get("data");
+                    if (dataObj instanceof Map) {
+                        result.put(courseId, (Map<String, Object>) dataObj);
+                        continue;
+                    }
+                }
+            } catch (Exception ex) {
+                logger.warn("获取课程 {} 失败，使用模拟数据: {}", courseId, ex.getMessage());
+            }
+            // 模拟数据（降级）
+            Map<String, Object> course = new HashMap<>();
+            course.put("id", courseId);
+            course.put("name", "模拟课程-" + courseId);
+            course.put("description", "这是模拟课程描述-" + courseId);
+            course.put("teacherId", courseId * 10 + 1);
+            result.put(courseId, course);
+        }
+        return result;
+    }
 }

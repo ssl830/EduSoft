@@ -1,29 +1,19 @@
 package org.example.edusoft.content.dto.file;
+// 用于返回文件信息的DTO 
 
-import java.time.LocalDateTime;
-
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import java.util.Date;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class FileResponseDTO {
-    
     private Long id;
-    private String title;
-    private String description;
-    private String type;
-    private String url;
-    private Long size;
-    private String visibility;
     private Long courseId;
     private Long sectionId;
-    private Long uploaderId;
-    private String uploaderName;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-    private Boolean isFolder;
-    private Long parentFolderId;
+    private Long uploaderId; 
+    private String title;
+    private String type;
+    private String fileUrl;
+    private String visibility;
+    private int version; // 版本号：是怎么确定的，应该是string还是int？后端暂且先设定为int
+    private Date createdAt;
 }

@@ -3,9 +3,8 @@ package org.example.edusoft.content.service.file;
 import jakarta.servlet.http.HttpServletResponse;
 
 public interface FileDownloadService {
-    
     /**
-     * 下载文件
+     * 下载文件或文件夹（如果是文件夹则打包成 ZIP）
      */
-    void downloadFile(Long fileId, HttpServletResponse response);
+    void downloadFileOrFolder(Long fileId, HttpServletResponse response);
 }

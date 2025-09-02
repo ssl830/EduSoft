@@ -1,9 +1,8 @@
 package org.example.edusoft.content.service.file;
 
+import jakarta.servlet.http.HttpServletResponse;
+
 public interface FilePreviewService {
-    
-    /**
-     * 获取文件预览信息
-     */
-    String getPreviewUrl(Long fileId);
+    void previewFile(Long fileId, HttpServletResponse response);
 }
+

@@ -1,17 +1,15 @@
 package org.example.edusoft.content.service.file;
 
-import org.example.edusoft.content.dto.file.FileResponseDTO;
-import java.util.List;
+import org.example.edusoft.content.entity.file.FileInfo;
 
 public interface FolderService {
     
     /**
+     * 找到班级下章节文件夹
+     */
+    public FileInfo findSectionFolder(Long parentId, Long sectionId);
+    /**
      * 创建文件夹
      */
-    FileResponseDTO createFolder(String folderName, Long parentFolderId, Long courseId, Long creatorId);
-    
-    /**
-     * 获取文件夹内容
-     */
-    List<FileResponseDTO> getFolderContents(Long folderId);
+    public boolean createFolder(String name, Long sectiondirid, Long parentId, Long courseId, Long classId, Long uploaderId);
 }

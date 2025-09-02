@@ -18,9 +18,17 @@ import org.example.edusoft.content.service.file.FileAccessService;
 import org.springframework.web.multipart.MultipartFile;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.RequiredArgsConstructor;
+
+import org.example.edusoft.content.client.UserClient;
 
 @RestController
-@RequestMapping("/api/content/file")
+@RequestMapping("/api")
 public class FileController {
 
     private final FileDownloadService fileDownloadService;
@@ -39,19 +47,15 @@ public class FileController {
         this.fileAccessService = fileAccessService;
     }
 
-    @PostMapping("/userfolders")
-    public Result<List<FileResponseDTO>> getUserRootFolders(@RequestBody Map<String, Long> request) {
-        Long userId = request.get("userId");
-        if (userId == null) {
-            return Result.error("用户ID不能为空");
-        }
-        List<FileResponseDTO> rootFolders = fileQueryService.getAllFilesByUserId(userId);
-        return Result.success(rootFolders, "获取用户文件成功");
-    }
+    @Autowired
+    private UserClient userClient;
+
+    @Value("${services.user.base-url:http://localhost:8081}")
+    private String userServiceBaseUrl;
 
    /**
-     * 获取用户在某个课程下的文件列表（支持过滤）
-     *
+     * 获取用户在某个课程下的文件列表（支持过滤）, done
+     * done
      * @param request 包含过滤条件的请求体 
      * @return Result<List<FileResponseDTO>>
      */
@@ -84,7 +88,7 @@ public class FileController {
     }
 
     /**
-     * 文件上传接口
+     * 文件上传接口 done
      *
      * @param courseId   所属课程ID（路径参数）
      * @param file       上传的文件（表单参数）

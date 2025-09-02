@@ -1,18 +1,12 @@
 package org.example.edusoft.content.dto.file;
-
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class FileQueryRequest {
-    
-    private Long userId;
-    private Long courseId;
-    private Long chapter;
-    private String type;
-    private String title;
-    private Boolean isTeacher;
+    private Long chapter;     // 章节
+    private String type;        // 类型（PDF/PPT/VIDEO/CODE/OTHER）
+    private String title;       // 文件标题（模糊匹配）
+    private Long courseId;    // 课程ID
+    private Long userId;        // 用户ID
+    private Boolean isTeacher;  // 是否为教师
 }

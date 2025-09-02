@@ -1,4 +1,4 @@
-package org.example.edusoft.entity.file;
+package org.example.edusoft.content.entity.file;
 
 // 这是一个文件类型的枚举类
 
