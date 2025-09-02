@@ -16,6 +16,9 @@ public interface PracticeQuestionMapper {
     @Select("SELECT * FROM practice_question pq WHERE pq.practice_id = #{practiceId}")
     List<PracticeQuestion> findpqByPracticeId(Long practiceId);
 
+    @Select("SELECT practice_id FROM practice_question WHERE question_id = #{questionId}")
+    List<Long> findPracticeIdsByQuestionId(@Param("questionId") Long questionId);
+
     /**
      * 更新指定练习题的得分率
      */

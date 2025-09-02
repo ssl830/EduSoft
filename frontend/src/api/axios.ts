@@ -9,12 +9,14 @@ export interface ApiResponse<T = any> {
 
 // Create an axios instance
 const instance = axios.create({
-  baseURL: 'http://localhost:8081',  // 修改为user-service端口
+  baseURL: '/', // 使用相对路径，交由 Vite 代理转发
   timeout: 1000000,
   headers: {
     'Content-Type': 'application/json'
   }
 })
+
+
 
 // Add a request interceptor
 instance.interceptors.request.use(
@@ -26,6 +28,10 @@ instance.interceptors.request.use(
 
       const authStore = useAuthStore()
       if (authStore.token) {
+        // 后端期望的头：satoken 或 Authorization
+        config.headers['satoken'] = authStore.token
+        config.headers['Authorization'] = authStore.token
+        // 兼容历史自定义头
         config.headers['free-fs-token'] = authStore.token
       } else if (!config.url?.includes('/login') && !config.url?.includes('/register')) {
         // 对于非登录和注册请求，如果没有token，记录日志

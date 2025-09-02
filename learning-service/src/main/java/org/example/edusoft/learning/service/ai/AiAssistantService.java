@@ -638,7 +638,7 @@ public class AiAssistantService implements AiServiceCaller {
                 if (sectionId != null) {
                     try {
                         logger.info("Fetching section info for section_id: {}", sectionId);
-                        logger.info("Calling URL: /api/course-sections/{}", sectionId);
+                        logger.info("Calling URL: /api/courses/{}", sectionId);
                         Map<String, Object> result = courseClient.getSectionById(sectionId);
                         logger.info("Raw section service response: {}", result);
                         

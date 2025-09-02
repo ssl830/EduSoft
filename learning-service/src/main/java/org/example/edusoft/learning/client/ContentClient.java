@@ -43,7 +43,8 @@ public class ContentClient extends BaseServiceClient {
         if (courseId == null) {
             throw new IllegalArgumentException("课程ID不能为空");
         }
-        return get("/api/course/" + courseId + "/resources", List.class);
+        // 对应 content-service TeachingResourceController: /api/content/resource/course/{courseId}
+        return get("/api/content/resource/course/" + courseId, List.class);
     }
     
     /**

@@ -6,17 +6,18 @@ import org.example.edusoft.service.CourseSectionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.Map;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/course-sections") 
+@RequestMapping("/api/courses") 
 public class CourseSectionController {
 
     @Autowired
     private CourseSectionService courseSectionService;
 
-    @GetMapping("/course/{courseId}")
+    @GetMapping("/{courseId}/sections")
     public Result<List<CourseSection>> getSectionsByCourseId(@PathVariable Long courseId) {
         try {
             List<CourseSection> sections = courseSectionService.getSectionsByCourseId(courseId);
@@ -26,7 +27,7 @@ public class CourseSectionController {
         }
     }
 
-    @PostMapping
+    @PostMapping("/{courseId}/section")
     public Result<CourseSection> createSection(@Valid @RequestBody CourseSection section) {
         try {
             CourseSection createdSection = courseSectionService.createSection(section);
@@ -36,20 +37,28 @@ public class CourseSectionController {
         }
     }
 
-    @GetMapping("/{id}")
-    public Result<CourseSection> getSectionById(@PathVariable Long id) {
+    @PostMapping("/{courseId}/sections")
+    public Result<List<CourseSection>> createSections(
+            @PathVariable Long courseId,
+            @RequestBody Map<String, List<CourseSection>> request) {
         try {
-            CourseSection section = courseSectionService.getSectionById(id);
-            return Result.success(section);
+            List<CourseSection> sections = request.get("sections");
+            for (CourseSection section : sections) {
+                section.setCourseId(courseId);
+                courseSectionService.createSection(section);
+                System.out.println("section==========================================");
+                System.out.println(section);
+            }
+            return Result.success(sections);
         } catch (Exception e) {
-            return Result.error(500, "获取章节失败：" + e.getMessage());
+            return Result.error("系统错误：" + e.getMessage());
         }
     }
 
     /**
      * 批量获取章节信息，完成微服务化改造
      */
-    @GetMapping("/batch")
+    @GetMapping("sections/batch")
     public Result<List<CourseSection>> getSectionsByIds(@RequestParam("ids") String ids, HttpServletRequest request) {
         if (ids == null || ids.trim().isEmpty()) {
             return Result.error(400, "章节ID列表不能为空");
@@ -71,6 +80,16 @@ public class CourseSectionController {
         return Result.success(result);
     }
 
+    public Result<CourseSection> getSectionById(Long id) {
+        try {
+            CourseSection section = courseSectionService.getSectionById(id);
+            return Result.success(section);
+        } catch (Exception e) {
+            return Result.error(500, "获取章节失败：" + e.getMessage());
+        }
+    }
+
+    /* 
     @PutMapping("/{id}")
     public Result<CourseSection> updateSection(@PathVariable Long id, @Valid @RequestBody CourseSection section) {
         try {
@@ -80,12 +99,14 @@ public class CourseSectionController {
         } catch (Exception e) {
             return Result.error(500, "更新章节失败：" + e.getMessage());
         }
-    }
+    }*/
 
-    @DeleteMapping("/{id}")
-    public Result<Boolean> deleteSection(@PathVariable Long id) {
+    @DeleteMapping("/{courseId}/sections/{sectionId}")
+    public Result<Boolean> deleteSection(
+        @PathVariable Long courseId,
+        @PathVariable Long sectionId) {
         try {
-            boolean success = courseSectionService.deleteSection(id);
+            boolean success = courseSectionService.deleteSection(sectionId);
             return Result.success(success);
         } catch (Exception e) {
             return Result.error(500, "删除章节失败：" + e.getMessage());

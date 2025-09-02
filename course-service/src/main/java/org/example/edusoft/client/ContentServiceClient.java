@@ -3,8 +3,10 @@ package org.example.edusoft.client;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.Map;
+import java.util.List;
 
 /**
  * Content Service客户端接口
@@ -20,4 +22,10 @@ public interface ContentServiceClient {
      */
     @GetMapping("/api/content/homework/count/course/{courseId}")
     Map<String, Object> getHomeworkCountByCourse(@PathVariable("courseId") Long courseId);
+
+    /**
+     * 根据课程获取资源列表
+     */
+    @GetMapping("/api/content/resource/course/{courseId}")
+    List<Map<String, Object>> getResourcesByCourse(@PathVariable("courseId") Long courseId);
 }

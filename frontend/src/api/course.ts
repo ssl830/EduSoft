@@ -11,7 +11,7 @@ interface Course {
 }
 
 const CourseApi = {
-  // Get all courses for current user
+  // Get all courses for current user 200
   getUserCourses(userId: number | undefined | string) {
     if (!userId) {
       console.error('userId is required')
@@ -20,11 +20,12 @@ const CourseApi = {
     return axios.get(`/api/courses/user/${userId}`)
   },
 
-  // Get course by ID
+  // Get course by ID 200
   getCourseById(id: string) {
     return axios.get(`/api/courses/${id}`)
   },
 
+  // 200
   uploadSections(courseId: bigint, data: {sections: any[] }){
     return axios.post(`/api/courses/${courseId}/sections`, data,
       {
@@ -35,11 +36,12 @@ const CourseApi = {
     );
   },
 
+  // 200
   deleteSection(courseId: bigint, sectionId: bigint) {
     return axios.delete(`/api/courses/${courseId}/sections/${sectionId}`)
   },
 
-  // Create new course (teacher only)
+  // Create new course (teacher only) 200
   createCourse(data: {
     teacherId: number | undefined;
     name: string;
@@ -50,7 +52,7 @@ const CourseApi = {
     return axios.post('/api/courses', data)
   },
 
-  // Update course (teacher only)
+  // Update course (teacher only) 200
   updateCourse(id: string, data: {
     name?: string;
     code?: string;
@@ -62,7 +64,7 @@ const CourseApi = {
     return axios.put(`/api/courses/${id}`, data)
   },
 
-  // Create class for a course (teacher only)
+  // Create class for a course (teacher only) 200
   createClass(courseId: string, data: {
     name: string;
   }) {
@@ -74,7 +76,7 @@ const CourseApi = {
     return axios.get(`/classes/${classId}`)
   },
 
-  // Join class (student only)
+  // Join class (student only) 200
   joinClass(classCode: string) {
     return axios.post('/classes/join', { class_code: classCode })
   },
@@ -96,7 +98,7 @@ const CourseApi = {
     })
   },
 
-  // 获取用户当前所在的班级
+  // 获取用户当前所在的班级 200
   getUserClasses() {
     return axios.get('/api/user/classes')
   },

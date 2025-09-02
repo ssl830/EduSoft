@@ -462,8 +462,7 @@ router.beforeEach( async (to, _from, next) => {
     to.meta.title === '错误题库' || to.meta.title === '学习记录' || to.meta.title === '自测历史' ||
     to.meta.title === 'AI自测' || to.meta.title === '自测详情' || to.meta.title === '教师列表' ||
     to.meta.title === '学生列表' || to.meta.title === '管理员列表' || to.meta.title === '资源列表' ||
-    to.meta.title === '系统概览' || to.meta.title === '练习列表' ||
-    to.meta.title === '课表'
+    to.meta.title === '系统概览' || to.meta.title === '练习列表'
   )) {
     next({name: 'Home'})
     return
@@ -579,86 +578,86 @@ router.beforeEach( async (to, _from, next) => {
   }
 
   // 校验/checkExercise权限：教师只能批改自己班级的练习，且submissionId必须属于该practiceId
-  if (
-    to.name === 'CheckExercise' &&
-    authStore.user &&
-    (authStore.user.role === 'teacher' || authStore.user.role === 'tutor')
-  ) {
-    try {
-      const ExerciseApi = (await import('@/api/exercise.ts')).default
-      const practiceId = String(to.params.practiceId)
-      const submissionId = String(to.params.submissionId)
-
-      // 1. 获取练习详情，检查班级归属
-      const exerciseRes = await ExerciseApi.getExerciseDetails(practiceId, {})
-      const classId = exerciseRes.data?.classId
-      if (!classId) {
-        next({ name: 'Home' })
-        return
-      }
-      // 获取教师负责的班级
-      const teacherClassRes = await ClassApi.getTeacherClasses(authStore.user.id)
-      const teacherClasses = teacherClassRes.data || []
-      const isTeacherOfClass = teacherClasses.some((cls: any) => String(cls.classId) === String(classId))
-      if (!isTeacherOfClass) {
-        next({ name: 'Home' })
-        return
-      }
-
-      // 2. 获取该练习的所有提交，判断submissionId是否属于该practiceId
-      const submissionsRes = await ExerciseApi.getPendingJudgeList({practiceId, classId})
-      const submissions = submissionsRes.data || []
-      const hasSubmission = submissions.some((sub: any) => String(sub.submissionId) === String(submissionId))
-      if (!hasSubmission) {
-        next({ name: 'Home' })
-        return
-      }
-    } catch (e) {
-      next({ name: 'Home' })
-      return
-    }
-  }
+  // if (
+  //   to.name === 'CheckExercise' &&
+  //   authStore.user &&
+  //   (authStore.user.role === 'teacher' || authStore.user.role === 'tutor')
+  // ) {
+  //   try {
+  //     const ExerciseApi = (await import('@/api/exercise.ts')).default
+  //     const practiceId = String(to.params.practiceId)
+  //     const submissionId = String(to.params.submissionId)
+  //
+  //     // 1. 获取练习详情，检查班级归属
+  //     const exerciseRes = await ExerciseApi.getExerciseDetails(practiceId, {})
+  //     const classId = exerciseRes.data?.classId
+  //     if (!classId) {
+  //       next({ name: 'Home' })
+  //       return
+  //     }
+  //     // 获取教师负责的班级
+  //     const teacherClassRes = await ClassApi.getTeacherClasses(authStore.user.id)
+  //     const teacherClasses = teacherClassRes.data || []
+  //     const isTeacherOfClass = teacherClasses.some((cls: any) => String(cls.classId) === String(classId))
+  //     if (!isTeacherOfClass) {
+  //       next({ name: 'Home' })
+  //       return
+  //     }
+  //
+  //     // 2. 获取该练习的所有提交，判断submissionId是否属于该practiceId
+  //     const submissionsRes = await ExerciseApi.getPendingJudgeList({practiceId, classId})
+  //     const submissions = submissionsRes.data || []
+  //     const hasSubmission = submissions.some((sub: any) => String(sub.submissionId) === String(submissionId))
+  //     if (!hasSubmission) {
+  //       next({ name: 'Home' })
+  //       return
+  //     }
+  //   } catch (e) {
+  //     next({ name: 'Home' })
+  //     return
+  //   }
+  // }
 
   // 校验/exerciseFeedback权限：学生只能查看自己班级的练习反馈，且submissionId必须属于该practiceId
-  if (
-    to.name === 'ExerciseFeedback' &&
-    authStore.user &&
-    authStore.user.role === 'student'
-  ) {
-    try {
-      const ExerciseApi = (await import('@/api/exercise.ts')).default
-      const practiceId = String(to.params.practiceId)
-      const submissionId = String(to.params.submissionId)
-
-      // 1. 获取练习详情，检查班级归属
-      const exerciseRes = await ExerciseApi.getExerciseDetails(practiceId, {})
-      const classId = exerciseRes.data?.classId
-      if (!classId) {
-        next({ name: 'Home' })
-        return
-      }
-      // 获取学生所在班级列表
-      const classRes = await ClassApi.getUserClasses(authStore.user.id)
-      const classList = classRes.data || []
-      const inClass = classList.some((cls: any) => String(cls.id) === String(classId))
-      if (!inClass) {
-        next({ name: 'Home' })
-        return
-      }
-
-      // 2. 获取该练习的所有提交，判断submissionId是否属于该practiceId
-      const submissionsRes = await ExerciseApi.getPendingJudgeList({practiceId, classId})
-      const submissions = submissionsRes.data || []
-      const hasSubmission = submissions.some((sub: any) => String(sub.submissionId) === String(submissionId))
-      if (!hasSubmission) {
-        next({ name: 'Home' })
-        return
-      }
-    } catch (e) {
-      next({ name: 'Home' })
-      return
-    }
-  }
+  // if (
+  //   to.name === 'ExerciseFeedback' &&
+  //   authStore.user &&
+  //   authStore.user.role === 'student'
+  // ) {
+  //   try {
+  //     const ExerciseApi = (await import('@/api/exercise.ts')).default
+  //     const practiceId = String(to.params.practiceId)
+  //     const submissionId = String(to.params.submissionId)
+  //
+  //     // 1. 获取练习详情，检查班级归属
+  //     const exerciseRes = await ExerciseApi.getExerciseDetails(practiceId, {})
+  //     const classId = exerciseRes.data?.classId
+  //     if (!classId) {
+  //       next({ name: 'Home' })
+  //       return
+  //     }
+  //     // 获取学生所在班级列表
+  //     const classRes = await ClassApi.getUserClasses(authStore.user.id)
+  //     const classList = classRes.data || []
+  //     const inClass = classList.some((cls: any) => String(cls.id) === String(classId))
+  //     if (!inClass) {
+  //       next({ name: 'Home' })
+  //       return
+  //     }
+  //
+  //     // 2. 获取该练习的所有提交，判断submissionId是否属于该practiceId
+  //     const submissionsRes = await ExerciseApi.getPendingJudgeList({practiceId, classId})
+  //     const submissions = submissionsRes.data || []
+  //     const hasSubmission = submissions.some((sub: any) => String(sub.submissionId) === String(submissionId))
+  //     if (!hasSubmission) {
+  //       next({ name: 'Home' })
+  //       return
+  //     }
+  //   } catch (e) {
+  //     next({ name: 'Home' })
+  //     return
+  //   }
+  // }
 
   // 校验/selfpractice/history/:pid权限：学生只能查看自己创建的AI自测历史
   if (
@@ -682,35 +681,35 @@ router.beforeEach( async (to, _from, next) => {
     }
   }
 
-  // 校验/exercise/edit/:id权限：教师只能编辑自己班级的练习
-  if (
-    to.name === 'ExerciseEdit' &&
-    authStore.user &&
-    (authStore.user.role === 'teacher')
-  ) {
-    try {
-      const ExerciseApi = (await import('@/api/exercise.ts')).default
-      const practiceId = String(to.params.id)
-      // 获取练习详情，拿到其班级ID
-      const res = await ExerciseApi.getExerciseDetails(practiceId, {})
-      const classId = res.data?.classId
-      if (!classId) {
-        next({ name: 'Home' })
-        return
-      }
-      // 获取教师负责的班级
-      const teacherClassRes = await ClassApi.getTeacherClasses(authStore.user.id)
-      const teacherClasses = teacherClassRes.data || []
-      const isTeacherOfClass = teacherClasses.some((cls: any) => String(cls.classId) === String(classId))
-      if (!isTeacherOfClass) {
-        next({ name: 'Home' })
-        return
-      }
-    } catch (e) {
-      next({ name: 'Home' })
-      return
-    }
-  }
+  // // 校验/exercise/edit/:id权限：教师只能编辑自己班级的练习
+  // if (
+  //   to.name === 'ExerciseEdit' &&
+  //   authStore.user &&
+  //   (authStore.user.role === 'teacher')
+  // ) {
+  //   try {
+  //     const ExerciseApi = (await import('@/api/exercise.ts')).default
+  //     const practiceId = String(to.params.id)
+  //     // 获取练习详情，拿到其班级ID
+  //     const res = await ExerciseApi.getExerciseDetails(practiceId, {})
+  //     const classId = res.data?.classId
+  //     if (!classId) {
+  //       next({ name: 'Home' })
+  //       return
+  //     }
+  //     // 获取教师负责的班级
+  //     const teacherClassRes = await ClassApi.getTeacherClasses(authStore.user.id)
+  //     const teacherClasses = teacherClassRes.data || []
+  //     const isTeacherOfClass = teacherClasses.some((cls: any) => String(cls.classId) === String(classId))
+  //     if (!isTeacherOfClass) {
+  //       next({ name: 'Home' })
+  //       return
+  //     }
+  //   } catch (e) {
+  //     next({ name: 'Home' })
+  //     return
+  //   }
+  // }
 
   next()
 })
