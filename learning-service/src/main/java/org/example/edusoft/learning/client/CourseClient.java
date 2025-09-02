@@ -74,13 +74,40 @@ public class CourseClient extends BaseServiceClient {
     }
 
     /**
-     * 根据用户ID和课程ID获取班级信息，完成微服务化改造
+     * 根据用户ID和课程ID列表批量获取班级信息（循环调用单个GET接口，收集结果）
      */
     public List<Map<String, Object>> getClassesByUserIdAndCourseIds(Long userId, List<Long> courseIds) {
         if (userId == null || courseIds == null || courseIds.isEmpty()) {
             throw new IllegalArgumentException("用户ID和课程ID列表不能为空");
         }
-        return post("/api/classes/{userId}/{courseId}", Map.of("userId", userId, "courseIds", courseIds), List.class);
+        String token = getCurrentToken();
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        if (token != null) {
+            headers.set("satoken", token);
+        }
+        org.springframework.http.HttpEntity<Void> entity = new org.springframework.http.HttpEntity<>(headers);
+
+        List<Map<String, Object>> result = new java.util.ArrayList<>();
+        for (Long courseId : courseIds) {
+            String url = getBaseUrl() + "/api/classes/" + userId + "/" + courseId;
+            try {
+                org.springframework.http.ResponseEntity<String> response = restTemplate.exchange(
+                    url,
+                    org.springframework.http.HttpMethod.GET,
+                    entity,
+                    String.class
+                );
+                // 假设返回的是JSON字符串，解析为Map
+                String body = response.getBody();
+                if (body != null && !body.isEmpty()) {
+                    Map<String, Object> map = new com.fasterxml.jackson.databind.ObjectMapper().readValue(body, Map.class);
+                    result.add(map);
+                }
+            } catch (Exception ex) {
+                logger.warn("获取班级信息失败: userId={}, courseId={}, {}", userId, courseId, ex.getMessage());
+            }
+        }
+        return result;
     }
 
     /**
