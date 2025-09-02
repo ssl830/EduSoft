@@ -1,6 +1,8 @@
 package org.example.edusoft.learning.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.example.edusoft.learning.entity.PracticeQuestion;
 import org.example.edusoft.learning.client.CourseClient;
 import org.example.edusoft.learning.client.ContentClient;
@@ -23,6 +25,8 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 public class PracticeServiceImpl implements PracticeService {
+
+    private static final Logger log = LoggerFactory.getLogger(PracticeServiceImpl.class);
 
     private final PracticeMapper practiceMapper;
     private final QuestionMapper questionMapper;
@@ -250,7 +254,174 @@ public class PracticeServiceImpl implements PracticeService {
 
     @Override
     public List<Map<String, Object>> getFavoriteQuestions(Long studentId) {
-        return favoriteQuestionMapper.findFavoriteQuestions(studentId);
+        // 基础数据：题目与其 course_id、section_id
+        List<Map<String, Object>> items = favoriteQuestionMapper.findFavoriteQuestions(studentId);
+        if (items == null || items.isEmpty()) return items;
+
+        // 收集ID集合
+        List<Long> courseIds = items.stream()
+                .map(m -> m.get("course_id"))
+                .filter(java.util.Objects::nonNull)
+                .map(v -> Long.valueOf(v.toString()))
+                .distinct().toList();
+        List<Long> sectionIds = items.stream()
+                .map(m -> m.get("section_id"))
+                .filter(java.util.Objects::nonNull)
+                .map(v -> Long.valueOf(v.toString()))
+                .distinct().toList();
+        log.debug("[Favorite] 收集到 courseIds={}, sectionIds={}", courseIds, sectionIds);
+        List<Long> questionIds = items.stream()
+                .map(m -> m.get("id"))
+                .filter(java.util.Objects::nonNull)
+                .map(v -> Long.valueOf(v.toString()))
+                .distinct().toList();
+
+        // 批量获取课程名称
+        java.util.Map<Long, String> courseNameMap = new java.util.HashMap<>();
+        try {
+            if (!courseIds.isEmpty()) {
+                String ids = String.join(",", courseIds.stream().map(String::valueOf).toList());
+                java.util.List<java.util.Map<String, Object>> courses = courseClient.getCoursesByIds(ids);
+                if (courses != null) {
+                    for (java.util.Map<String, Object> c : courses) {
+                        Object idObj = c.get("id");
+                        Object nameObj = c.get("name");
+                        if (idObj != null && nameObj != null) {
+                            courseNameMap.put(Long.valueOf(idObj.toString()), nameObj.toString());
+                        }
+                    }
+                }
+            }
+        } catch (Exception ignore) {
+        }
+
+        // 批量获取章节名称
+        java.util.Map<Long, String> sectionNameMap = new java.util.HashMap<>();
+        try {
+            if (!sectionIds.isEmpty()) {
+                String ids = String.join(",", sectionIds.stream().map(String::valueOf).toList());
+                java.util.List<java.util.Map<String, Object>> sections = courseClient.getSectionsByIds(ids);
+                log.debug("[Favorite] 批量获取章节，输入IDs={}, 返回条数={}", ids, (sections == null ? null : sections.size()));
+                if (sections != null) {
+                    for (java.util.Map<String, Object> s : sections) {
+                        Object idObj = s.get("id");
+                        if (idObj == null) idObj = s.get("section_id");
+                        if (idObj == null) idObj = s.get("sectionId");
+                        if (idObj == null) continue;
+                        Object nameObj = s.get("name");
+                        if (nameObj == null) nameObj = s.get("title");
+                        if (nameObj == null) nameObj = s.get("sectionName");
+                        if (nameObj == null) nameObj = s.get("section_title");
+                        if (nameObj == null) nameObj = s.get("sectionTitle");
+                        if (nameObj == null) nameObj = s.get("title_cn");
+                        if (nameObj != null) {
+                            sectionNameMap.put(Long.valueOf(idObj.toString()), nameObj.toString());
+                        }
+                    }
+                }
+                log.debug("[Favorite] 批量阶段 sectionNameMap keys={} size={}", sectionNameMap.keySet(), sectionNameMap.size());
+                // 对缺失的部分逐个兜底查询
+                java.util.Set<Long> missing = new java.util.HashSet<>(sectionIds);
+                missing.removeAll(sectionNameMap.keySet());
+                log.debug("[Favorite] 需要逐条兜底的章节IDs={}", missing);
+                if (!missing.isEmpty()) {
+                    for (Long sidMiss : missing) {
+                        try {
+                            java.util.Map<String, Object> sec = courseClient.getSectionById(sidMiss);
+                            if (sec != null) {
+                                Object nameObj = sec.get("name");
+                                if (nameObj == null) nameObj = sec.get("title");
+                                if (nameObj == null) nameObj = sec.get("sectionName");
+                                if (nameObj == null) nameObj = sec.get("section_title");
+                                if (nameObj == null) nameObj = sec.get("sectionTitle");
+                                if (nameObj == null) nameObj = sec.get("title_cn");
+                                if (nameObj != null) {
+                                    sectionNameMap.put(sidMiss, nameObj.toString());
+                                }
+                            }
+                        } catch (Exception ignored) {}
+                    }
+                    log.debug("[Favorite] 逐条阶段 sectionNameMap keys={} size={}", sectionNameMap.keySet(), sectionNameMap.size());
+                    // 仍缺失：按课程ID拉取课程下章节填充
+                    java.util.Set<Long> stillMissing = new java.util.HashSet<>(sectionIds);
+                    stillMissing.removeAll(sectionNameMap.keySet());
+                    log.debug("[Favorite] 需要按课程兜底的章节IDs={}", stillMissing);
+                    if (!stillMissing.isEmpty() && !courseIds.isEmpty()) {
+                        for (Long cId : courseIds) {
+                            try {
+                                java.util.List<java.util.Map<String, Object>> secList = courseClient.getSectionsByCourseId(cId);
+                                log.debug("[Favorite] 课程{} 返回章节条数={}", cId, (secList == null ? null : secList.size()));
+                                if (secList != null) {
+                                    for (java.util.Map<String, Object> s : secList) {
+                                        Object sidObj = s.get("id");
+                                        if (sidObj == null) sidObj = s.get("section_id");
+                                        if (sidObj == null) sidObj = s.get("sectionId");
+                                        if (sidObj == null) continue;
+                                        Long sidL = Long.valueOf(sidObj.toString());
+                                        if (!sectionNameMap.containsKey(sidL)) {
+                                            Object nameObj = s.get("name");
+                                            if (nameObj == null) nameObj = s.get("title");
+                                            if (nameObj == null) nameObj = s.get("sectionName");
+                                            if (nameObj == null) nameObj = s.get("section_title");
+                                            if (nameObj == null) nameObj = s.get("sectionTitle");
+                                            if (nameObj == null) nameObj = s.get("title_cn");
+                                            if (nameObj != null) {
+                                                sectionNameMap.put(sidL, nameObj.toString());
+                                            }
+                                        }
+                                    }
+                                }
+                            } catch (Exception ignored) {}
+                        }
+                        log.debug("[Favorite] 按课程阶段 sectionNameMap keys={} size={}", sectionNameMap.keySet(), sectionNameMap.size());
+                    }
+                }
+            }
+        } catch (Exception ignore) {
+        }
+
+        // 通过 practice_question 反查所属练习（取一个即可）并带上练习标题
+        for (Map<String, Object> item : items) {
+            // 课程与章节名
+            Object cid = item.get("course_id");
+            if (cid != null) {
+                Long cId = Long.valueOf(cid.toString());
+                item.put("course_name", courseNameMap.getOrDefault(cId, ""));
+            }
+            Object sid = item.get("section_id");
+            if (sid != null) {
+                Long sId = Long.valueOf(sid.toString());
+                String secNameVal = sectionNameMap.getOrDefault(sId, "");
+                item.put("section_name", secNameVal);
+                // 前端 QuestionFavor.vue 使用 section_title 展示
+                item.put("section_title", secNameVal);
+                // 兼容驼峰
+                item.put("sectionName", secNameVal);
+                if (!sectionNameMap.containsKey(sId)) {
+                    log.debug("[Favorite] 条目(id={}) 仍缺少章节名 section_id={}，当前已知章节keys={}", item.get("id"), sId, sectionNameMap.keySet());
+                }
+            }
+
+            // 所属练习（learning 内部）
+            Object qid = item.get("id");
+            if (qid != null) {
+                Long qId = Long.valueOf(qid.toString());
+                try {
+                    java.util.List<Long> pids = practiceQuestionMapper.findPracticeIdsByQuestionId(qId);
+                    if (pids != null && !pids.isEmpty()) {
+                        Long pid = pids.get(0);
+                        item.put("practice_id", pid);
+                        org.example.edusoft.learning.entity.Practice p = practiceMapper.getPracticeById(pid);
+                        if (p != null) {
+                            item.put("practice_title", p.getTitle());
+                        }
+                    }
+                } catch (Exception ignore) {
+                }
+            }
+        }
+
+        return items;
     }
 
     @Override
@@ -273,12 +444,227 @@ public class PracticeServiceImpl implements PracticeService {
 
     @Override
     public List<Map<String, Object>> getWrongQuestions(Long studentId) {
-        return wrongQuestionMapper.findWrongQuestions(studentId);
+        List<Map<String, Object>> items = wrongQuestionMapper.findWrongQuestions(studentId);
+        if (items == null || items.isEmpty()) return items;
+
+        // 收集ID集合
+        List<Long> courseIds = items.stream()
+                .map(m -> m.get("course_id"))
+                .filter(java.util.Objects::nonNull)
+                .map(v -> Long.valueOf(v.toString()))
+                .distinct().toList();
+        List<Long> sectionIds = items.stream()
+                .map(m -> m.get("section_id"))
+                .filter(java.util.Objects::nonNull)
+                .map(v -> Long.valueOf(v.toString()))
+                .distinct().toList();
+        List<Long> questionIds = items.stream()
+                .map(m -> m.get("id"))
+                .filter(java.util.Objects::nonNull)
+                .map(v -> Long.valueOf(v.toString()))
+                .distinct().toList();
+
+        // 批量获取课程
+        java.util.Map<Long, String> courseNameMap = new java.util.HashMap<>();
+        try {
+            if (!courseIds.isEmpty()) {
+                String ids = String.join(",", courseIds.stream().map(String::valueOf).toList());
+                List<Map<String, Object>> courseList = courseClient.getCoursesByIds(ids);
+                if (courseList != null) {
+                    for (Map<String, Object> c : courseList) {
+                        Object idObj = c.get("id");
+                        Object nameObj = c.get("name");
+                        if (idObj != null && nameObj != null) {
+                            courseNameMap.put(Long.valueOf(idObj.toString()), nameObj.toString());
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.warn("[Wrong] 批量获取课程失败: {}", e.getMessage());
+        }
+
+        // 批量获取章节
+        java.util.Map<Long, String> sectionNameMap = new java.util.HashMap<>();
+        try {
+            if (!sectionIds.isEmpty()) {
+                String sids = String.join(",", sectionIds.stream().map(String::valueOf).toList());
+                List<Map<String, Object>> sectionList = courseClient.getSectionsByIds(sids);
+                if (sectionList != null) {
+                    for (Map<String, Object> sec : sectionList) {
+                        Object sidObj = sec.get("id");
+                        if (sidObj == null) sidObj = sec.get("section_id");
+                        if (sidObj == null) sidObj = sec.get("sectionId");
+                        Object nameObj = sec.get("name");
+                        if (nameObj == null) nameObj = sec.get("title");
+                        if (nameObj == null) nameObj = sec.get("sectionName");
+                        if (nameObj == null) nameObj = sec.get("section_title");
+                        if (nameObj == null) nameObj = sec.get("sectionTitle");
+                        if (nameObj == null) nameObj = sec.get("title_cn");
+                        if (sidObj != null && nameObj != null) {
+                            sectionNameMap.put(Long.valueOf(sidObj.toString()), nameObj.toString());
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.warn("[Wrong] 批量获取章节失败: {}", e.getMessage());
+        }
+
+        // 为获取练习标题，先根据题目ID查practiceIds
+        java.util.Set<Long> practiceIdSet = new java.util.HashSet<>();
+        java.util.Map<Long, java.util.Set<Long>> questionToPracticeIds = new java.util.HashMap<>();
+        for (Long qid : questionIds) {
+            List<Long> pids = practiceQuestionMapper.findPracticeIdsByQuestionId(qid);
+            if (pids != null && !pids.isEmpty()) {
+                practiceIdSet.addAll(pids);
+                questionToPracticeIds.put(qid, new java.util.HashSet<>(pids));
+            }
+        }
+
+        // 填充到每条记录
+        for (Map<String, Object> item : items) {
+            // 兼容前端删除时使用 question_id
+            if (item.get("question_id") == null && item.get("id") != null) {
+                item.put("question_id", item.get("id"));
+            }
+            Object cid = item.get("course_id");
+            if (cid != null) {
+                Long cId = Long.valueOf(cid.toString());
+                item.put("course_name", courseNameMap.getOrDefault(cId, ""));
+            }
+            Object sid = item.get("section_id");
+            if (sid != null) {
+                Long sId = Long.valueOf(sid.toString());
+                String secNameVal = sectionNameMap.getOrDefault(sId, "");
+                item.put("section_name", secNameVal);
+                item.put("section_title", secNameVal);
+                item.put("sectionName", secNameVal);
+            }
+            // 练习标题（若同一题属于多个练习，取任意一个标题展示）—与收藏题一致，直接本地 practiceMapper
+            Object qid = item.get("id");
+            if (qid != null) {
+                Long qId = Long.valueOf(qid.toString());
+                java.util.Set<Long> pids = questionToPracticeIds.get(qId);
+                if (pids != null && !pids.isEmpty()) {
+                    Long firstPid = pids.iterator().next();
+                    try {
+                        org.example.edusoft.learning.entity.Practice p = practiceMapper.getPracticeById(firstPid);
+                        if (p != null && p.getTitle() != null) {
+                            item.put("practice_title", p.getTitle());
+                        }
+                    } catch (Exception ex) {
+                        log.debug("[Wrong] 获取练习标题失败 practiceId={} err={}", firstPid, ex.getMessage());
+                    }
+                }
+            }
+        }
+
+        return items;
     }
 
     @Override
     public List<Map<String, Object>> getWrongQuestionsByCourse(Long studentId, Long courseId) {
-        return wrongQuestionMapper.findWrongQuestionsByCourse(studentId, courseId);
+        List<Map<String, Object>> items = wrongQuestionMapper.findWrongQuestionsByCourse(studentId, courseId);
+        if (items == null || items.isEmpty()) return items;
+
+        // 课程名
+        String courseName = "";
+        try {
+            if (courseId != null) {
+                List<Map<String, Object>> courseList = courseClient.getCoursesByIds(String.valueOf(courseId));
+                if (courseList != null && !courseList.isEmpty()) {
+                    Object nameObj = courseList.get(0).get("name");
+                    if (nameObj != null) courseName = nameObj.toString();
+                }
+            }
+        } catch (Exception e) {
+            log.warn("[WrongByCourse] 获取课程失败: {}", e.getMessage());
+        }
+
+        // 章节名
+        List<Long> sectionIds = items.stream()
+                .map(m -> m.get("section_id"))
+                .filter(java.util.Objects::nonNull)
+                .map(v -> Long.valueOf(v.toString()))
+                .distinct().toList();
+        java.util.Map<Long, String> sectionNameMap = new java.util.HashMap<>();
+        try {
+            if (!sectionIds.isEmpty()) {
+                String sids = String.join(",", sectionIds.stream().map(String::valueOf).toList());
+                List<Map<String, Object>> sectionList = courseClient.getSectionsByIds(sids);
+                if (sectionList != null) {
+                    for (Map<String, Object> sec : sectionList) {
+                        Object sidObj = sec.get("id");
+                        if (sidObj == null) sidObj = sec.get("section_id");
+                        if (sidObj == null) sidObj = sec.get("sectionId");
+                        Object nameObj = sec.get("name");
+                        if (nameObj == null) nameObj = sec.get("title");
+                        if (nameObj == null) nameObj = sec.get("sectionName");
+                        if (nameObj == null) nameObj = sec.get("section_title");
+                        if (nameObj == null) nameObj = sec.get("sectionTitle");
+                        if (nameObj == null) nameObj = sec.get("title_cn");
+                        if (sidObj != null && nameObj != null) {
+                            sectionNameMap.put(Long.valueOf(sidObj.toString()), nameObj.toString());
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.warn("[WrongByCourse] 批量获取章节失败: {}", e.getMessage());
+        }
+
+        // 练习标题
+        List<Long> questionIds = items.stream()
+                .map(m -> m.get("id"))
+                .filter(java.util.Objects::nonNull)
+                .map(v -> Long.valueOf(v.toString()))
+                .distinct().toList();
+        java.util.Set<Long> practiceIdSet = new java.util.HashSet<>();
+        java.util.Map<Long, java.util.Set<Long>> questionToPracticeIds = new java.util.HashMap<>();
+        for (Long qid : questionIds) {
+            List<Long> pids = practiceQuestionMapper.findPracticeIdsByQuestionId(qid);
+            if (pids != null && !pids.isEmpty()) {
+                practiceIdSet.addAll(pids);
+                questionToPracticeIds.put(qid, new java.util.HashSet<>(pids));
+            }
+        }
+        for (Map<String, Object> item : items) {
+            // 兼容前端删除时使用 question_id
+            if (item.get("question_id") == null && item.get("id") != null) {
+                item.put("question_id", item.get("id"));
+            }
+            // 课程
+            item.put("course_name", courseName);
+            // 章节
+            Object sid = item.get("section_id");
+            if (sid != null) {
+                Long sId = Long.valueOf(sid.toString());
+                String secNameVal = sectionNameMap.getOrDefault(sId, "");
+                item.put("section_name", secNameVal);
+                item.put("section_title", secNameVal);
+                item.put("sectionName", secNameVal);
+            }
+            // 练习—与收藏题一致，直接本地 practiceMapper
+            Object qid = item.get("id");
+            if (qid != null) {
+                Long qId = Long.valueOf(qid.toString());
+                java.util.Set<Long> pids = questionToPracticeIds.get(qId);
+                if (pids != null && !pids.isEmpty()) {
+                    Long firstPid = pids.iterator().next();
+                    try {
+                        org.example.edusoft.learning.entity.Practice p = practiceMapper.getPracticeById(firstPid);
+                        if (p != null && p.getTitle() != null) {
+                            item.put("practice_title", p.getTitle());
+                        }
+                    } catch (Exception ex) {
+                        log.debug("[WrongByCourse] 获取练习标题失败 practiceId={} err={}", firstPid, ex.getMessage());
+                    }
+                }
+            }
+        }
+
+        return items;
     }
 
     @Override
@@ -361,7 +747,87 @@ public class PracticeServiceImpl implements PracticeService {
 
     @Override
     public Map<String, Object> getSubmissionStats(Long practiceId) {
-        return practiceRecordMapper.getSubmissionStatsByPracticeId(practiceId);
+        Map<String, Object> stats = practiceRecordMapper.getSubmissionStatsByPracticeId(practiceId);
+        if (stats == null) stats = new java.util.HashMap<>();
+        try {
+            Practice practice = practiceMapper.getPracticeById(practiceId);
+            if (practice != null) {
+                // 填入课程与班级ID，便于前端使用
+                if (practice.getCourseId() != null) stats.putIfAbsent("course_id", practice.getCourseId());
+                if (practice.getClassId() != null) stats.putIfAbsent("class_id", practice.getClassId());
+
+                // 课程名称
+                try {
+                    if (practice.getCourseId() != null) {
+                        log.debug("[Stats] 解析课程名称 courseId={}", practice.getCourseId());
+                        Map<String, Object> course = courseClient.getCourseById(practice.getCourseId());
+                        if (course != null) {
+                            Object data = course.get("data");
+                            Map<String, Object> courseData = (data instanceof Map) ? (Map<String, Object>) data : course;
+                            log.debug("[Stats] course raw keys={} wrappedKeys={}", course.keySet(), courseData.keySet());
+                            Object nameObj = courseData.get("name");
+                            if (nameObj == null) nameObj = courseData.get("title");
+                            if (nameObj == null) nameObj = courseData.get("course_name");
+                            if (nameObj == null) nameObj = courseData.get("courseName");
+                            if (nameObj != null) {
+                                stats.put("course_name", nameObj.toString());
+                                log.info("[Stats] 解析课程名称成功 practiceId={} courseId={} name={}", practiceId, practice.getCourseId(), nameObj);
+                            } else {
+                                log.debug("[Stats] 未从课程响应中解析到名称 practiceId={} courseId={} keys={}", practiceId, practice.getCourseId(), courseData.keySet());
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    log.debug("[Stats] 获取课程名称失败 practiceId={} err={}", practiceId, e.getMessage());
+                }
+
+                // 班级名称
+                try {
+                    if (practice.getClassId() != null) {
+                        log.debug("[Stats] 解析班级名称 classId={}", practice.getClassId());
+                        Map<String, Object> cls = courseClient.getClassById(practice.getClassId());
+                        if (cls != null) {
+                            Object data = cls.get("data");
+                            Map<String, Object> clsData = (data instanceof Map) ? (Map<String, Object>) data : cls;
+                            log.debug("[Stats] class raw keys={} wrappedKeys={}", cls.keySet(), clsData.keySet());
+                            Object nameObj = clsData.get("name");
+                            if (nameObj == null) nameObj = clsData.get("class_name");
+                            if (nameObj == null) nameObj = clsData.get("className");
+                            if (nameObj == null) nameObj = clsData.get("title");
+                            if (nameObj != null) {
+                                stats.put("class_name", nameObj.toString());
+                                log.info("[Stats] 解析班级名称成功 practiceId={} classId={} name={}", practiceId, practice.getClassId(), nameObj);
+                            } else {
+                                log.debug("[Stats] 未从班级响应中解析到名称 practiceId={} classId={} keys={}", practiceId, practice.getClassId(), clsData.keySet());
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    log.debug("[Stats] 获取班级名称失败 practiceId={} err={}", practiceId, e.getMessage());
+                }
+
+                // 规范化输出字段：同时提供 snake_case 与 camelCase，并设置缺省值
+                try {
+                    Object courseNameObj = stats.get("course_name");
+                    if (courseNameObj == null) courseNameObj = stats.get("courseName");
+                    String courseName = courseNameObj != null ? courseNameObj.toString() : "未知课程";
+                    stats.put("course_name", courseName);
+                    stats.put("courseName", courseName);
+                    Object classNameObj = stats.get("class_name");
+                    if (classNameObj == null) classNameObj = stats.get("className");
+                    String className = classNameObj != null ? classNameObj.toString() : "未知班级";
+                    stats.put("class_name", className);
+                    stats.put("className", className);
+                    log.info("[Stats] 规范化名称输出 practiceId={} course_name='{}' class_name='{}'", practiceId, courseName, className);
+                } catch (Exception ignore) {}
+            }
+        } catch (Exception ex) {
+            log.warn("[Stats] 丰富统计信息失败 practiceId={} err={}", practiceId, ex.getMessage());
+        }
+        try {
+            log.info("[Stats] 返回前最终stats practiceId={} keys={} course_name='{}' class_name='{}'", practiceId, stats.keySet(), stats.get("course_name"), stats.get("class_name"));
+        } catch (Exception ignore) {}
+        return stats;
     }
 
 

@@ -370,6 +370,26 @@ public class PracticeController {
     @GetMapping("/stats/{practiceId}")
     public Result<Map<String, Object>> getPracticeStats(@PathVariable Long practiceId) {
         Map<String, Object> stats = practiceService.getSubmissionStats(practiceId);
+        try {
+            var log = org.slf4j.LoggerFactory.getLogger(PracticeController.class);
+            Object courseId = stats.get("course_id");
+            Object classId = stats.get("class_id");
+            Object courseNameSnake = stats.get("course_name");
+            Object courseNameCamel = stats.get("courseName");
+            Object classNameSnake = stats.get("class_name");
+            Object classNameCamel = stats.get("className");
+            String courseResolved = courseNameSnake != null ? courseNameSnake.toString() : (courseNameCamel != null ? courseNameCamel.toString() : null);
+            String classResolved = classNameSnake != null ? classNameSnake.toString() : (classNameCamel != null ? classNameCamel.toString() : null);
+            log.info("[PracticeController] StatsResolved practiceId={} courseId={} classId={} course_name='{}' courseName='{}' class_name='{}' className='{}'",
+                    practiceId, courseId, classId, courseNameSnake, courseNameCamel, classNameSnake, classNameCamel);
+            if (courseResolved == null || courseResolved.isBlank()) {
+                log.warn("[PracticeController] course name missing/blank for practiceId={} courseId={} (keys={})", practiceId, courseId, stats.keySet());
+            }
+            if (classResolved == null || classResolved.isBlank()) {
+                log.warn("[PracticeController] class name missing/blank for practiceId={} classId={} (keys={})", practiceId, classId, stats.keySet());
+            }
+            log.debug("[PracticeController] Full stats payload practiceId={} -> {}", practiceId, stats);
+        } catch (Exception ignore) {}
         return Result.success(stats);
     }
 

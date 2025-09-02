@@ -1,31 +1,24 @@
-package org.example.edusoft.entity.file;
+package org.example.edusoft.content.entity.file;
 
+import java.time.LocalDateTime;
+
+import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.Builder;
+import lombok.NoArgsConstructor;
 
-/**
- * 文件访问DTO
- */
 @Data
-@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class FileAccessDTO {
-    /**
-     * 带签名的访问URL
-     */
-    private String url;
-
-    /**
-     * 文件名
-     */
+    
+    private Long id;
     private String fileName;
-
-    /**
-     * 文件类型
-     */
+    private String fileUrl;
+    private String downloadUrl;
+    private String previewUrl;
+    private Long fileSize;
     private String fileType;
-
-    /**
-     * URL过期时间（秒）
-     */
-    private Integer expiresIn;
+    private LocalDateTime accessTime;
+    private Long userId;
+    private Long fileId;
 } 
