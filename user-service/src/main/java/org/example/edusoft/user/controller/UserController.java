@@ -1,4 +1,5 @@
 package org.example.edusoft.user.controller;
+import org.example.edusoft.user.domain.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -361,16 +362,26 @@ public class UserController {
             // 获取当前用户ID
             String loginIdStr = StpUtil.getLoginId().toString();
             Long currentUserId = Long.parseLong(loginIdStr);
-            
+
             // 检查权限：只能删除自己的账号
             if (!currentUserId.equals(id)) {
                 return SaResult.error("无权限删除其他用户");
             }
-            
+
             userService.deleteById(id);
             return SaResult.ok("删除用户成功");
         } catch (Exception e) {
             return SaResult.error("删除用户失败：" + e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/delete/{id}")
+    public Result<Boolean> deleteUser2(@PathVariable Long id) {
+        try {
+            userService.deleteById(id);
+            return Result.ok(true, "删除用户成功");
+        } catch (Exception e) {
+            return Result.error(500, "删除用户失败：" + e.getMessage());
         }
     }
 }

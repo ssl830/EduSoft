@@ -1,7 +1,9 @@
 import axios from './axios'
+import {useAuthStore} from "@/stores/auth.ts";
 
 // 练习报告导出格式
 export type ExportFormat = 'excel' | 'pdf'
+const authStore = useAuthStore()
 
 // 学习记录接口
 export interface StudyRecord {
@@ -303,8 +305,9 @@ export const StudyRecordsApi = {
       responseType: 'blob',
       headers: {
         'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/json',
-        'Content-Type': 'application/json'
-      }
+        'Content-Type': 'application/json',
+        "free-fs-token": authStore.token  // APIKey
+      },
     });
   }
 }
