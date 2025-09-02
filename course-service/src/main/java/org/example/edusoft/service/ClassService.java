@@ -25,6 +25,9 @@ public interface ClassService {
     // 获取学生的班级列表
     List<Class> getClassesByStudentId(Long studentId);
     
+    // 获取某课程下的所有班级
+    List<Class> getClassesByCourseId(Long courseId);
+
     // 获取班级基本信息
     Class getClassById(Long id);
     

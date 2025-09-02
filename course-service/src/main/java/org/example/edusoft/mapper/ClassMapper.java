@@ -74,6 +74,11 @@ public interface ClassMapper extends BaseMapper<Class> {
             "WHERE cu.user_id = #{studentId}")
     List<Class> getClassesByStudentId(Long studentId);
 
+    @Select("SELECT c.* FROM class c " +
+            "LEFT JOIN course co ON c.course_id = co.id " +
+            "WHERE co.id = #{courseId}")
+    List<Class> getClassesByCourseId(Long courseId);
+
     @Select("SELECT COUNT(*) FROM classuser WHERE class_id = #{classId}")
     int getClassStudentCount(Long classId);
     

@@ -160,6 +160,14 @@ public class ClassServiceImpl implements ClassService {
     }
 
     @Override
+    public List<Class> getClassesByCourseId(Long courseId) {
+        if (courseId == null) {
+            throw new IllegalArgumentException("课程ID不能为空");
+        }
+        return classMapper.getClassesByCourseId(courseId);
+    }
+
+    @Override
     public Class getClassById(Long id) {
         if (id == null) {
             throw new IllegalArgumentException("班级ID不能为空");

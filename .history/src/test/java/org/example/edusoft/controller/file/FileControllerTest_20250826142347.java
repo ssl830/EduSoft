@@ -39,30 +39,6 @@ class FileControllerTest {
     @MockBean
     private FileAccessService fileAccessService;
 
-    // getUserRootFolders
-    @Test
-    void getUserRootFolders_success() throws Exception {
-        List<FileResponseDTO> resp = Arrays.asList(new FileResponseDTO(), new FileResponseDTO());
-        Mockito.when(fileQueryService.getAllFilesByUserId(1L)).thenReturn(resp);
-
-        mockMvc.perform(post("/api/userfolders")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"userId\":1}"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data[0]").exists())
-                .andExpect(jsonPath("$.msg").value("获取用户文件成功"));
-    }
-
-    @Test
-    void getUserRootFolders_fail_nullUserId() throws Exception {
-        mockMvc.perform(post("/api/userfolders")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{}"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(500))
-                .andExpect(jsonPath("$.msg").value("用户ID不能为空"));
-    }
-
     // getFilesByUserAndCourse
     @Test
     void getFilesByUserAndCourse_success() throws Exception {
