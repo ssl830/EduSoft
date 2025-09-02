@@ -29,7 +29,7 @@
             {{ course.name }}
           </option>
         </select>
-        <select v-model="filters.status" class="filter-select">
+        <select v-if="false" v-model="filters.status" class="filter-select">
           <option value="">所有完成状态</option>
           <option value="completed">已完成</option>
           <option value="in-progress">进行中</option>

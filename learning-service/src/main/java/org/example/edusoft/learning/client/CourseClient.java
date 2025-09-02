@@ -67,13 +67,25 @@ public class CourseClient extends BaseServiceClient {
         }
         org.springframework.http.HttpEntity<Void> entity = new org.springframework.http.HttpEntity<>(headers);
         String url = getBaseUrl() + "/api/courses/" + courseId;
+        logger.debug("[CourseClient] -> GET {} token={} headers={}", url, (token != null ? "present" : "absent"), headers.keySet());
         org.springframework.http.ResponseEntity<Map> response = restTemplate.exchange(
             url, 
             org.springframework.http.HttpMethod.GET, 
             entity, 
             Map.class
         );
-        return response.getBody();
+        Map body = response.getBody();
+        if (body != null) {
+            try {
+                Object data = body.get("data");
+                if (data instanceof java.util.Map<?,?> m) {
+                    logger.debug("[CourseClient] course {} body keys={} dataKeys={}", courseId, body.keySet(), ((java.util.Map<?,?>) data).keySet());
+                } else {
+                    logger.debug("[CourseClient] course {} body keys={}", courseId, body.keySet());
+                }
+            } catch (Exception ignore) {}
+        }
+        return body;
     }
 
     /**
@@ -83,7 +95,21 @@ public class CourseClient extends BaseServiceClient {
         if (classId == null) {
             throw new IllegalArgumentException("班级ID不能为空");
         }
-        return getForMap("/api/classes/" + classId);
+        String path = "/api/classes/" + classId;
+        Map<String, Object> res = getForMap(path);
+        try {
+            if (res != null) {
+                Object data = res.get("data");
+                if (data instanceof java.util.Map<?,?> m) {
+                    logger.debug("[CourseClient] class {} path={} bodyKeys={} dataKeys={}", classId, path, res.keySet(), ((java.util.Map<?,?>) data).keySet());
+                } else {
+                    logger.debug("[CourseClient] class {} path={} bodyKeys={}", classId, path, res.keySet());
+                }
+            } else {
+                logger.debug("[CourseClient] class {} path={} body=null", classId, path);
+            }
+        } catch (Exception ignore) {}
+        return res;
     }
 
     /**
