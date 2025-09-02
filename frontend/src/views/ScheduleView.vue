@@ -137,7 +137,7 @@ function goToClassDetail(classId: number | string) {
 const currentWeek = ref(1)
 
 // 学期开始日期
-const semesterStartDate = new Date('2025-02-24')
+const semesterStartDate = new Date('2025-09-01')
 
 // 计算当前是第几周
 function calculateCurrentWeek(): number {
