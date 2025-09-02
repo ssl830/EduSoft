@@ -1,4 +1,4 @@
-package org.example.edusoft.content.controller.resource;
+package org.example.edusoft.content.controller;
 
 import org.example.edusoft.content.common.Result;
 import org.example.edusoft.content.entity.resource.TeachingResource;
@@ -40,7 +40,7 @@ class ProgressUpdateRequest {
  * 教学资源控制器
  */
 @RestController
-@RequestMapping("/api/content/resources")
+@RequestMapping("/api/resources")
 public class TeachingResourceController {
 
     private static final Logger log = LoggerFactory.getLogger(TeachingResourceController.class);
