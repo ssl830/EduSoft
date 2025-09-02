@@ -22,6 +22,8 @@ import java.util.Map;
 import org.example.edusoft.client.UserServiceClient;
 // 内容服务客户端
 import org.example.edusoft.client.ContentServiceClient;
+// 学习服务客户端（获取练习列表）
+import org.example.edusoft.client.LearningServiceClient;
 
 @Service
 public class CourseServiceImpl implements CourseService {
@@ -34,6 +36,9 @@ public class CourseServiceImpl implements CourseService {
 
     @Autowired
     private ContentServiceClient contentServiceClient;
+
+    @Autowired
+    private LearningServiceClient learningServiceClient;
 
     @Value("${services.user.base-url:http://localhost:8081}")
     private String userServiceBaseUrl;
@@ -125,6 +130,49 @@ public class CourseServiceImpl implements CourseService {
         
         System.out.println("fetchHomeworkCountByCourseId: 返回默认值0");
         return 0;
+    }
+
+    /**
+     * 从学习服务获取课程练习总数
+     */
+    private Integer fetchPracticeCountByCourseId(Long courseId) {
+        if (courseId == null) return 0;
+        try {
+            String token = resolveOutboundToken();
+            String auth = (token != null && token.startsWith("Bearer ")) ? token : (token != null ? ("Bearer " + token) : null);
+            Map<String, Object> resp = learningServiceClient.getCoursePractices(courseId, token, auth);
+            if (resp != null) {
+                Object data = resp.get("data");
+                if (data instanceof java.util.List<?> list) {
+                    return list.size();
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("fetchPracticeCountByCourseId: 调用学习微服务异常=" + e.getMessage());
+        }
+        return 0;
+    }
+
+    /**
+     * 从内容服务获取课程资源总数
+     */
+    private Integer fetchResourceCountByCourseId(Long courseId) {
+        if (courseId == null) return 0;
+        try {
+            String token = resolveOutboundToken();
+            String auth = (token != null && token.startsWith("Bearer ")) ? token : (token != null ? ("Bearer " + token) : null);
+            Map<String, Object> resp = learningServiceClient.getResourceCountByCourse(courseId, token, auth);
+            if (resp != null) {
+                Object data = resp.get("data");
+                if (data instanceof Number n) {
+                    return n.intValue();
+                }
+            }
+            return 0;
+        } catch (Exception e) {
+            System.out.println("fetchResourceCountByCourseId: 调用内容微服务异常=" + e.getMessage());
+            return 0;
+        }
     }
 
     @Override
@@ -241,6 +289,12 @@ public class CourseServiceImpl implements CourseService {
             // 从内容服务获取作业总数
             Integer homeworkCount = fetchHomeworkCountByCourseId(courseId);
             courseDetail.setHomeworkCount(homeworkCount);
+            // 从学习服务获取练习总数
+            Integer practiceCount = fetchPracticeCountByCourseId(courseId);
+            courseDetail.setPracticeCount(practiceCount);
+            // 从内容服务获取资源总数
+            Integer resourceCount = fetchResourceCountByCourseId(courseId);
+            courseDetail.setResourceCount(resourceCount);
         }
         return courseDetail;
     }
@@ -263,6 +317,12 @@ public class CourseServiceImpl implements CourseService {
             // 从内容服务获取作业总数
             Integer homeworkCount = fetchHomeworkCountByCourseId(course.getId());
             course.setHomeworkCount(homeworkCount);
+            // 从学习服务获取练习总数
+            Integer practiceCount = fetchPracticeCountByCourseId(course.getId());
+            course.setPracticeCount(practiceCount);
+            // 从内容服务获取资源总数
+            Integer resourceCount = fetchResourceCountByCourseId(course.getId());
+            course.setResourceCount(resourceCount);
         }
         return courses;
     }
@@ -294,6 +354,12 @@ public class CourseServiceImpl implements CourseService {
             // 从内容服务获取作业总数
             Integer homeworkCount = fetchHomeworkCountByCourseId(dto.getId());
             dto.setHomeworkCount(homeworkCount);
+            // 从学习服务获取练习总数
+            Integer practiceCount = fetchPracticeCountByCourseId(dto.getId());
+            dto.setPracticeCount(practiceCount);
+            // 从内容服务获取资源总数
+            Integer resourceCount = fetchResourceCountByCourseId(dto.getId());
+            dto.setResourceCount(resourceCount);
         }
         return list;
     }
