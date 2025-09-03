@@ -37,7 +37,13 @@ export default defineConfig({
       overlay: false // 禁用热更新错误覆盖
     },
     proxy: {
-      '/api/user': { target: 'http://user-service:8081', changeOrigin: true },
+      '/api/user': { 
+        target: process.env.NODE_ENV === 'development' 
+          ? 'http://localhost:8081'
+          : 'http://user-service:8081', 
+        changeOrigin: true,
+        rewrite: path => path.replace(/^\/api\/user/, '/')
+      },
       '/api/imports': { target: 'http://course-service:8082', changeOrigin: true },
       '/api/courses': { target: 'http://course-service:8082', changeOrigin: true },
       '/api/classes': { target: 'http://course-service:8082', changeOrigin: true },

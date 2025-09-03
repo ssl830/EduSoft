@@ -9,8 +9,8 @@ export interface ApiResponse<T = any> {
 
 // Create an axios instance
 const instance = axios.create({
-  baseURL: '', // 使用空字符串，确保相对路径能正确工作
-  timeout: 1000000,
+  baseURL: '', // 在 Docker 环境中使用相对路径
+  timeout: 10000,
   headers: {
     'Content-Type': 'application/json'
   }
