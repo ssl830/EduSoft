@@ -65,8 +65,8 @@ public class DiscussionController {
         }
         
         // 调用 user-service 校验 token 并获取用户信息
-        boolean validate = userClient.validateToken("http://localhost:8081", token);
-        if (validate == false) {
+        boolean isValid = userClient.validateToken("http://localhost:8081", token);
+        if (!isValid) {
             Map<String, String> response = new HashMap<>();
             response.put("error", "登录状态无效");
             return ResponseEntity.status(401).body(response);
@@ -106,13 +106,18 @@ public class DiscussionController {
             response.put("error", "请先登录");
             return ResponseEntity.status(401).body(response);
         }
-        boolean validate = userClient.validateToken("http://localhost:8081", token);
-        if (validate == false) {
+        boolean isValid = userClient.validateToken("http://localhost:8081", token);
+        if (!isValid) {
             Map<String, String> response = new HashMap<>();
             response.put("error", "登录状态无效");
             return ResponseEntity.status(401).body(response);
         }
         Map<String, Object> userData = userClient.fetchCurrentUser("http://localhost:8081", token);
+        if (userData == null) {
+            Map<String, String> response = new HashMap<>();
+            response.put("error", "用户不存在");
+            return ResponseEntity.status(404).body(response);
+        }
         Long loginId = ((Number) userData.get("id")).longValue();
         // 验证是否是讨论创建者
         Discussion existingDiscussion = discussionService.getDiscussion(id);
@@ -150,13 +155,18 @@ public class DiscussionController {
             response.put("error", "请先登录");
             return ResponseEntity.status(401).body(response);
         }
-        boolean validate = userClient.validateToken("http://localhost:8081", token);
-        if (validate == false) {
+        boolean isValid = userClient.validateToken("http://localhost:8081", token);
+        if (!isValid) {
             Map<String, String> response = new HashMap<>();
             response.put("error", "登录状态无效");
             return ResponseEntity.status(401).body(response);
         }
         Map<String, Object> userData = userClient.fetchCurrentUser("http://localhost:8081", token);
+        if (userData == null) {
+            Map<String, String> response = new HashMap<>();
+            response.put("error", "用户不存在");
+            return ResponseEntity.status(404).body(response);
+        }
         Long loginId = ((Number) userData.get("id")).longValue();
         // 验证是否是讨论创建者
         Discussion discussion = discussionService.getDiscussion(id);
@@ -258,8 +268,8 @@ public class DiscussionController {
             response.put("error", "请先登录");
             return ResponseEntity.status(401).body(response);
         }
-        boolean validate = userClient.validateToken("http://localhost:8081", token);
-        if (validate == false) {
+        boolean isValid = userClient.validateToken("http://localhost:8081", token);
+        if (!isValid) {
             Map<String, String> response = new HashMap<>();
             response.put("error", "登录状态无效");
             return ResponseEntity.status(401).body(response);
@@ -308,8 +318,8 @@ public class DiscussionController {
             response.put("error", "请先登录");
             return ResponseEntity.status(401).body(response);
         }
-        boolean validate = userClient.validateToken("http://localhost:8081", token);
-        if (validate == false) {
+        boolean isValid = userClient.validateToken("http://localhost:8081", token);
+        if (!isValid) {
             Map<String, String> response = new HashMap<>();
             response.put("error", "登录状态无效");
             return ResponseEntity.status(401).body(response);

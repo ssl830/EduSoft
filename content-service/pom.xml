@@ -186,7 +186,7 @@
             <resource>
                 <directory>src/main/resources</directory>
                 <includes>
-                    <include>**/*.xml</include> <!-- 确保这一行存在 -->
+                    <include>**/*</include>
                 </includes>
                 <filtering>true</filtering>
             </resource>

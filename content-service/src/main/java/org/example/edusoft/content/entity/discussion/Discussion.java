@@ -1,78 +1,66 @@
 package org.example.edusoft.content.entity.discussion;
 
+import jakarta.persistence.*;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 import java.time.LocalDateTime;
 
-/**
- * 讨论实体类
- */
+@Entity
+@Table(name = "discussions")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Discussion {
+    
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    
+    @Column(name = "title", nullable = false, length = 255)
     private String title;
+    
+    @Column(name = "content", columnDefinition = "TEXT")
     private String content;
-    private String userId;
+    
+    @Column(name = "course_id", nullable = false)
     private Long courseId;
+    
+    @Column(name = "class_id", nullable = false)
     private Long classId;
-    private String type;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-    private Boolean isDeleted;
-    private Integer viewCount;
-    private Integer replyCount;
-    private Integer likeCount;
+    
+    @Column(name = "creator_id", nullable = false)
     private Long creatorId;
+    
+    @Column(name = "creator_num", length = 50)
     private String creatorNum;
-    private Boolean isPinned;
-    private Boolean isClosed;
-
-    // Getters and Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
     
-    public String getTitle() { return title; }
-    public void setTitle(String title) { this.title = title; }
+    @Column(name = "view_count")
+    private Integer viewCount = 0;
     
-    public String getContent() { return content; }
-    public void setContent(String content) { this.content = content; }
+    @Column(name = "reply_count")
+    private Integer replyCount = 0;
     
-    public String getUserId() { return userId; }
-    public void setUserId(String userId) { this.userId = userId; }
+    @Column(name = "is_pinned")
+    private Boolean isPinned = false;
     
-    public Long getCourseId() { return courseId; }
-    public void setCourseId(Long courseId) { this.courseId = courseId; }
+    @Column(name = "is_closed")
+    private Boolean isClosed = false;
     
-    public Long getClassId() { return classId; }
-    public void setClassId(Long classId) { this.classId = classId; }
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
     
-    public String getType() { return type; }
-    public void setType(String type) { this.type = type; }
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
     
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
     
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
-    
-    public Boolean getIsDeleted() { return isDeleted; }
-    public void setIsDeleted(Boolean isDeleted) { this.isDeleted = isDeleted; }
-    
-    public Integer getViewCount() { return viewCount; }
-    public void setViewCount(Integer viewCount) { this.viewCount = viewCount; }
-    
-    public Integer getReplyCount() { return replyCount; }
-    public void setReplyCount(Integer replyCount) { this.replyCount = replyCount; }
-    
-    public Integer getLikeCount() { return likeCount; }
-    public void setLikeCount(Integer likeCount) { this.likeCount = likeCount; }
-    
-    public Long getCreatorId() { return creatorId; }
-    public void setCreatorId(Long creatorId) { this.creatorId = creatorId; }
-    
-    public String getCreatorNum() { return creatorNum; }
-    public void setCreatorNum(String creatorNum) { this.creatorNum = creatorNum; }
-    
-    public Boolean getIsPinned() { return isPinned; }
-    public void setIsPinned(Boolean isPinned) { this.isPinned = isPinned; }
-    
-    public Boolean getIsClosed() { return isClosed; }
-    public void setIsClosed(Boolean isClosed) { this.isClosed = isClosed; }
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }

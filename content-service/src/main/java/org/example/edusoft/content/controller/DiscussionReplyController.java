@@ -40,13 +40,18 @@ public class DiscussionReplyController {
             return ResponseEntity.status(401).body(resp);
         }
         try {
-            boolean validate = userClient.validateToken("http://localhost:8081", token);
-            if (validate == false) {
+            boolean isValid = userClient.validateToken("http://localhost:8081", token);
+            if (!isValid) {
                 Map<String, String> response = new HashMap<>();
                 response.put("error", "登录状态无效");
                 return ResponseEntity.status(401).body(response);
             }
             Map<String, Object> userData = userClient.fetchCurrentUser("http://localhost:8081", token);
+            if (userData == null) {
+                Map<String, String> response = new HashMap<>();
+                response.put("error", "登录状态无效");
+                return ResponseEntity.status(401).body(response);
+            }
             Long creatorId = ((Number) userData.get("id")).longValue();
             // user-service 校验返回中，用户的学号/工号字段为 userId（与 DiscussionController 一致用作 creator_num）
             String userNum = (String) userData.get("userId");
@@ -102,12 +107,35 @@ public class DiscussionReplyController {
      * 更新回复
      */
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateReply(@PathVariable Long id, @RequestBody String content) {
-        DiscussionReply reply = discussionReplyService.updateReply(id, content);
-        if (reply != null) {
-            return ResponseEntity.ok(reply);
-        } else {
-            return ResponseEntity.status(404).body(Map.of("error", "回复不存在"));
+    public ResponseEntity<?> updateReply(@PathVariable Long id, @RequestBody String content, HttpServletRequest httpRequest) {
+        String token = httpRequest.getHeader("satoken");
+        if (token == null || token.isEmpty()) {
+            Map<String, String> resp = new HashMap<>();
+            resp.put("error", "请先登录");
+            return ResponseEntity.status(401).body(resp);
+        }
+        try {
+            boolean isValid = userClient.validateToken("http://localhost:8081", token);
+            if (!isValid) {
+                Map<String, String> response = new HashMap<>();
+                response.put("error", "登录状态无效");
+                return ResponseEntity.status(401).body(response);
+            }
+            Map<String, Object> userData = userClient.fetchCurrentUser("http://localhost:8081", token);
+            if (userData == null) {
+                Map<String, String> response = new HashMap<>();
+                response.put("error", "登录状态无效");
+                return ResponseEntity.status(401).body(response);
+            }
+            Long userId = ((Number) userData.get("id")).longValue();
+            DiscussionReply reply = discussionReplyService.updateReply(id, content);
+            if (reply != null) {
+                return ResponseEntity.ok(reply);
+            } else {
+                return ResponseEntity.status(404).body(Map.of("error", "回复不存在"));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(400).body(Map.of("error", "更新回复失败: " + e.getMessage()));
         }
     }
 
@@ -123,8 +151,14 @@ public class DiscussionReplyController {
             return ResponseEntity.status(401).body(resp);
         }
         try {
-            boolean validate = userClient.validateToken("http://localhost:8081", token);
-            if (validate == false) {
+            boolean isValid = userClient.validateToken("http://localhost:8081", token);
+            if (!isValid) {
+                Map<String, String> response = new HashMap<>();
+                response.put("error", "登录状态无效");
+                return ResponseEntity.status(401).body(response);
+            }
+            Map<String, Object> userData = userClient.fetchCurrentUser("http://localhost:8081", token);
+            if (userData == null) {
                 Map<String, String> response = new HashMap<>();
                 response.put("error", "登录状态无效");
                 return ResponseEntity.status(401).body(response);
@@ -144,12 +178,35 @@ public class DiscussionReplyController {
      * 点赞回复
      */
     @PostMapping("/{id}/like")
-    public ResponseEntity<?> likeReply(@PathVariable Long id) {
-        boolean success = discussionReplyService.likeReply(id);
-        if (success) {
-            return ResponseEntity.ok(Map.of("message", "点赞成功"));
-        } else {
-            return ResponseEntity.status(400).body(Map.of("error", "点赞失败"));
+    public ResponseEntity<?> likeReply(@PathVariable Long id, HttpServletRequest httpRequest) {
+        String token = httpRequest.getHeader("satoken");
+        if (token == null || token.isEmpty()) {
+            Map<String, String> resp = new HashMap<>();
+            resp.put("error", "请先登录");
+            return ResponseEntity.status(401).body(resp);
+        }
+        try {
+            boolean isValid = userClient.validateToken("http://localhost:8081", token);
+            if (!isValid) {
+                Map<String, String> response = new HashMap<>();
+                response.put("error", "登录状态无效");
+                return ResponseEntity.status(401).body(response);
+            }
+            Map<String, Object> userData = userClient.fetchCurrentUser("http://localhost:8081", token);
+            if (userData == null) {
+                Map<String, String> response = new HashMap<>();
+                response.put("error", "登录状态无效");
+                return ResponseEntity.status(401).body(response);
+            }
+            Long userId = ((Number) userData.get("id")).longValue();
+            boolean success = discussionReplyService.likeReply(id);
+            if (success) {
+                return ResponseEntity.ok(Map.of("message", "点赞成功"));
+            } else {
+                return ResponseEntity.status(400).body(Map.of("error", "点赞失败"));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(400).body(Map.of("error", "点赞失败: " + e.getMessage()));
         }
     }
 
@@ -157,12 +214,35 @@ public class DiscussionReplyController {
      * 取消点赞
      */
     @PostMapping("/{id}/unlike")
-    public ResponseEntity<?> unlikeReply(@PathVariable Long id) {
-        boolean success = discussionReplyService.unlikeReply(id);
-        if (success) {
-            return ResponseEntity.ok(Map.of("message", "取消点赞成功"));
-        } else {
-            return ResponseEntity.status(400).body(Map.of("error", "取消点赞失败"));
+    public ResponseEntity<?> unlikeReply(@PathVariable Long id, HttpServletRequest httpRequest) {
+        String token = httpRequest.getHeader("satoken");
+        if (token == null || token.isEmpty()) {
+            Map<String, String> resp = new HashMap<>();
+            resp.put("error", "请先登录");
+            return ResponseEntity.status(401).body(resp);
+        }
+        try {
+            boolean isValid = userClient.validateToken("http://localhost:8081", token);
+            if (!isValid) {
+                Map<String, String> response = new HashMap<>();
+                response.put("error", "登录状态无效");
+                return ResponseEntity.status(401).body(response);
+            }
+            Map<String, Object> userData = userClient.fetchCurrentUser("http://localhost:8081", token);
+            if (userData == null) {
+                Map<String, String> response = new HashMap<>();
+                response.put("error", "登录状态无效");
+                return ResponseEntity.status(401).body(response);
+            }
+            Long userId = ((Number) userData.get("id")).longValue();
+            boolean success = discussionReplyService.unlikeReply(id);
+            if (success) {
+                return ResponseEntity.ok(Map.of("message", "取消点赞成功"));
+            } else {
+                return ResponseEntity.status(400).body(Map.of("error", "取消点赞失败"));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(400).body(Map.of("error", "取消点赞失败: " + e.getMessage()));
         }
     }
 
