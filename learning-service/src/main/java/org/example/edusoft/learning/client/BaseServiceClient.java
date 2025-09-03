@@ -1,6 +1,6 @@
 package org.example.edusoft.learning.client;
 
-import org.example.edusoft.learning.exception.ServiceCallException;
+import org.example.edusoft.learning.exception.ServiceCallException2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -94,14 +94,14 @@ public abstract class BaseServiceClient {
             return response.getBody();
         } catch (HttpStatusCodeException ex) {
             logger.error("HTTP error calling {}: {} - {}", getServiceName(), ex.getStatusCode(), ex.getResponseBodyAsString());
-            throw new ServiceCallException(
+            throw new ServiceCallException2(
                 getServiceName(), 
                 ex.getStatusCode().value(), 
                 ex.getResponseBodyAsString()
             );
         } catch (Exception ex) {
             logger.error("Error calling {}: {}", getServiceName(), ex.getMessage(), ex);
-            throw new ServiceCallException(getServiceName(), ex.getMessage(), ex);
+            throw new ServiceCallException2(getServiceName(), ex.getMessage(), ex);
         }
     }
     

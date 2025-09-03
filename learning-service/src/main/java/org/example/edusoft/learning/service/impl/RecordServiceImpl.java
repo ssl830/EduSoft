@@ -65,7 +65,7 @@ public class RecordServiceImpl implements RecordService {
 
     @Value("${services.content.base-url:http://localhost:8083}")
     private String contentBaseUrl;
-
+ 
     private String resolveOutboundToken() {
         RequestAttributes attrs = RequestContextHolder.getRequestAttributes();
         if (attrs instanceof ServletRequestAttributes servlet) {

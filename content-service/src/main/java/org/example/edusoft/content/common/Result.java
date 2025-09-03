@@ -31,4 +31,8 @@ public class Result<T> {
     public static <T> Result<T> error(Integer code, String message) {
         return new Result<>(code, message, null);
     }
+
+    public char[] getMsg() {
+        return message.toCharArray();
+    }
 }
