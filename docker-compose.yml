@@ -1,0 +1,56 @@
+services:
+  # MySQL数据库服务
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: fkq200566
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./user-service/user-db.sql:/docker-entrypoint-initdb.d/01-user.sql
+    networks:
+      - edusoft-network
+    healthcheck:
+      test: mysqladmin ping -h localhost -u root --password=$$MYSQL_ROOT_PASSWORD
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # User Service
+  user-service:
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/user-db?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=fkq200566
+      - LOGGING_LEVEL_ORG_SPRINGFRAMEWORK=DEBUG
+      - LOGGING_LEVEL_COM_EDUSOFT=DEBUG
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - edusoft-network
+
+  # Frontend Service
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    depends_on:
+      - user-service
+    networks:
+      - edusoft-network
+
+networks:
+  edusoft-network:
+    driver: bridge
+
+volumes:
+  mysql_data:

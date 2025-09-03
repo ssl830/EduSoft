@@ -13,7 +13,7 @@ const props = defineProps<{
 const practices = ref<any[]>([])
 const pendingCorrections = ref<any[]>([]) // 新增：待批改列表
 const loading = ref(true)
-const error = ref('')
+const error = ref<string>('')
 const currentView = ref('exercises') // 新增：视图切换（练习/批改）
 
 // Filters
@@ -145,12 +145,17 @@ const doPractice = (practiceId: number) => {
     })
 }
 
+// 处理错误信息
+const showError = (message: string) => {
+    error.value = message;
+}
+
 // 批改练习
 const checkPractice = (submissionId: number) => {
     console.log("selectedExer.value:", selectedExer.value)
     console.log()
     if(selectedExer.value == -1){
-        error.value = '请选择一个练习进行批改'
+        showError('请选择一个练习进行批改');
         return
     }
     router.push({
@@ -275,7 +280,7 @@ onMounted(() => {
                         <td class="actions">
                             <button
                                 class="btn-action history"
-                                @click="selectedExer !== -1 ? checkPractice(item.submissionId) : error.value = '请选择一个练习进行批改'"
+                                @click="() => selectedExer !== -1 ? checkPractice(item.submissionId) : showError('请选择一个练习进行批改')"
                                 :disabled="selectedExer === -1"
                                 title="批改"
                             >
