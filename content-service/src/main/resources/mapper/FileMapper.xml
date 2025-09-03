@@ -28,20 +28,6 @@
         <result property="objectName" column="object_name"/>
     </resultMap>
 
-    <!-- 在FileMapper.xml中添加ClassUser结果映射 -->
-    <resultMap id="ClassUserResultMap" type="org.example.edusoft.entity.classroom.ClassUser">
-        <id property="classId" column="class_id"/>
-        <result property="userId" column="user_id"/>
-        <result property="joinedAt" column="joined_at"/>
-    </resultMap>
-
-    <!-- 映射 CourseClass -->
-    <resultMap id="CourseClassResultMap" type="org.example.edusoft.entity.courseclass.CourseClass">
-        <id property="courseId" column="course_id"/>
-        <result property="classId" column="class_id"/>
-        <result property="joinedAt" column="joined_at"/>
-    </resultMap>
-
     <!-- 查询所有节点 -->
     <select id="selectAll" resultMap="FileNodeResultMap">
         SELECT * FROM file_node

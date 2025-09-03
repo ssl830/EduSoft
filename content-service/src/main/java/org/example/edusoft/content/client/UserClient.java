@@ -188,6 +188,15 @@ public class UserClient {
 	}
 
 	/**
+	 * 根据用户ID获取用户信息（别名方法）
+	 * @param userId 用户ID
+	 * @return 用户信息Map，如果失败返回null
+	 */
+	public Map<String, Object> getUserInfo(Long userId) {
+		return getUserById(userId);
+	}
+
+	/**
 	 * 检查用户是否存在
 	 * @param userId 用户ID
 	 * @return 如果用户存在返回true，否则返回false

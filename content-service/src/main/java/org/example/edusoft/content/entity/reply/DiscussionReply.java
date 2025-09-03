@@ -1,11 +1,11 @@
-package org.example.edusoft.content.dto.reply;
+package org.example.edusoft.content.entity.reply;
 
 import java.time.LocalDateTime;
 
 /**
- * 讨论回复DTO类
+ * 讨论回复实体类
  */
-public class DiscussionReplyDTO {
+public class DiscussionReply {
     private Long id;
     private Long discussionId;
     private String userId;

@@ -76,7 +76,7 @@ public interface NotificationMapper {
     })
     List<Notification> findByUserIdPaged(@Param("userId") String userId, @Param("offset") int offset, @Param("size") int size);
 
-    @Select("SELECT COUNT(*) FROM notification WHERE user_id = #{userId} AND read_flag = false")
+    @Select("SELECT COUNT(*) FROM notification WHERE user_id = #{userId} AND read_flag = false AND status != 'deleted'")
     int countUnreadByUserId(String userId);
 
     @Select("SELECT COUNT(*) FROM notification WHERE user_id = #{userId}")

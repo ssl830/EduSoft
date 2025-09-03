@@ -4,7 +4,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -232,17 +231,20 @@ public class TokenInterceptor implements HandlerInterceptor {
                 logger.debug("检测到UUID格式的token: {}", cleanToken);
                 
                 // 调用用户服务验证token并获取字符串格式的userId
+                logger.debug("开始调用用户服务验证token: {}", cleanToken);
                 String userId = validateTokenWithUserService(cleanToken);
                 if (userId != null) {
                     logger.debug("通过用户服务验证token成功，获取到用户ID: {}", userId);
                     return userId;
                 } else {
                     logger.warn("通过用户服务验证token失败，无法获取用户ID");
+                    logger.debug("用户服务返回null，可能是网络问题或服务不可用");
                 }
             }
             
         } catch (Exception e) {
             logger.debug("UUID格式解析失败: {}", e.getMessage());
+            logger.error("UUID格式解析异常: ", e);
         }
         return null;
     }
@@ -292,6 +294,9 @@ public class TokenInterceptor implements HandlerInterceptor {
      */
     private String validateTokenWithUserService(String token) {
         try {
+            logger.debug("开始调用用户服务验证token: {}", token);
+            logger.debug("用户服务URL: {}", USER_SERVICE_URL);
+            
             // 设置请求头
             HttpHeaders headers = new HttpHeaders();
             headers.set("satoken", token);
@@ -307,6 +312,9 @@ public class TokenInterceptor implements HandlerInterceptor {
                 Map.class
             );
             
+            logger.debug("用户服务响应状态: {}", response.getStatusCode());
+            logger.debug("用户服务响应体: {}", response.getBody());
+            
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 Map<String, Object> responseBody = response.getBody();
                 
@@ -314,34 +322,44 @@ public class TokenInterceptor implements HandlerInterceptor {
                 if (responseBody.containsKey("code") && responseBody.get("code").equals(200)) {
                     // 获取用户数据
                     Map<String, Object> userData = (Map<String, Object>) responseBody.get("data");
+                    logger.debug("用户数据: {}", userData);
+                    
                     if (userData != null && userData.containsKey("userId")) {
                         // 优先获取userId字段（字符串格式，如20200207, T001, S001）
                         Object userIdObj = userData.get("userId");
+                        logger.debug("找到userId字段: {}", userIdObj);
                         if (userIdObj instanceof String) {
                             return (String) userIdObj;
                         }
                     } else if (userData != null && userData.containsKey("userid")) {
                         // 兼容userid字段（小写）
                         Object userIdObj = userData.get("userid");
+                        logger.debug("找到userid字段: {}", userIdObj);
                         if (userIdObj instanceof String) {
                             return (String) userIdObj;
                         }
                     } else if (userData != null && userData.containsKey("id")) {
                         // 如果没有userId字段，使用id字段
                         Object userIdObj = userData.get("id");
+                        logger.debug("找到id字段: {}", userIdObj);
                         if (userIdObj instanceof Number) {
                             return userIdObj.toString();
                         } else if (userIdObj instanceof String) {
                             return (String) userIdObj;
                         }
                     }
+                    
+                    logger.warn("用户数据中没有找到有效的用户ID字段");
                 } else {
                     logger.warn("用户服务返回错误: {}", responseBody.get("msg"));
                 }
+            } else {
+                logger.warn("用户服务响应不成功: {}", response.getStatusCode());
             }
             
         } catch (Exception e) {
             logger.error("调用用户服务验证token失败: {}", e.getMessage());
+            logger.error("异常详情: ", e);
         }
         
         return null;
@@ -370,7 +388,9 @@ public class TokenInterceptor implements HandlerInterceptor {
         if (userId == null) {
             String token = extractToken(request);
             if (token != null && !token.trim().isEmpty()) {
+                logger.debug("开始解析token: {}", token);
                 userId = extractUserIdFromToken(token);
+                logger.debug("token解析结果: {}", userId);
             }
         }
 
