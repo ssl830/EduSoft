@@ -147,17 +147,21 @@ const doPractice = (practiceId: number) => {
 
 // 批改练习
 const checkPractice = (submissionId: number) => {
-    console.log("selectedExer.value:", selectedExer.value)
-    console.log()
-    if(selectedExer.value == -1){
-        error.value = '请选择一个练习进行批改'
-        return
-    }
     router.push({
         name: 'CheckExercise',
         params: { practiceId: selectedExer.value, submissionId: submissionId }
     })
 }
+
+// 处理批改按钮点击
+const handleCheckPractice = (submissionId: number) => {
+    if(selectedExer.value !== -1) {
+        checkPractice(submissionId)
+    } else {
+        error.value = '请选择一个练习进行批改'
+    }
+}
+
 
 // 查看练习
 // const getPracticeReport = async (practiceId: number, submissionId: number) => {
@@ -275,7 +279,7 @@ onMounted(() => {
                         <td class="actions">
                             <button
                                 class="btn-action history"
-                                @click="selectedExer !== -1 ? checkPractice(item.submissionId) : error.value = '请选择一个练习进行批改'"
+                                @click="handleCheckPractice(item.submissionId)"
                                 :disabled="selectedExer === -1"
                                 title="批改"
                             >

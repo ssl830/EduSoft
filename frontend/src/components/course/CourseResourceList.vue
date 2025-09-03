@@ -157,6 +157,8 @@ const fetchResources = async () => {
       title: searchQuery.value || undefined,
       isTeacher: props.isTeacher
     })
+    console.log(response.data)
+    // 将每个资源的 title 替换为 file_name
     resources.value = response.data
     console.log("resources: " + resources.value)
     // Extract unique types
