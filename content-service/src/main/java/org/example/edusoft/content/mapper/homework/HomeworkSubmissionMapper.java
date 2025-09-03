@@ -36,7 +36,7 @@ public interface HomeworkSubmissionMapper {
     /**
      * 根据作业ID查询所有提交记录
      */
-    @Select("SELECT * FROM homeworksubmission WHERE homework_id = #{homeworkId} ORDER BY submitted_at DESC")
+    @Select("SELECT * FROM homework_submission WHERE homework_id = #{homeworkId} ORDER BY submitted_at DESC")
     List<HomeworkSubmission> selectByHomeworkId(Long homeworkId);
 
     /**

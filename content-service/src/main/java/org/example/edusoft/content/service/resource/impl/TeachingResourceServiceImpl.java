@@ -345,4 +345,13 @@ public class TeachingResourceServiceImpl implements TeachingResourceService {
             log.error("同步AI知识库失败: {}", e.getMessage());
         }
     }
+
+    /**
+     * 统计指定课程的资源总数
+     * @param courseId 课程ID
+     * @return 资源总数
+     */
+    public int countResourcesByCourseId(Long courseId) {
+        return teachingResourceMapper.countByCourseId(courseId);
+    }
 }

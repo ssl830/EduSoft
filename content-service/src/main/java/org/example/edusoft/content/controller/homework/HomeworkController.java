@@ -1,13 +1,19 @@
 package org.example.edusoft.content.controller.homework;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.edusoft.content.common.Result;
 import org.example.edusoft.content.dto.homework.HomeworkDTO;
 import org.example.edusoft.content.dto.homework.HomeworkSubmissionDTO;
 import org.example.edusoft.content.service.homework.HomeworkService;
+
+import org.example.edusoft.content.client.UserClient;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.util.Map;
 
 import java.util.List;
 
@@ -17,9 +23,15 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/homework")
 @RequiredArgsConstructor
+@Slf4j
 public class HomeworkController {
 
     private final HomeworkService homeworkService;
+    private final HttpServletRequest request;
+    private final UserClient userClient;
+
+    @Value("${services.user.base-url:http://localhost:8081}")
+    private String userServiceBaseUrl;
 
     /**
      * 创建作业
@@ -30,9 +42,25 @@ public class HomeworkController {
             @RequestParam("title") String title,
             @RequestParam(value = "description", required = false) String description,
             @RequestParam(value = "end_time", required = false) String endTime,
-            @RequestParam(value = "file", required = false) MultipartFile file,
-            @RequestParam("created_by") Long createdBy) {
+            @RequestParam(value = "file", required = false) MultipartFile file) {
         try {
+            // 从请求头中获取token
+            String token = request.getHeader("satoken");
+            if (token == null) {
+                token = request.getHeader("Authorization");
+            }
+            if (token == null) {
+                return Result.error("未获取到认证信息");
+            }
+
+            // 调用用户服务获取当前用户信息
+            Map<String, Object> userInfo = userClient.fetchCurrentUser(userServiceBaseUrl, token);
+            if (userInfo == null || !userInfo.containsKey("id")) {
+                return Result.error("未获取到用户信息");
+            }
+
+            // 从用户信息中获取用户ID
+            Long createdBy = Long.valueOf(userInfo.get("id").toString());
             Long homeworkId = homeworkService.createHomework(classId, title, description, endTime, file, createdBy);
             return Result.success(homeworkId, "作业创建成功");
         } catch (Exception e) {
@@ -85,8 +113,9 @@ public class HomeworkController {
     public Result<Long> submitHomework(
             @PathVariable Long homeworkId,
             @RequestParam("student_id") Long studentId,
-            @RequestParam("file") MultipartFile file) {
+            @RequestPart("file") MultipartFile file) {
         try {
+            log.info("接收到作业提交请求：homeworkId={}, studentId={}, fileName={}", homeworkId, studentId, file.getOriginalFilename());
             Long submissionId = homeworkService.submitHomework(homeworkId, studentId, "", file);
             return Result.success(submissionId, "作业提交成功");
         } catch (Exception e) {
@@ -118,7 +147,7 @@ public class HomeworkController {
     @GetMapping("/submission")
     public Result<HomeworkSubmissionDTO> getStudentSubmission(
             @RequestParam Long homeworkId,
-            @RequestParam("student_id") Long studentId) {
+            @RequestParam Long studentId) {
         try {
             HomeworkSubmissionDTO submission = homeworkService.getStudentSubmission(homeworkId, studentId);
             if (submission == null) {
@@ -127,6 +156,21 @@ public class HomeworkController {
             return Result.success(submission, "获取提交记录成功");
         } catch (Exception e) {
             return Result.error("获取提交记录失败：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 获取课程作业总数
+     * @param courseId 课程ID
+     * @return 作业总数
+     */
+    @GetMapping("/count/course/{courseId}")
+    public Result<Integer> getHomeworkCountByCourse(@PathVariable Long courseId) {
+        try {
+            int count = homeworkService.getHomeworkCountByCourse(courseId);
+            return Result.success(count, "获取作业总数成功");
+        } catch (Exception e) {
+            return Result.error("获取作业总数失败：" + e.getMessage());
         }
     }
 

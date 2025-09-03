@@ -20,7 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import jakarta.servlet.http.HttpServletResponse;
-
+import org.example.edusoft.content.client.CourseClient;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -39,6 +39,7 @@ public class HomeworkServiceImpl implements HomeworkService {
     private final HomeworkSubmissionMapper submissionMapper;
     private final FileUpload fileUpload;
     private final FileAccessService fileAccessService;
+    private final CourseClient courseClient;
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
@@ -96,10 +97,10 @@ public class HomeworkServiceImpl implements HomeworkService {
         }
         
         return HomeworkDTO.builder()
-                .id(homework.getId())
+                .homeworkId(homework.getId())
+                .class_id(homework.getClassId())
                 .title(homework.getTitle())
                 .description(homework.getDescription())
-                .classId(homework.getClassId())
                 .fileUrl(homework.getAttachmentUrl())
                 .fileName(homework.getObjectName() != null ? homework.getObjectName().substring(homework.getObjectName().lastIndexOf('/') + 1) : null)
                 .endTime(homework.getDeadline() != null ? homework.getDeadline().format(DATE_TIME_FORMATTER) : null)
@@ -113,10 +114,10 @@ public class HomeworkServiceImpl implements HomeworkService {
     public List<HomeworkDTO> getHomeworkList(Long classId) {
         List<Homework> homeworkList = homeworkMapper.selectByClassId(classId);
         return homeworkList.stream().map(homework -> HomeworkDTO.builder()
-                .id(homework.getId())
+                .homeworkId(homework.getId())
+                .class_id(homework.getClassId())
                 .title(homework.getTitle())
                 .description(homework.getDescription())
-                .classId(homework.getClassId())
                 .fileUrl(homework.getAttachmentUrl())
                 .fileName(homework.getObjectName() != null ? homework.getObjectName().substring(homework.getObjectName().lastIndexOf('/') + 1) : null)
                 .endTime(homework.getDeadline() != null ? homework.getDeadline().format(DATE_TIME_FORMATTER) : null)
@@ -130,20 +131,44 @@ public class HomeworkServiceImpl implements HomeworkService {
     @Override
     @Transactional
     public Long submitHomework(Long homeworkId, Long studentId, String studentName, MultipartFile file) {
+        log.info("开始处理作业提交：homeworkId={}, studentId={}, studentName={}, fileName={}, fileSize={}", 
+            homeworkId, studentId, studentName, file.getOriginalFilename(), file.getSize());
+        
         // 参数校验
         if (file == null || file.isEmpty()) {
+            log.error("提交的文件为空");
             throw new RuntimeException("提交的文件不能为空");
         }
 
         // 检查作业是否存在
         Homework homework = homeworkMapper.selectById(homeworkId);
         if (homework == null) {
+            log.error("作业不存在：homeworkId={}", homeworkId);
             throw new RuntimeException("作业不存在");
         }
+        log.info("找到作业：{}", homework);
 
         // 检查是否已过截止时间
         if (homework.getDeadline() != null && LocalDateTime.now().isAfter(homework.getDeadline())) {
+            log.error("作业已过截止时间：deadline={}, current={}", 
+                homework.getDeadline(), LocalDateTime.now());
             throw new RuntimeException("作业已过截止时间");
+        }
+
+        // 获取课程ID
+        Long classId = homework.getClassId();
+        log.info("开始获取课程ID：作业ID={}, 班级ID={}", homeworkId, classId);
+        Long courseId;
+        try {
+            courseId = courseClient.getCourseIdByClassId(classId);
+            if (courseId == null) {
+                log.error("获取课程ID失败：班级不存在或未关联到课程：classId={}", classId);
+                throw new RuntimeException("获取课程ID失败：班级不存在或未关联到课程");
+            }
+            log.info("成功获取到课程ID：courseId={}, classId={}", courseId, classId);
+        } catch (Exception e) {
+            log.error("调用课程服务获取课程ID时发生错误：classId={}, error={}", classId, e.getMessage());
+            throw new RuntimeException("获取课程ID失败：" + e.getMessage());
         }
 
         // 创建或更新提交记录
@@ -155,12 +180,28 @@ public class HomeworkServiceImpl implements HomeworkService {
         // 上传文件
         String objectName = "homework/submission/" + homeworkId + "/" + studentId + "_" + file.getOriginalFilename();
         try {
-            Result<?> uploadResult = fileUpload.uploadFile(file, file.getOriginalFilename(), 
-                null, null, "private", studentId, FileType.HOMEWORK_SUBMISSION.name());
+            String title = file.getOriginalFilename();
+            String type = FileType.HOMEWORK_SUBMISSION.name();
+            log.info("开始上传提交文件：objectName={}, fileSize={}, fileName={}, courseId={}, classId={}, type={}", 
+                    objectName, file.getSize(), title, courseId, homework.getClassId(), type);
+            
+            // 重要：提交的作业文件设置为班级可见
+            Result<?> uploadResult = fileUpload.uploadFile(
+                file,          // 文件
+                title,         // 文件名
+                courseId,      // 课程ID
+                null,          // 章节ID，作业提交不需要
+                "CLASS_ONLY",  // 可见性：仅班级可见
+                studentId,     // 上传者ID
+                type          // 文件类型
+            );
+            log.info("文件上传服务返回结果：{}", uploadResult);
+            log.info("文件上传结果：{}", uploadResult);
             if (uploadResult.isSuccess()) {
                 submission.setObjectName(objectName);
                 FileAccessDTO accessDTO = fileAccessService.getDownloadUrlByObjectName(objectName);
                 submission.setFileUrl(accessDTO.getUrl());
+                log.info("获取到文件访问地址：{}", accessDTO.getUrl());
             } else {
                 throw new RuntimeException("上传提交文件失败");
             }
@@ -170,7 +211,9 @@ public class HomeworkServiceImpl implements HomeworkService {
         submission.setSubmittedAt(LocalDateTime.now());
 
         // 保存提交记录
+        log.info("开始保存提交记录：{}", submission);
         submissionMapper.insert(submission);
+        log.info("提交记录保存成功，ID：{}", submission.getId());
         return submission.getId();
     }
 
@@ -232,6 +275,22 @@ public class HomeworkServiceImpl implements HomeworkService {
             response.sendRedirect(accessDTO.getUrl());
         } catch (IOException e) {
             throw new RuntimeException("下载提交文件失败: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public int getHomeworkCountByCourse(Long courseId) {
+        try {
+            // 从course-service获取该课程下的所有班级ID
+            List<Long> classIds = courseClient.getAllClassIdsByCourseId(courseId);
+            if (classIds.isEmpty()) {
+                return 0;
+            }
+            // 根据班级ID列表统计作业总数
+            return homeworkMapper.countByClassIds(classIds);
+        } catch (Exception e) {
+            log.error("获取课程作业总数失败: courseId={}, error={}", courseId, e.getMessage());
+            return 0;
         }
     }
 

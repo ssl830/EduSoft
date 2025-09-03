@@ -272,4 +272,17 @@ public class TeachingResourceController {
             return Result.error("更新视频时长失败：" + e.getMessage());
         }
     }
-} 
+
+    /**
+     * 获取指定课程的资源总数
+     * @param courseId 课程ID
+     * @return 资源总数
+     */
+    @GetMapping("/count/course/{courseId}")
+    public Result<Integer> getResourceCountByCourseId(@PathVariable Long courseId) {
+        log.info("Received request to count resources for courseId: {}", courseId);
+        int count = resourceService.countResourcesByCourseId(courseId);
+        log.info("Resource count for courseId {}: {}", courseId, count);
+        return Result.success(count);
+    }
+}

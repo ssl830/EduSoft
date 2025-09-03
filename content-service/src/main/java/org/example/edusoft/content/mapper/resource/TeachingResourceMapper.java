@@ -88,4 +88,12 @@ public interface TeachingResourceMapper {
             "</script>"
     })
     List<TeachingResource> selectByCourseAndChapter(@Param("courseId") Long courseId, @Param("chapterId") Long chapterId);
+
+    /**
+     * 统计指定课程的资源总数
+     * @param courseId 课程ID
+     * @return 资源总数
+     */
+    @Select("SELECT COUNT(*) FROM teaching_resource WHERE course_id = #{courseId}")
+    int countByCourseId(Long courseId);
 }

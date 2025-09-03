@@ -52,4 +52,11 @@ public interface HomeworkService {
      * 删除作业
      */
     void deleteHomework(Long homeworkId);
+
+    /**
+     * 获取课程的作业总数
+     * @param courseId 课程ID
+     * @return 作业总数
+     */
+    int getHomeworkCountByCourse(Long courseId);
 } 

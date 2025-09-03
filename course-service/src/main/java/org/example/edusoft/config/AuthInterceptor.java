@@ -35,14 +35,14 @@ public class AuthInterceptor implements HandlerInterceptor {
 		// 优先使用satoken头（符合Sa-Token框架）
 		String satoken = request.getHeader("satoken");
 		if (satoken != null && !satoken.trim().isEmpty()) {
-			logger.debug("从satoken头获取token: {}", satoken);
+			logger.info("从satoken头获取token: {}", satoken);
 			return satoken;
 		}
 
 		// 其次使用Authorization头
 		String authHeader = request.getHeader("Authorization");
 		if (authHeader != null && !authHeader.trim().isEmpty()) {
-			logger.debug("从Authorization头获取token: {}", authHeader);
+			logger.info("从Authorization头获取token: {}", authHeader);
 			return authHeader;
 		}
 
@@ -53,13 +53,13 @@ public class AuthInterceptor implements HandlerInterceptor {
 				String p = part.trim();
 				if (p.startsWith("satoken=")) {
 					String token = p.substring("satoken=".length());
-					logger.debug("从Cookie获取token: {}", token);
+					logger.info("从Cookie获取token: {}", token);
 					return token;
 				}
 			}
 		}
 
-		logger.debug("未找到有效的认证token");
+		logger.warn("未找到有效的认证token");
 		return null;
 	}
 

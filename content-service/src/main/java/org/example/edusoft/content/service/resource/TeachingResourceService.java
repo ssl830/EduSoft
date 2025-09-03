@@ -70,4 +70,11 @@ public interface TeachingResourceService {
      * 创建教学资源
      */
     TeachingResource createResource(TeachingResource resource);
+
+    /**
+     * 统计指定课程的资源总数
+     * @param courseId 课程ID
+     * @return 资源总数
+     */
+    int countResourcesByCourseId(Long courseId);
 }
