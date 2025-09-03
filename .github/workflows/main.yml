@@ -44,22 +44,22 @@ jobs:
       - name: 构建 user-service（Build user-service）
         run: |
           cd user-service
-          ./mvnw clean package -DskipTests
+          ./mvn clean package -DskipTests
 
       - name: 构建 course-service（Build course-service）
         run: |
           cd course-service
-          ./mvnw clean package -DskipTests
+          ./mvn clean package -DskipTests
 
       - name: 构建 learning-service（Build learning-service）
         run: |
           cd learning-service
-          ./mvnw clean package -DskipTests
+          ./mvn clean package -DskipTests
 
       - name: 构建 content-service（Build content-service）
         run: |
           cd content-service
-          ./mvnw clean package -DskipTests
+          ./mvn clean package -DskipTests
 
       - name: 构建前端（Build frontend）
         run: |
