@@ -14,6 +14,18 @@ const ResourceApi = {
   },
   // 上传视频
   uploadVideo(formData: FormData, onUploadProgress?: (progressEvent: number) => void) {
+    // 检查并补全后端需要的字段
+    const requiredFields = ['file', 'courseId', 'chapterId', 'chapterName', 'title', 'description', 'createdBy']
+    requiredFields.forEach(field => {
+      if (!formData.has(field)) {
+        // description 可为空，但必须有字段
+        if (field === 'description') {
+          formData.append('description', '')
+        } else {
+          throw new Error(`缺少字段: ${field}`)
+        }
+      }
+    })
     return axios.post(`/api/resources/upload`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
@@ -56,7 +68,7 @@ const ResourceApi = {
     title?: string;
     isTeacher: boolean;
   }) {
-    return axios.post(`/api/courses/${courseId}/filelist`, {
+    return axios.post(`/api/resources/${courseId}/filelist`, {
       ...data,
       courseId: Number(courseId),
     })
@@ -64,7 +76,8 @@ const ResourceApi = {
 
   // Upload resource
   uploadResource(courseId: string, formData: FormData, onUploadProgress?: (progressEvent: number) => void) {
-    return axios.post(`/api/courses/${courseId}/upload`, formData, {
+    // 修正接口路径为 /api/courses/${courseId}/upload
+    return axios.post(`/api/resources/${courseId}/upload`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       },

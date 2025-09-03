@@ -66,14 +66,28 @@ public class NotificationController {
     @GetMapping("/unread")
     public Result<Map<String, Integer>> getUnreadCount(HttpServletRequest request) {
         try {
+            // 添加调试日志
+            System.out.println("=== DEBUG: getUnreadCount 开始 ===");
+            
+            Object userIdAttr = request.getAttribute("userId");
+            System.out.println("DEBUG: request.getAttribute('userId') = " + userIdAttr);
+            System.out.println("DEBUG: userIdAttr type = " + (userIdAttr != null ? userIdAttr.getClass().getName() : "null"));
+            
             String userId = (String) request.getAttribute("userId");
             if (userId == null) {
+                System.out.println("DEBUG: userId 为 null，返回错误");
                 return Result.error(400, "无法获取用户ID，请检查认证token");
             }
             
+            System.out.println("DEBUG: 最终使用的 userId = " + userId);
             int count = notificationService.getUnreadCount(userId);
+            System.out.println("DEBUG: notificationService.getUnreadCount 返回: " + count);
+            
+            System.out.println("=== DEBUG: getUnreadCount 结束 ===");
             return Result.success(Map.of("count", count));
         } catch (Exception e) {
+            System.out.println("DEBUG: 发生异常: " + e.getMessage());
+            e.printStackTrace();
             return Result.error(500, "获取未读通知数量失败：" + e.getMessage());
         }
     }

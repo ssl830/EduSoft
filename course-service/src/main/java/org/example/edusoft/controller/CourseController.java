@@ -92,7 +92,10 @@ public class CourseController {
                 return Result.error(500, "用户ID格式错误");
             }
             
-            if (!currentUserId.equals(userId)) {
+            // 获取用户角色
+            String role = currentUser.get("role") != null ? currentUser.get("role").toString() : "";
+            // 如果不是助教，且查看的不是自己的课程，则拒绝访问
+            if (!"tutor".equalsIgnoreCase(role) && !currentUserId.equals(userId)) {
                 return Result.error(403, "无权限查看其他用户的课程");
             }
             

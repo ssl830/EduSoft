@@ -39,18 +39,8 @@ public class FileController {
         this.fileAccessService = fileAccessService;
     }
 
-    @PostMapping("/userfolders")
-    public Result<List<FileResponseDTO>> getUserRootFolders(@RequestBody Map<String, Long> request) {
-        Long userId = request.get("userId");
-        if (userId == null) {
-            return Result.error("用户ID不能为空");
-        }
-        List<FileResponseDTO> rootFolders = fileQueryService.getAllFilesByUserId(userId);
-        return Result.ok(rootFolders, "获取用户文件成功");
-    }
-
    /**
-     * 获取用户在某个课程下的文件列表（支持过滤）
+     * 获取用户在某个课程下的文件列表（支持过滤） 
      *
      * @param request 包含过滤条件的请求体 
      * @return Result<List<FileResponseDTO>>

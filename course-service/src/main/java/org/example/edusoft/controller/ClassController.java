@@ -58,6 +58,15 @@ public class ClassController {
         }
     }
 
+    @GetMapping("/course/{courseId}")
+    public Result<List<Class>> getClassesByCourseId(@NotNull(message = "课程ID不能为空") @PathVariable Long courseId) {
+        try {
+            return Result.success(classService.getClassesByCourseId(courseId));
+        } catch (IllegalArgumentException e) {
+            return Result.error(e.getMessage());
+        }
+    }
+
     //获取班级详情
     @GetMapping("/{id}")
     public Result<ClassDetailDTO> getClassById(@PathVariable Long id) {

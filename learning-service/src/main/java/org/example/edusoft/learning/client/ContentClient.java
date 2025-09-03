@@ -5,6 +5,8 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
+import java.time.LocalDate;
+import java.util.HashMap;
 
 /**
  * 内容服务客户端
@@ -12,6 +14,8 @@ import java.util.Map;
  */
 @Component
 public class ContentClient extends BaseServiceClient {
+    
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ContentClient.class);
     
     @Value("${service.content.url:http://localhost:8083}")
     private String contentServiceUrl;
@@ -35,16 +39,54 @@ public class ContentClient extends BaseServiceClient {
         }
         return getForMap("/api/resource/" + resourceId);
     }
+
+    /**
+     * 获取课程下的所有资源
+     */
+    public List<Map<String, Object>> getResourcesByCourseId(Long courseId, Long userId) {
+        if (courseId == null || userId == null) {
+            throw new IllegalArgumentException("课程ID和用户ID不能为空");
+        }
+        // 构造请求体
+        Map<String, Object> requestBody = Map.of(
+                "courseId", courseId,
+                "userId", userId
+        );
+        // 用POST请求
+        Map<String, Object> result = post("/api/resources/" + courseId + "/filelist", requestBody, Map.class);
+        Object data = result != null ? result.get("data") : null;
+        if (data instanceof List) {
+            return (List<Map<String, Object>>) data;
+        } else {
+            return java.util.Collections.emptyList();
+        }
+    }
     
     /**
      * 获取课程下的所有资源
      */
-    public List<Map<String, Object>> getResourcesByCourseId(Long courseId) {
+    public List<Map<String, Object>> getResourcesByCourseId2(Long courseId) {
         if (courseId == null) {
             throw new IllegalArgumentException("课程ID不能为空");
         }
-        // 对应 content-service TeachingResourceController: /api/content/resource/course/{courseId}
-        return get("/api/content/resource/course/" + courseId, List.class);
+        // 修正：先获取Map，再取data字段
+        Map<String, Object> result = getForMap("/api/resources/list/" + courseId);
+        Object data = result != null ? result.get("data") : null;
+        // 兼容data为null或不是List的情况
+        if (data instanceof Map) {
+            // 按章节分组，合并所有章节资源为一个List
+            List<Map<String, Object>> all = new java.util.ArrayList<>();
+            ((Map<?, ?>) data).values().forEach(v -> {
+                if (v instanceof List) {
+                    all.addAll((List<Map<String, Object>>) v);
+                }
+            });
+            return all;
+        } else if (data instanceof List) {
+            return (List<Map<String, Object>>) data;
+        } else {
+            return java.util.Collections.emptyList();
+        }
     }
     
     /**
@@ -128,5 +170,49 @@ public class ContentClient extends BaseServiceClient {
             throw new IllegalArgumentException("通知内容不能为空");
         }
         return post("/api/content/notification", notification, Map.class);
+    }
+
+    /**
+     * 统计教师创建的作业数量
+     */
+    public int countTeacherHomework(LocalDate start, LocalDate end, List<Long> teacherIds) {
+        try {
+            Map<String, Object> params = new HashMap<>();
+            params.put("start", start);
+            params.put("end", end);
+            params.put("teacherIds", teacherIds);
+            
+            Map<String, Object> result = post("/api/homework/stats/teacher/count", params, Map.class);
+            
+            if (result != null && result.get("count") instanceof Number) {
+                return ((Number) result.get("count")).intValue();
+            }
+            return 0;
+        } catch (Exception e) {
+            log.error("统计教师作业数量失败: {}", e.getMessage());
+            return 0;
+        }
+    }
+
+    /**
+     * 统计学生提交的作业数量
+     */
+    public int countStudentHomework(LocalDate start, LocalDate end, List<Long> studentIds) {
+        try {
+            Map<String, Object> params = new HashMap<>();
+            params.put("start", start);
+            params.put("end", end);
+            params.put("studentIds", studentIds);
+            
+            Map<String, Object> result = post("/api/homework/stats/student/submissions", params, Map.class);
+            
+            if (result != null && result.get("count") instanceof Number) {
+                return ((Number) result.get("count")).intValue();
+            }
+            return 0;
+        } catch (Exception e) {
+            log.error("统计学生作业数量失败: {}", e.getMessage());
+            return 0;
+        }
     }
 }

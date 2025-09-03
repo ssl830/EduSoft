@@ -80,6 +80,15 @@ export interface ApiResponse<T = any> {
   total?: number; // 分页查询时的总数
 }
 
+// 通知查询参数类型
+export interface NotificationParams {
+  type?: string;
+  read?: boolean;
+  courseId?: string;
+  limit?: number;
+  offset?: number;
+}
+
 const notificationApi = {
   // 获取通知列表
   getNotifications: async (params?: {
@@ -166,7 +175,8 @@ const notificationApi = {
         errorMessage = error.response.data?.message || 
                       `服务器错误 (${error.response.status})`;
       } else if (error.request) { // Network error or no response from server
-        errorMessage = '无法连接到服务器';
+        errorMessage = error.response.data?.message || 
+                      `网络错误`;
       } else if (error.message && !error.response && !error.request) { // Errors thrown by our code before request or non-Axios errors
         errorMessage = error.message;
       } else if (error.message) { // Other JavaScript errors
@@ -311,7 +321,7 @@ const notificationApi = {
   deleteNotification: async (id: number) => {
     try {
       // response 类型是 ApiResponse
-      const response: ApiResponse = await axiosInstance.delete(`/api/content/notifications/${id}`);
+      const response: ApiResponse = await axiosInstance.delete(`/api/notifications/${id}`);
       if (response && response.code === 200) {
         return true;
       } else {
@@ -427,7 +437,7 @@ const notificationApi = {
   checkDeadlinesAndGenerateReminders: async () => {
     try {
       // 注意：此函数仍在使用全局 axios。
-      const response = await axios.post('/api/content/notifications/check-deadlines');
+      const response = await axios.post('/api/notifications/check-deadlines');
       return {
         success: response.data?.code === 200,
         message: response.data?.message || '提醒生成成功'

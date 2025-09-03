@@ -32,7 +32,7 @@ CREATE TABLE `file_node` (
   `class_id` bigint DEFAULT NULL,
   `uploader_id` bigint NOT NULL,
   `sectiondir_id` bigint DEFAULT '-1',
-  `file_type` enum('VIDEO','PPT','CODE','PDF','OTHER') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `file_type` enum('VIDEO','PPT','CODE','PDF','OTHER','WORD') COLLATE utf8mb4_unicode_ci NOT NULL,
   `section_id` bigint DEFAULT '-1',
   `last_file_version` bigint NOT NULL DEFAULT '0',
   `is_current_version` tinyint(1) NOT NULL DEFAULT '1',

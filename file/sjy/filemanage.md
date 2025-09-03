@@ -2,53 +2,7 @@
 
 该控制器提供了与文件相关的基础功能，包括：**获取用户根目录文件夹、查询课程文件、上传、下载和预览文件**。所有接口均以 `/api` 为前缀。
 
----
 
-## 1. 获取用户根目录文件夹
-
-### 请求方式
-```
-POST /api/userfolders
-```
-
-### 请求参数
-- **Body (JSON)**
-```json
-{
-  "userId": 123
-}
-```
-
-### 响应格式
-```json
-{
-  "code": 0,
-  "message": "获取用户文件成功",
-  "data": [
-    {
-      "id": 1,
-      "name": "我的资料",
-      "isDir": true,
-      "parentId": null,
-      "courseId": 101,
-      "classId": 201,
-      "uploaderId": 123,
-      "fileType": "FOLDER",
-      "sectiondirId": null,
-      "sectionId": null,
-      "lastVersionId": null,
-      "isCurrentVersion": false,
-      "fileSize": 0,
-      "visibility": "PUBLIC",
-      "url": "",
-      "createdAt": "2023-01-01T00:00:00",
-      "updatedAt": "2023-01-01T00:00:00",
-      "version": 1,
-      "objectName": ""
-    }
-  ]
-}
-```
 
 ---
 

@@ -104,7 +104,10 @@ public class CourseServiceImpl implements CourseService {
         try {
             System.out.println("fetchHomeworkCountByCourseId: 开始调用内容微服务，courseId=" + courseId);
             
-            Map<String, Object> response = contentServiceClient.getHomeworkCountByCourse(courseId);
+            String token = resolveOutboundToken();
+            String auth = (token != null && token.startsWith("Bearer ")) ? token : (token != null ? ("Bearer " + token) : null);
+
+            Map<String, Object> response = contentServiceClient.getHomeworkCountByCourse(courseId, token, auth);
             System.out.println("fetchHomeworkCountByCourseId: 内容微服务返回数据=" + response);
 
             if (response != null) {
@@ -159,13 +162,20 @@ public class CourseServiceImpl implements CourseService {
     private Integer fetchResourceCountByCourseId(Long courseId) {
         if (courseId == null) return 0;
         try {
+            System.out.println("fetchResourceCountByCourseId: 开始调用内容微服务，courseId=" + courseId);
+            
             String token = resolveOutboundToken();
             String auth = (token != null && token.startsWith("Bearer ")) ? token : (token != null ? ("Bearer " + token) : null);
-            Map<String, Object> resp = learningServiceClient.getResourceCountByCourse(courseId, token, auth);
-            if (resp != null) {
-                Object data = resp.get("data");
+            
+            Map<String, Object> response = contentServiceClient.getResourceCountByCourse(courseId, token, auth);
+            System.out.println("fetchResourceCountByCourseId: 内容微服务返回数据=" + response);
+            
+            if (response != null) {
+                Object data = response.get("data");
                 if (data instanceof Number n) {
-                    return n.intValue();
+                    Integer count = n.intValue();
+                    System.out.println("fetchResourceCountByCourseId: 获取到资源总数=" + count);
+                    return count;
                 }
             }
             return 0;

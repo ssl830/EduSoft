@@ -33,14 +33,14 @@ public class DiscussionLikeController {
             return ResponseEntity.status(401).body(response);
         }
         try {
-            Map<String, Object> validate = userClient.validateToken(token);
-            if (validate == null || validate.get("code") == null || ((Number) validate.get("code")).intValue() != 200) {
+            boolean validate = userClient.validateToken("http://localhost:8081", token);
+            if (validate == false) {
                 Map<String, String> response = new HashMap<>();
                 response.put("error", "登录状态无效");
                 return ResponseEntity.status(401).body(response);
             }
-            Map<String, Object> userData = (Map<String, Object>) validate.get("data");
-            Long userId = ((Number) userData.get("id")).longValue();
+            Map<String, Object> userData = userClient.fetchCurrentUser("http://localhost:8081", token);
+            String userId = userData.get("userId").toString();
             DiscussionLike like = discussionLikeService.likeDiscussion(discussionId, userId);
             return ResponseEntity.ok(like);
         } catch (IllegalArgumentException e) {
@@ -67,14 +67,14 @@ public class DiscussionLikeController {
             return ResponseEntity.status(401).body(response);
         }
         try {
-            Map<String, Object> validate = userClient.validateToken(token);
-            if (validate == null || validate.get("code") == null || ((Number) validate.get("code")).intValue() != 200) {
+            boolean validate = userClient.validateToken("http://localhost:8081", token);
+            if (validate == false) {
                 Map<String, String> response = new HashMap<>();
                 response.put("error", "登录状态无效");
                 return ResponseEntity.status(401).body(response);
             }
-            Map<String, Object> userData = (Map<String, Object>) validate.get("data");
-            Long userId = ((Number) userData.get("id")).longValue();
+            Map<String, Object> userData = userClient.fetchCurrentUser("http://localhost:8081", token);
+            String userId = userData.get("userId").toString();
             discussionLikeService.unlikeDiscussion(discussionId, userId);
             Map<String, String> response = new HashMap<>();
             response.put("message", "取消点赞成功");
@@ -100,7 +100,7 @@ public class DiscussionLikeController {
      * 权限要求：已登录用户
      */
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<DiscussionLike>> getLikesByUser(@PathVariable Long userId) {
+    public ResponseEntity<List<DiscussionLike>> getLikesByUser(@PathVariable String userId) {
         return ResponseEntity.ok(discussionLikeService.getLikesByUser(userId));
     }
 
@@ -118,7 +118,7 @@ public class DiscussionLikeController {
      * 权限要求：已登录用户
      */
     @GetMapping("/user/{userId}/count")
-    public ResponseEntity<Integer> countLikesByUser(@PathVariable Long userId) {
+    public ResponseEntity<Integer> countLikesByUser(@PathVariable String userId) {
         return ResponseEntity.ok(discussionLikeService.countLikesByUser(userId));
     }
 
@@ -135,14 +135,14 @@ public class DiscussionLikeController {
             return ResponseEntity.status(401).body(response);
         }
         try {
-            Map<String, Object> validate = userClient.validateToken(token);
-            if (validate == null || validate.get("code") == null || ((Number) validate.get("code")).intValue() != 200) {
+            boolean validate = userClient.validateToken("http://localhost:8081", token);
+            if (validate == false) {
                 Map<String, String> response = new HashMap<>();
                 response.put("error", "登录状态无效");
                 return ResponseEntity.status(401).body(response);
             }
-            Map<String, Object> userData = (Map<String, Object>) validate.get("data");
-            Long userId = ((Number) userData.get("id")).longValue();
+            Map<String, Object> userData = userClient.fetchCurrentUser("http://localhost:8081", token);
+            String userId = userData.get("userId").toString();
             Boolean hasLiked = discussionLikeService.hasLiked(discussionId, userId);
             return ResponseEntity.ok(hasLiked);
         } catch (Exception e) {

@@ -16,16 +16,27 @@ import java.util.List;
 public interface ContentServiceClient {
 
     /**
-     * 根据课程ID获取作业总数
+     * 获取指定课程的资源总数
      * @param courseId 课程ID
-     * @return 包含作业总数的响应
+     * @param token 认证令牌
+     * @param authorization 授权头
+     * @return 包含资源总数的响应
      */
-    @GetMapping("/api/content/homework/count/course/{courseId}")
-    Map<String, Object> getHomeworkCountByCourse(@PathVariable("courseId") Long courseId);
+    @GetMapping("/api/resources/count/course/{courseId}")
+    Map<String, Object> getResourceCountByCourse(@PathVariable("courseId") Long courseId,
+                                               @RequestParam(value = "satoken", required = false) String token,
+                                               @RequestParam(value = "Authorization", required = false) String authorization);
 
     /**
-     * 根据课程获取资源列表
+     * 根据课程ID获取作业总数
+     * @param courseId 课程ID
+     * @param token 认证令牌
+     * @param authorization 授权头
+     * @return 包含作业总数的响应
      */
-    @GetMapping("/api/content/resource/course/{courseId}")
-    List<Map<String, Object>> getResourcesByCourse(@PathVariable("courseId") Long courseId);
+    @GetMapping("/api/homework/count/course/{courseId}")
+    Map<String, Object> getHomeworkCountByCourse(@PathVariable("courseId") Long courseId,
+                                                 @RequestParam(value = "satoken", required = false) String token,
+                                                 @RequestParam(value = "Authorization", required = false) String authorization);
+
 }
