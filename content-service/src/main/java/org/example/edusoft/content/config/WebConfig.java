@@ -24,14 +24,6 @@ public class WebConfig implements WebMvcConfigurer {
                 .excludePathPatterns("/api/health", "/api/info"); // 排除健康检查等接口
     }
     
-    @Override
-    public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**")
-                .allowedOriginPatterns("*")
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                .allowedHeaders("*")
-                .allowCredentials(true)
-                .maxAge(3600);
-    }
+    // CORS配置已移至CorsConfig类
 }
 

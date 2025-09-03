@@ -9,14 +9,14 @@ import java.util.List;
 public interface DiscussionReplyMapper {
     
     @Insert("INSERT INTO discussionreply (discussion_id, parent_reply_id, user_id, user_num, content, created_at, updated_at) " +
-            "VALUES (#{discussionId}, #{parentReplyId}, #{creatorId}, #{creatorName}, #{content}, NOW(), NOW())")
+            "VALUES (#{discussionId}, #{parentReplyId}, #{userId}, #{userNum}, #{content}, NOW(), NOW())")
     @Options(useGeneratedKeys = true, keyProperty = "id")
     int insert(DiscussionReply reply);
         
-    @Select("SELECT id, discussion_id AS discussionId, parent_reply_id AS parentReplyId, user_id AS creatorId, user_num AS creatorName, content, NULL AS likeCount, created_at AS createdAt, updated_at AS updatedAt, NULL AS isDeleted FROM discussionreply WHERE id = #{id}")
+    @Select("SELECT id, discussion_id AS discussionId, parent_reply_id AS parentReplyId, user_id AS userId, user_num AS userNum, content, created_at AS createdAt, updated_at AS updatedAt FROM discussionreply WHERE id = #{id}")
     DiscussionReply selectById(@Param("id") Long id);
         
-    @Select("SELECT id, discussion_id AS discussionId, parent_reply_id AS parentReplyId, user_id AS creatorId, user_num AS creatorName, content, NULL AS likeCount, NULL AS isLiked, created_at AS createdAt, updated_at AS updatedAt, NULL AS isDeleted FROM discussionreply WHERE discussion_id = #{discussionId} ORDER BY created_at ASC")
+    @Select("SELECT id, discussion_id AS discussionId, parent_reply_id AS parentReplyId, user_id AS userId, user_num AS userNum, content, created_at AS createdAt, updated_at AS updatedAt FROM discussionreply WHERE discussion_id = #{discussionId} ORDER BY created_at ASC")
     List<DiscussionReplyDTO> selectByDiscussionId(@Param("discussionId") Long discussionId);
         
     @Select("SELECT id, discussion_id AS discussionId, parent_reply_id AS parentReplyId, user_id AS creatorId, user_num AS creatorName, content, NULL AS likeCount, NULL AS isLiked, created_at AS createdAt, updated_at AS updatedAt, NULL AS isDeleted FROM discussionreply WHERE parent_reply_id = #{parentReplyId} ORDER BY created_at ASC")

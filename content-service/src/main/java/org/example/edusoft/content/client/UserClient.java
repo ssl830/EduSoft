@@ -37,10 +37,9 @@ public class UserClient {
 		
 		// 尝试多个可能的API端点，优先使用通过数据库ID查询的接口
 		String[] candidates = {
-			baseUrl + "/api/user/id/" + userId,  // 通过数据库ID查询（新增接口）
-			baseUrl + "/api/user/" + userId,     // 通过用户编码查询（原有接口）
-			baseUrl + "/api/user/info/" + userId,
-			baseUrl + "/user/" + userId
+			baseUrl + "/api/user/id/" + userId,  // 通过数据库ID查询
+			baseUrl + "/api/user/" + userId,     // 通过userId查询
+			baseUrl + "/api/user/validate"       // 如果是current，用validate接口
 		};
 
 		HttpStatusCodeException lastEx = null;
@@ -114,11 +113,12 @@ public class UserClient {
 			// 只使用satoken头
 			headers.set("satoken", pureToken);
 			
-			logger.debug("尝试获取当前用户信息，URL: {}, Token: {}", baseUrl + "/api/user/validate", pureToken);
+			String validateUrl = baseUrl + "/api/user/validate";
+			logger.debug("尝试获取当前用户信息，URL: {}, Token: {}", validateUrl, pureToken);
 
 			HttpEntity<Void> entity = new HttpEntity<>(headers);
 			ResponseEntity<Map> response = restTemplate.exchange(
-				baseUrl + "/api/user/validate", 
+				validateUrl, 
 				HttpMethod.GET, 
 				entity, 
 				Map.class
