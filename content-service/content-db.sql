@@ -64,6 +64,7 @@ CREATE TABLE `homework` (
   `attachment_url` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `object_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `deadline` datetime NOT NULL,
+  `is_active` tinyint(1) NOT NULL DEFAULT 1,
   `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
