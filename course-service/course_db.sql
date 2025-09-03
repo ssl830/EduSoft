@@ -1,4 +1,5 @@
-CREATE DATABASE course_db;
+-- 创建 course_db 数据库并切换到该数据库
+CREATE DATABASE IF NOT EXISTS course_db;
 USE course_db;
 
 DROP TABLE IF EXISTS `course`;

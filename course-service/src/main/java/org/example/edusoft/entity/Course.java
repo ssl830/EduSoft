@@ -11,7 +11,7 @@ import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
 
 @Data
-@TableName("Course")
+@TableName("course")
 public class Course {
     
     @TableId(type = IdType.AUTO)

@@ -8,7 +8,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 @Data
-@TableName("CourseSection")
+@TableName("coursesection")
 public class CourseSection {
     @TableId(type = IdType.AUTO)
     private Long id;

@@ -9,7 +9,7 @@ import jakarta.validation.constraints.Size;
 import jakarta.validation.constraints.Pattern;
 
 @Data
-@TableName("Class")
+@TableName("class")
 public class Class {
     @TableId(type = IdType.AUTO)
     private Long id;
