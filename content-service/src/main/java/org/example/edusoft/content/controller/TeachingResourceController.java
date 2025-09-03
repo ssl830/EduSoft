@@ -178,7 +178,7 @@ public class TeachingResourceController {
             LearningProgress learningProgress = resourceService.updateProgress(
                 request.getResourceId(),
                 request.getStudentId(),
-                request.getProgress().doubleValue(),
+                request.getProgress(),
                 request.getPosition()
             );
             return Result.success(learningProgress, "更新学习进度成功");

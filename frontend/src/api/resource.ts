@@ -56,7 +56,7 @@ const ResourceApi = {
     title?: string;
     isTeacher: boolean;
   }) {
-    return axios.post(`/api/courses/${courseId}/filelist`, {
+    return axios.post(`/api/resources/${courseId}/filelist`, {
       ...data,
       courseId: Number(courseId),
     })

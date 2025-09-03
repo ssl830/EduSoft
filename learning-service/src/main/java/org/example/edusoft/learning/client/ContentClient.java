@@ -35,16 +35,54 @@ public class ContentClient extends BaseServiceClient {
         }
         return getForMap("/api/resource/" + resourceId);
     }
+
+    /**
+     * 获取课程下的所有资源
+     */
+    public List<Map<String, Object>> getResourcesByCourseId(Long courseId, Long userId) {
+        if (courseId == null || userId == null) {
+            throw new IllegalArgumentException("课程ID和用户ID不能为空");
+        }
+        // 构造请求体
+        Map<String, Object> requestBody = Map.of(
+                "courseId", courseId,
+                "userId", userId
+        );
+        // 用POST请求
+        Map<String, Object> result = post("/api/resources/" + courseId + "/filelist", requestBody, Map.class);
+        Object data = result != null ? result.get("data") : null;
+        if (data instanceof List) {
+            return (List<Map<String, Object>>) data;
+        } else {
+            return java.util.Collections.emptyList();
+        }
+    }
     
     /**
      * 获取课程下的所有资源
      */
-    public List<Map<String, Object>> getResourcesByCourseId(Long courseId) {
+    public List<Map<String, Object>> getResourcesByCourseId2(Long courseId) {
         if (courseId == null) {
             throw new IllegalArgumentException("课程ID不能为空");
         }
-        // 对应 content-service TeachingResourceController: /api/content/resource/course/{courseId}
-        return get("/api/content/resource/course/" + courseId, List.class);
+        // 修正：先获取Map，再取data字段
+        Map<String, Object> result = getForMap("/api/resources/list/" + courseId);
+        Object data = result != null ? result.get("data") : null;
+        // 兼容data为null或不是List的情况
+        if (data instanceof Map) {
+            // 按章节分组，合并所有章节资源为一个List
+            List<Map<String, Object>> all = new java.util.ArrayList<>();
+            ((Map<?, ?>) data).values().forEach(v -> {
+                if (v instanceof List) {
+                    all.addAll((List<Map<String, Object>>) v);
+                }
+            });
+            return all;
+        } else if (data instanceof List) {
+            return (List<Map<String, Object>>) data;
+        } else {
+            return java.util.Collections.emptyList();
+        }
     }
     
     /**

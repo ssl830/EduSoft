@@ -19,19 +19,19 @@ public class LearningProgressServiceImpl implements LearningProgressService {
     private LearningProgressMapper learningProgressMapper;
     
     @Override
-    public LearningProgress updateProgress(Long resourceId, Long studentId, Double progress, Integer position) {
+    public LearningProgress updateProgress(Long resourceId, Long studentId, Integer progress, Integer position) {
         LearningProgress learningProgress = new LearningProgress();
         learningProgress.setResourceId(resourceId);
         learningProgress.setStudentId(studentId);
         learningProgress.setProgress(progress);
-        learningProgress.setPosition(position);
-        learningProgress.setLastAccessedAt(LocalDateTime.now());
+        learningProgress.setLastPosition(position);
+        learningProgress.setLastWatchTime(LocalDateTime.now());
         learningProgress.setUpdatedAt(LocalDateTime.now());
         
         if (learningProgressMapper.selectProgress(resourceId, studentId) == null) {
             learningProgress.setCreatedAt(LocalDateTime.now());
         }
-        
+
         learningProgressMapper.insertOrUpdateProgress(learningProgress);
         return learningProgress;
     }

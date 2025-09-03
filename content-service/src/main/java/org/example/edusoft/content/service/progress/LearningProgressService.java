@@ -10,7 +10,7 @@ public interface LearningProgressService {
     /**
      * 更新学习进度
      */
-    LearningProgress updateProgress(Long resourceId, Long studentId, Double progress, Integer position);
+    LearningProgress updateProgress(Long resourceId, Long studentId, Integer progress, Integer position);
     
     /**
      * 获取学习进度

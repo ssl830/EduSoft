@@ -8,6 +8,32 @@ import java.util.List;
 
 @Mapper
 public interface LearningProgressMapper {
+
+    /**
+     * 插入或更新学习进度
+     * @param progress 学习进度对象
+     */
+    @Insert({
+            "<script>",
+            "INSERT INTO learning_progress (resource_id, student_id, progress, last_position, watch_count, last_watch_time)",
+            "VALUES (#{resourceId}, #{studentId}, #{progress}, #{lastPosition}, 1, #{lastWatchTime})",
+            "ON DUPLICATE KEY UPDATE",
+            "progress = #{progress},",
+            "last_position = #{lastPosition},",
+            "watch_count = watch_count + 1,",
+            "last_watch_time = #{lastWatchTime}",
+            "</script>"
+    })
+    void insertOrUpdate(LearningProgress progress);
+
+    /**
+     * 根据资源ID和学生ID查询学习进度
+     * @param resourceId 资源ID
+     * @param studentId 学生ID
+     * @return 学习进度对象
+     */
+    @Select("SELECT * FROM learning_progress WHERE resource_id = #{resourceId} AND student_id = #{studentId}")
+    LearningProgress selectByResourceAndStudent(@Param("resourceId") Long resourceId, @Param("studentId") Long studentId);
     
     @Insert("INSERT INTO learning_progress (resource_id, student_id, progress, position, last_accessed_at, created_at, updated_at) " +
             "VALUES (#{resourceId}, #{studentId}, #{progress}, #{position}, #{lastAccessedAt}, #{createdAt}, #{updatedAt}) " +
@@ -59,4 +85,12 @@ public interface LearningProgressMapper {
             "last_accessed_at = #{lastAccessedAt}, updated_at = #{updatedAt} " +
             "WHERE resource_id = #{resourceId} AND student_id = #{studentId}")
     int updateProgress(LearningProgress progress);
+
+    /**
+     * 删除资源的所有学习进度记录
+     * @param resourceId 资源ID
+     * @return 影响的行数
+     */
+    @Delete("DELETE FROM learning_progress WHERE resource_id = #{resourceId}")
+    int deleteByResourceId(@Param("resourceId") Long resourceId);
 }

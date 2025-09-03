@@ -101,6 +101,9 @@ public interface FileMapper {
         @Param("courseId") Long courseId
     );
 
+    /**
+     * 获取某课程下的所有文件（支持过滤）
+     */
     List<FileInfo> getFilesByCourseId(
         @Param("courseId") Long courseId,
         @Param("title") String title,
