@@ -21,6 +21,7 @@ jobs:
       - name: 构建用户服务镜像
         run: |
           cd user-service
+          mvn clean package -DskipTests
           docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/edusoft-user-service:latest .
 
       - name: 推送用户服务镜像
