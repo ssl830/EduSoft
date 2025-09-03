@@ -1,16 +1,13 @@
 package org.example.edusoft.content.controller.homework;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.example.edusoft.content.common.Result;
 import org.example.edusoft.content.dto.homework.HomeworkDTO;
 import org.example.edusoft.content.dto.homework.HomeworkSubmissionDTO;
-import org.example.edusoft.content.dto.homework.CreateHomeworkRequest;
 import org.example.edusoft.content.service.homework.HomeworkService;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import jakarta.servlet.http.HttpServletResponse;
-import org.example.edusoft.content.entity.homework.Homework;
-import org.example.edusoft.content.entity.homework.HomeworkSubmission;
 
 import java.util.List;
 
@@ -18,15 +15,14 @@ import java.util.List;
  * 作业管理控制器
  */
 @RestController
-@RequestMapping("/api/content/homework")
-@CrossOrigin(origins = "*")
+@RequestMapping("/api/homework")
+@RequiredArgsConstructor
 public class HomeworkController {
 
-    @Autowired
-    private HomeworkService homeworkService;
+    private final HomeworkService homeworkService;
 
     /**
-     * 创建作业（支持multipart/form-data）
+     * 创建作业
      */
     @PostMapping("/create")
     public Result<Long> createHomework(
@@ -34,28 +30,10 @@ public class HomeworkController {
             @RequestParam("title") String title,
             @RequestParam(value = "description", required = false) String description,
             @RequestParam(value = "end_time", required = false) String endTime,
-            @RequestParam(value = "file", required = false) MultipartFile file) {
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            @RequestParam("created_by") Long createdBy) {
         try {
-            Long homeworkId = homeworkService.createHomework(classId, title, description, endTime, file);
-            return Result.success(homeworkId, "作业创建成功");
-        } catch (Exception e) {
-            return Result.error("作业创建失败：" + e.getMessage());
-        }
-    }
-
-    /**
-     * 创建作业（支持JSON格式）
-     */
-    @PostMapping("/create-json")
-    public Result<Long> createHomeworkJson(@RequestBody CreateHomeworkRequest request) {
-        try {
-            Long homeworkId = homeworkService.createHomework(
-                request.getClassId(), 
-                request.getTitle(), 
-                request.getDescription(), 
-                request.getEndTime(), 
-                null
-            );
+            Long homeworkId = homeworkService.createHomework(classId, title, description, endTime, file, createdBy);
             return Result.success(homeworkId, "作业创建成功");
         } catch (Exception e) {
             return Result.error("作业创建失败：" + e.getMessage());
@@ -106,7 +84,7 @@ public class HomeworkController {
     @PostMapping("/submit/{homeworkId}")
     public Result<Long> submitHomework(
             @PathVariable Long homeworkId,
-            @RequestParam Long studentId,
+            @RequestParam("student_id") Long studentId,
             @RequestParam("file") MultipartFile file) {
         try {
             Long submissionId = homeworkService.submitHomework(homeworkId, studentId, "", file);
@@ -140,7 +118,7 @@ public class HomeworkController {
     @GetMapping("/submission")
     public Result<HomeworkSubmissionDTO> getStudentSubmission(
             @RequestParam Long homeworkId,
-            @RequestParam Long studentId) {
+            @RequestParam("student_id") Long studentId) {
         try {
             HomeworkSubmissionDTO submission = homeworkService.getStudentSubmission(homeworkId, studentId);
             if (submission == null) {
@@ -196,21 +174,6 @@ public class HomeworkController {
             return Result.success(null, "作业删除成功");
         } catch (Exception e) {
             return Result.error("作业删除失败：" + e.getMessage());
-        }
-    }
-
-    /**
-     * 根据课程ID统计作业总数
-     * @param courseId 课程ID
-     * @return 作业总数
-     */
-    @GetMapping("/count/course/{courseId}")
-    public Result<Integer> getHomeworkCountByCourse(@PathVariable Long courseId) {
-        try {
-            int count = homeworkService.getHomeworkCountByCourse(courseId);
-            return Result.success(count, "获取作业总数成功");
-        } catch (Exception e) {
-            return Result.error("获取作业总数失败：" + e.getMessage());
         }
     }
 } 

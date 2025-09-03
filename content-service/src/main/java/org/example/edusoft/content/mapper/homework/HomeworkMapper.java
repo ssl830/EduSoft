@@ -13,10 +13,10 @@ public interface HomeworkMapper {
      * 创建新作业
      */
     @Insert({
-        "INSERT INTO homework(title, description, course_id, chapter_id, chapter_name, class_id, created_by, created_by_name, attachment_url,",
-        "object_name, file_name, deadline, status, created_at, updated_at)",
-        "VALUES(#{title}, #{description}, #{courseId}, #{chapterId}, #{chapterName}, #{classId}, #{createdBy}, #{createdByName}, #{attachmentUrl},",
-        "#{objectName}, #{fileName}, #{deadline}, #{status}, #{createdAt}, #{updatedAt})"
+        "INSERT INTO homework(title, description, class_id, created_by, attachment_url,",
+        "object_name, deadline, created_at, updated_at)",
+        "VALUES(#{title}, #{description}, #{classId}, #{createdBy}, #{attachmentUrl},",
+        "#{objectName}, #{deadline}, #{createdAt}, #{updatedAt})"
     })
     @Options(useGeneratedKeys = true, keyProperty = "id")
     void insert(Homework homework);
@@ -46,14 +46,9 @@ public interface HomeworkMapper {
         "UPDATE homework",
         "SET title = #{title},",
         "    description = #{description},",
-        "    course_id = #{courseId},",
-        "    chapter_id = #{chapterId},",
-        "    chapter_name = #{chapterName},",
         "    attachment_url = #{attachmentUrl},",
         "    object_name = #{objectName},",
-        "    file_name = #{fileName},",
         "    deadline = #{deadline},",
-        "    status = #{status},",
         "    updated_at = #{updatedAt}",
         "WHERE id = #{id}"
     })

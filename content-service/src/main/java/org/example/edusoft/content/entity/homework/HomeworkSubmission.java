@@ -34,6 +34,9 @@ public class HomeworkSubmission {
     
     @Column(name = "file_name")
     private String fileName;
+
+    @Column(name = "object_name")
+    private String objectName;
     
     @Column(name = "status", length = 20)
     private String status = "submitted";

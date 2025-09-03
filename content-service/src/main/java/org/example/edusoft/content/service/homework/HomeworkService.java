@@ -11,7 +11,7 @@ public interface HomeworkService {
     /**
      * 创建作业
      */
-    Long createHomework(Long classId, String title, String description, String endTime, MultipartFile file);
+    Long createHomework(Long classId, String title, String description, String endTime, MultipartFile file, Long createdBy);
     
     /**
      * 获取作业详情
@@ -26,7 +26,7 @@ public interface HomeworkService {
     /**
      * 提交作业
      */
-    Long submitHomework(Long homeworkId, Long studentId, String content, MultipartFile file);
+    Long submitHomework(Long homeworkId, Long studentId, String studentName, MultipartFile file);
     
     /**
      * 获取作业提交列表
@@ -37,16 +37,6 @@ public interface HomeworkService {
      * 获取学生提交的作业
      */
     HomeworkSubmissionDTO getStudentSubmission(Long homeworkId, Long studentId);
-    
-    /**
-     * 批改作业
-     */
-    void gradeHomework(Long submissionId, String feedback, Integer score);
-    
-    /**
-     * 导出作业提交列表
-     */
-    void exportSubmissions(Long homeworkId, HttpServletResponse response);
     
     /**
      * 下载作业附件
@@ -62,9 +52,4 @@ public interface HomeworkService {
      * 删除作业
      */
     void deleteHomework(Long homeworkId);
-    
-    /**
-     * 根据课程ID统计作业总数
-     */
-    int getHomeworkCountByCourse(Long courseId);
 } 

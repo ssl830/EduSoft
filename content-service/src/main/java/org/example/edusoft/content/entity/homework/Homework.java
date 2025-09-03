@@ -26,14 +26,17 @@ public class Homework {
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
     
-    @Column(name = "end_time")
-    private String endTime;
+    @Column(name = "deadline")
+    private LocalDateTime deadline;
+
+    @Column(name = "created_by")
+    private Long createdBy;
     
-    @Column(name = "file_url")
-    private String fileUrl;
+    @Column(name = "attachment_url")
+    private String attachmentUrl;
     
-    @Column(name = "file_name")
-    private String fileName;
+    @Column(name = "object_name")
+    private String objectName;
     
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;

@@ -1,6 +1,7 @@
 package org.example.edusoft.content.service.homework.impl;
 
 import lombok.extern.slf4j.Slf4j;
+import lombok.RequiredArgsConstructor;
 import org.example.edusoft.content.dto.homework.HomeworkDTO;
 import org.example.edusoft.content.dto.homework.HomeworkSubmissionDTO;
 import org.example.edusoft.content.entity.homework.Homework;
@@ -8,10 +9,12 @@ import org.example.edusoft.content.entity.homework.HomeworkSubmission;
 import org.example.edusoft.content.mapper.homework.HomeworkMapper;
 import org.example.edusoft.content.mapper.homework.HomeworkSubmissionMapper;
 import org.example.edusoft.content.service.homework.HomeworkService;
-import org.example.edusoft.content.service.file.FileUpload;
-import org.example.edusoft.content.entity.file.FileType;
-import org.example.edusoft.content.entity.file.FileInfo;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.example.edusoft.content.common.Result;
+import org.example.edusoft.content.entity.file.FileType;
+import org.example.edusoft.content.service.file.FileUpload;
+import org.example.edusoft.content.service.file.FileAccessService;
+import org.example.edusoft.content.entity.file.FileAccessDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,23 +32,20 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class HomeworkServiceImpl implements HomeworkService {
 
-    @Autowired
-    private HomeworkMapper homeworkMapper;
-    
-    @Autowired
-    private HomeworkSubmissionMapper submissionMapper;
-    
-    @Autowired
-    private FileUpload fileUploadService;
+    private final HomeworkMapper homeworkMapper;
+    private final HomeworkSubmissionMapper submissionMapper;
+    private final FileUpload fileUpload;
+    private final FileAccessService fileAccessService;
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @Override
     @Transactional
     public Long createHomework(Long classId, String title, String description,
-                             String endTime, MultipartFile file) {
+                             String endTime, MultipartFile file, Long createdBy) {
         // 参数校验
         if (classId == null || title == null || title.trim().isEmpty()) {
             throw new RuntimeException("班级ID和作业标题不能为空");
@@ -56,7 +56,11 @@ public class HomeworkServiceImpl implements HomeworkService {
         homework.setClassId(classId);
         homework.setTitle(title);
         homework.setDescription(description);
-        homework.setEndTime(endTime);
+        homework.setCreatedBy(createdBy);
+
+        if (endTime != null && !endTime.isEmpty()) {
+            homework.setDeadline(LocalDateTime.parse(endTime, DATE_TIME_FORMATTER));
+        }
 
         // 设置创建时间和更新时间
         LocalDateTime now = LocalDateTime.now();
@@ -65,11 +69,17 @@ public class HomeworkServiceImpl implements HomeworkService {
 
         // 上传附件（如果有）
         if (file != null && !file.isEmpty()) {
-            // 使用新的上传接口
-            Result<?> result = fileUploadService.upload(file, title, null, null, classId, "private", null, FileType.OTHER, null);
-            if (result.getData() instanceof FileInfo fileInfo) {
-                homework.setFileUrl(fileInfo.getUrl());
-                homework.setFileName(fileInfo.getName());
+            String objectName = "homework/" + classId + "/" + file.getOriginalFilename();
+            try {
+                Result<?> uploadResult = fileUpload.uploadFile(file, file.getOriginalFilename(), 
+                    null, null, "private", createdBy, FileType.HOMEWORK.name());
+                if (uploadResult.isSuccess()) {
+                    homework.setObjectName(objectName);
+                    FileAccessDTO accessDTO = fileAccessService.getDownloadUrlByObjectName(objectName);
+                    homework.setAttachmentUrl(accessDTO.getUrl());
+                }
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException("上传作业文件失败", e);
             }
         }
 
@@ -85,41 +95,41 @@ public class HomeworkServiceImpl implements HomeworkService {
             return null;
         }
         
-        HomeworkDTO dto = new HomeworkDTO();
-        dto.setId(homework.getId());
-        dto.setTitle(homework.getTitle());
-        dto.setDescription(homework.getDescription());
-        dto.setClassId(homework.getClassId());
-        dto.setFileUrl(homework.getFileUrl());
-        dto.setFileName(homework.getFileName());
-        dto.setEndTime(homework.getEndTime());
-        dto.setCreatedAt(homework.getCreatedAt());
-        dto.setUpdatedAt(homework.getUpdatedAt());
-        
-        return dto;
+        return HomeworkDTO.builder()
+                .id(homework.getId())
+                .title(homework.getTitle())
+                .description(homework.getDescription())
+                .classId(homework.getClassId())
+                .fileUrl(homework.getAttachmentUrl())
+                .fileName(homework.getObjectName() != null ? homework.getObjectName().substring(homework.getObjectName().lastIndexOf('/') + 1) : null)
+                .endTime(homework.getDeadline() != null ? homework.getDeadline().format(DATE_TIME_FORMATTER) : null)
+                .createdAt(homework.getCreatedAt())
+                .updatedAt(homework.getUpdatedAt())
+                .isActive(homework.getIsActive())
+                .build();
     }
 
     @Override
     public List<HomeworkDTO> getHomeworkList(Long classId) {
         List<Homework> homeworkList = homeworkMapper.selectByClassId(classId);
-        return homeworkList.stream().map(homework -> {
-            HomeworkDTO dto = new HomeworkDTO();
-            dto.setId(homework.getId());
-            dto.setTitle(homework.getTitle());
-            dto.setDescription(homework.getDescription());
-            dto.setClassId(homework.getClassId());
-            dto.setFileUrl(homework.getFileUrl());
-            dto.setFileName(homework.getFileName());
-            dto.setEndTime(homework.getEndTime());
-            dto.setCreatedAt(homework.getCreatedAt());
-            dto.setUpdatedAt(homework.getUpdatedAt());
-            return dto;
-        }).collect(Collectors.toList());
+        return homeworkList.stream().map(homework -> HomeworkDTO.builder()
+                .id(homework.getId())
+                .title(homework.getTitle())
+                .description(homework.getDescription())
+                .classId(homework.getClassId())
+                .fileUrl(homework.getAttachmentUrl())
+                .fileName(homework.getObjectName() != null ? homework.getObjectName().substring(homework.getObjectName().lastIndexOf('/') + 1) : null)
+                .endTime(homework.getDeadline() != null ? homework.getDeadline().format(DATE_TIME_FORMATTER) : null)
+                .createdAt(homework.getCreatedAt())
+                .updatedAt(homework.getUpdatedAt())
+                .isActive(homework.getIsActive())
+                .build()
+        ).collect(Collectors.toList());
     }
 
     @Override
     @Transactional
-    public Long submitHomework(Long homeworkId, Long studentId, String content, MultipartFile file) {
+    public Long submitHomework(Long homeworkId, Long studentId, String studentName, MultipartFile file) {
         // 参数校验
         if (file == null || file.isEmpty()) {
             throw new RuntimeException("提交的文件不能为空");
@@ -132,30 +142,30 @@ public class HomeworkServiceImpl implements HomeworkService {
         }
 
         // 检查是否已过截止时间
-        if (homework.getEndTime() != null && LocalDateTime.now().isAfter(LocalDateTime.parse(homework.getEndTime()))) {
+        if (homework.getDeadline() != null && LocalDateTime.now().isAfter(homework.getDeadline())) {
             throw new RuntimeException("作业已过截止时间");
         }
 
-        // 检查是否已经提交过
-        HomeworkSubmission existingSubmission = submissionMapper.selectByHomeworkAndStudent(homeworkId, studentId);
-        if (existingSubmission != null) {
-            throw new RuntimeException("您已经提交过该作业");
-        }
-
-        // 创建提交记录
+        // 创建或更新提交记录
         HomeworkSubmission submission = new HomeworkSubmission();
         submission.setHomeworkId(homeworkId);
         submission.setStudentId(studentId);
-        submission.setStudentName("学生" + studentId); // 简化处理
-        submission.setContent(content);
+        submission.setStudentName(studentName);
 
-        // 使用新的上传接口
-        String title = file.getOriginalFilename();
-        String folder = "homework-submission/" + homeworkId + "/" + studentId;
-        Result<?> result = fileUploadService.upload(file, title, null, null, null, "private", null, FileType.OTHER, null);
-        if (result.getData() instanceof FileInfo fileInfo) {
-            submission.setFileUrl(fileInfo.getUrl());
-            submission.setFileName(fileInfo.getName());
+        // 上传文件
+        String objectName = "homework/submission/" + homeworkId + "/" + studentId + "_" + file.getOriginalFilename();
+        try {
+            Result<?> uploadResult = fileUpload.uploadFile(file, file.getOriginalFilename(), 
+                null, null, "private", studentId, FileType.HOMEWORK_SUBMISSION.name());
+            if (uploadResult.isSuccess()) {
+                submission.setObjectName(objectName);
+                FileAccessDTO accessDTO = fileAccessService.getDownloadUrlByObjectName(objectName);
+                submission.setFileUrl(accessDTO.getUrl());
+            } else {
+                throw new RuntimeException("上传提交文件失败");
+            }
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("上传提交文件失败", e);
         }
         submission.setSubmittedAt(LocalDateTime.now());
 
@@ -167,17 +177,15 @@ public class HomeworkServiceImpl implements HomeworkService {
     @Override
     public List<HomeworkSubmissionDTO> getSubmissionList(Long homeworkId) {
         List<HomeworkSubmission> submissions = submissionMapper.selectByHomeworkId(homeworkId);
-        return submissions.stream().map(submission -> {
-            HomeworkSubmissionDTO dto = new HomeworkSubmissionDTO();
-            dto.setId(submission.getId());
-            dto.setHomeworkId(submission.getHomeworkId());
-            dto.setStudentId(submission.getStudentId());
-            dto.setStudentName(submission.getStudentName());
-            dto.setFileUrl(submission.getFileUrl());
-            dto.setFileName(submission.getFileName());
-            dto.setSubmittedAt(submission.getSubmittedAt());
-            return dto;
-        }).collect(Collectors.toList());
+        return submissions.stream().map(submission -> HomeworkSubmissionDTO.builder()
+                .submissionId(submission.getId())
+                .studentId(submission.getStudentId().toString())
+                .studentName(submission.getStudentName())
+                .fileUrl(submission.getFileUrl())
+                .fileName(submission.getObjectName() != null ? submission.getObjectName().substring(submission.getObjectName().lastIndexOf('/') + 1) : null)
+                .submitTime(submission.getSubmittedAt().format(DATE_TIME_FORMATTER))
+                .build()
+        ).collect(Collectors.toList());
     }
 
     @Override
@@ -187,87 +195,43 @@ public class HomeworkServiceImpl implements HomeworkService {
             return null;
         }
         
-        HomeworkSubmissionDTO dto = new HomeworkSubmissionDTO();
-        dto.setId(submission.getId());
-        dto.setHomeworkId(submission.getHomeworkId());
-        dto.setStudentId(submission.getStudentId());
-        dto.setStudentName(submission.getStudentName());
-        dto.setFileUrl(submission.getFileUrl());
-        dto.setFileName(submission.getFileName());
-        dto.setSubmittedAt(submission.getSubmittedAt());
-        
-        return dto;
+        return HomeworkSubmissionDTO.builder()
+                .submissionId(submission.getId())
+                .studentId(submission.getStudentId().toString())
+                .studentName(submission.getStudentName())
+                .fileUrl(submission.getFileUrl())
+                .fileName(submission.getObjectName() != null ? submission.getObjectName().substring(submission.getObjectName().lastIndexOf('/') + 1) : null)
+                .submitTime(submission.getSubmittedAt().format(DATE_TIME_FORMATTER))
+                .build();
     }
 
     @Override
-    public void exportSubmissions(Long homeworkId, HttpServletResponse response) {
-        // TODO: 实现导出功能
-        log.info("导出作业提交列表，作业ID: {}", homeworkId);
-    }
-    
-    @Override
-    public void gradeHomework(Long submissionId, String feedback, Integer score) {
-        HomeworkSubmission submission = submissionMapper.selectById(submissionId);
-        if (submission != null) {
-            submission.setFeedback(feedback);
-            submission.setScore(score);
-            submission.setUpdatedAt(LocalDateTime.now());
-            submissionMapper.updateById(submission);
-        }
-    }
-    
-    @Override
     public void downloadHomeworkFile(Long homeworkId, HttpServletResponse response) {
-        Homework homework = homeworkMapper.selectById(homeworkId);
-        if (homework == null) {
-            throw new RuntimeException("作业不存在");
-        }
-        
-        // 简化的文件下载逻辑
         try {
-            String fileName = homework.getFileName() != null ? homework.getFileName() : "homework_" + homeworkId + ".txt";
-            response.setContentType("text/plain; charset=UTF-8");
-            response.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
+            Homework homework = homeworkMapper.selectById(homeworkId);
+            if (homework == null || homework.getObjectName() == null) {
+                throw new RuntimeException("作业或附件不存在");
+            }
             
-            // 生成作业内容
-            String content = String.format("作业标题: %s\n作业描述: %s\n截止时间: %s\n创建时间: %s\n\n这是一个模拟的作业文件内容。",
-                homework.getTitle(),
-                homework.getDescription() != null ? homework.getDescription() : "无描述",
-                homework.getEndTime() != null ? homework.getEndTime() : "无截止时间",
-                homework.getCreatedAt() != null ? homework.getCreatedAt().toString() : "未知"
-            );
-            
-            response.getWriter().write(content);
+            FileAccessDTO accessDTO = fileAccessService.getDownloadUrlByObjectName(homework.getObjectName());
+            response.sendRedirect(accessDTO.getUrl());
         } catch (IOException e) {
-            throw new RuntimeException("文件下载失败", e);
+            throw new RuntimeException("下载作业文件失败: " + e.getMessage(), e);
         }
     }
 
     @Override
     public void downloadSubmissionFile(Long submissionId, HttpServletResponse response) {
-        HomeworkSubmission submission = submissionMapper.selectById(submissionId);
-        if (submission == null) {
-            throw new RuntimeException("提交记录不存在");
-        }
-        
-        // 简化的文件下载逻辑
         try {
-            String fileName = "submission_" + submissionId + ".txt";
-            response.setContentType("text/plain; charset=UTF-8");
-            response.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
+            HomeworkSubmission submission = submissionMapper.selectById(submissionId);
+            if (submission == null || submission.getObjectName() == null) {
+                throw new RuntimeException("提交记录或附件不存在");
+            }
             
-            // 生成提交内容
-            String content = String.format("提交记录ID: %d\n作业ID: %d\n学生ID: %d\n学生姓名: %s\n提交时间: %s\n\n这是一个模拟的作业提交文件内容。",
-                submission.getId(),
-                submission.getHomeworkId(),
-                submission.getStudentId(),
-                submission.getStudentName() != null ? submission.getStudentName() : "未知",
-                submission.getSubmittedAt() != null ? submission.getSubmittedAt().toString() : "未知"
-            );
-            
-            response.getWriter().write(content);
+            FileAccessDTO accessDTO = fileAccessService.getDownloadUrlByObjectName(submission.getObjectName());
+            response.sendRedirect(accessDTO.getUrl());
         } catch (IOException e) {
-            throw new RuntimeException("文件下载失败", e);
+            throw new RuntimeException("下载提交文件失败: " + e.getMessage(), e);
         }
     }
 
@@ -280,11 +244,5 @@ public class HomeworkServiceImpl implements HomeworkService {
         homeworkMapper.deleteById(homeworkId);
     }
 
-    @Override
-    public int getHomeworkCountByCourse(Long courseId) {
-        if (courseId == null) {
-            throw new RuntimeException("课程ID不能为空");
-        }
-        return homeworkMapper.countByCourseId(courseId);
-    }
+
 }

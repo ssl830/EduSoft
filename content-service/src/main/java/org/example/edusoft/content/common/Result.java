@@ -35,4 +35,8 @@ public class Result<T> {
     public char[] getMsg() {
         return message.toCharArray();
     }
+
+    public boolean isSuccess() {
+        return code != null && code == 200;
+    }
 }

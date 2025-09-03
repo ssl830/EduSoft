@@ -8,6 +8,8 @@ public enum FileType {
     WORD,
     CODE,
     PDF,
+    HOMEWORK,
+    HOMEWORK_SUBMISSION,
     OTHER;
 
     /**
