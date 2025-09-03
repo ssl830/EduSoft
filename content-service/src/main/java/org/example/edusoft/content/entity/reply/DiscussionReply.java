@@ -1,57 +1,54 @@
 package org.example.edusoft.content.entity.reply;
 
-import jakarta.persistence.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "discussion_replies")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
+/**
+ * 讨论回复实体类
+ */
 public class DiscussionReply {
-    
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
-    @Column(name = "discussion_id", nullable = false)
     private Long discussionId;
-    
-    @Column(name = "parent_reply_id")
-    private Long parentReplyId;
-    
-    @Column(name = "creator_id", nullable = false)
-    private Long creatorId;
-    
-    @Column(name = "creator_name", length = 100)
-    private String creatorName;
-    
-    @Column(name = "content", columnDefinition = "TEXT", nullable = false)
+    private String userId;
     private String content;
-    
-    @Column(name = "like_count", columnDefinition = "INT DEFAULT 0")
-    private Integer likeCount = 0;
-    
-    @Column(name = "created_at", nullable = false)
+    private Long parentReplyId;
     private LocalDateTime createdAt;
-    
-    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+    private Boolean isDeleted;
+    private Integer likeCount;
+    private Long creatorId;
+    private String creatorName;
+
+    // Getters and Setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
     
-    @Column(name = "is_deleted", columnDefinition = "BOOLEAN DEFAULT FALSE")
-    private Boolean isDeleted = false;
+    public Long getDiscussionId() { return discussionId; }
+    public void setDiscussionId(Long discussionId) { this.discussionId = discussionId; }
     
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
-    }
+    public String getUserId() { return userId; }
+    public void setUserId(String userId) { this.userId = userId; }
     
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
+    public String getContent() { return content; }
+    public void setContent(String content) { this.content = content; }
+    
+    public Long getParentReplyId() { return parentReplyId; }
+    public void setParentReplyId(Long parentReplyId) { this.parentReplyId = parentReplyId; }
+    
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    
+    public Boolean getIsDeleted() { return isDeleted; }
+    public void setIsDeleted(Boolean isDeleted) { this.isDeleted = isDeleted; }
+    
+    public Integer getLikeCount() { return likeCount; }
+    public void setLikeCount(Integer likeCount) { this.likeCount = likeCount; }
+    
+    public Long getCreatorId() { return creatorId; }
+    public void setCreatorId(Long creatorId) { this.creatorId = creatorId; }
+    
+    public String getCreatorName() { return creatorName; }
+    public void setCreatorName(String creatorName) { this.creatorName = creatorName; }
 }

@@ -151,6 +151,13 @@ public class CourseClient extends BaseServiceClient {
     }
 
     /**
+     * 根据课程ID获取课程信息（别名方法）
+     */
+    public Map<String, Object> getCourseInfo(Long courseId) {
+        return getCourseById(courseId);
+    }
+
+    /**
      * 根据班级ID获取班级信息
      */
     public Map<String, Object> getClassById(Long classId) {
@@ -158,6 +165,13 @@ public class CourseClient extends BaseServiceClient {
             throw new IllegalArgumentException("班级ID不能为空");
         }
         return getForMap("/api/classes/" + classId);
+    }
+
+    /**
+     * 根据班级ID获取班级信息（别名方法）
+     */
+    public Map<String, Object> getClassInfo(Long classId) {
+        return getClassById(classId);
     }
 
     /**

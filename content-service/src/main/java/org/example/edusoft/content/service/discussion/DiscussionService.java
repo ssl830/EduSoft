@@ -2,13 +2,27 @@ package org.example.edusoft.content.service.discussion;
 
 import org.example.edusoft.content.entity.discussion.Discussion;
 import java.util.List;
+import java.util.Map;
 
+/**
+ * 讨论服务接口
+ */
 public interface DiscussionService {
     
     /**
      * 创建讨论
      */
     Discussion createDiscussion(Discussion discussion);
+    
+    /**
+     * 获取讨论列表
+     */
+    List<Discussion> getDiscussions(Long courseId, Long classId, String type, int page, int size);
+    
+    /**
+     * 根据ID获取讨论
+     */
+    Discussion getDiscussionById(Long id);
     
     /**
      * 更新讨论
@@ -21,9 +35,9 @@ public interface DiscussionService {
     void deleteDiscussion(Long id);
     
     /**
-     * 获取讨论详情
+     * 搜索讨论
      */
-    Discussion getDiscussion(Long id);
+    List<Discussion> searchDiscussions(String keyword, Long courseId, Long classId);
     
     /**
      * 增加浏览次数
@@ -31,22 +45,42 @@ public interface DiscussionService {
     void incrementViewCount(Long id);
     
     /**
-     * 根据课程获取讨论列表
+     * 增加回复次数
+     */
+    void incrementReplyCount(Long id);
+    
+    /**
+     * 增加点赞次数
+     */
+    void incrementLikeCount(Long id);
+    
+    /**
+     * 减少点赞次数
+     */
+    void decrementLikeCount(Long id);
+    
+    /**
+     * 根据ID获取讨论（别名方法）
+     */
+    Discussion getDiscussion(Long id);
+    
+    /**
+     * 根据课程ID获取讨论列表
      */
     List<Discussion> getDiscussionsByCourse(Long courseId);
     
     /**
-     * 根据班级获取讨论列表
+     * 根据班级ID获取讨论列表
      */
     List<Discussion> getDiscussionsByClass(Long classId);
     
     /**
-     * 根据创建者获取讨论列表
+     * 根据创建者ID获取讨论列表
      */
     List<Discussion> getDiscussionsByCreator(Long creatorId);
     
     /**
-     * 根据课程和班级获取讨论列表
+     * 根据课程ID和班级ID获取讨论列表
      */
     List<Discussion> getDiscussionsByCourseAndClass(Long courseId, Long classId);
     
@@ -61,12 +95,12 @@ public interface DiscussionService {
     void updateClosedStatus(Long id, Boolean isClosed);
     
     /**
-     * 统计课程下的讨论数量
+     * 统计课程讨论数量
      */
-    Integer countDiscussionsByCourse(Long courseId);
+    int countDiscussionsByCourse(Long courseId);
     
     /**
-     * 统计班级下的讨论数量
+     * 统计班级讨论数量
      */
-    Integer countDiscussionsByClass(Long classId);
+    int countDiscussionsByClass(Long classId);
 }

@@ -1,104 +1,77 @@
 package org.example.edusoft.content.service.discussion.impl;
 
 import org.example.edusoft.content.entity.discussion.DiscussionLike;
-import org.example.edusoft.content.mapper.discussion.DiscussionLikeMapper;
 import org.example.edusoft.content.service.discussion.DiscussionLikeService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
+import java.util.ArrayList;
+import java.time.LocalDateTime;
 
+/**
+ * 讨论点赞服务实现类
+ */
 @Service
-@Transactional
 public class DiscussionLikeServiceImpl implements DiscussionLikeService {
     
-    @Autowired
-    private DiscussionLikeMapper discussionLikeMapper;
-    
     @Override
-    public DiscussionLike likeDiscussion(Long discussionId, Long userId) {
-        if (discussionId == null) {
-            throw new IllegalArgumentException("讨论ID不能为空");
-        }
-        if (userId == null) {
-            throw new IllegalArgumentException("用户ID不能为空");
-        }
-        
-        // 检查是否已经点赞
-        Integer existingCount = discussionLikeMapper.countByDiscussionAndUser(discussionId, userId);
-        if (existingCount > 0) {
-            throw new IllegalArgumentException("您已经点赞过这个讨论了");
-        }
-        
+    public DiscussionLike likeDiscussion(Long discussionId, String userId) {
+        // TODO: 实现点赞讨论的逻辑
         DiscussionLike like = new DiscussionLike();
         like.setDiscussionId(discussionId);
         like.setUserId(userId);
-        
-        discussionLikeMapper.insert(like);
+        like.setCreatedAt(LocalDateTime.now());
+        like.setIsDeleted(false);
         return like;
     }
     
     @Override
-    public void unlikeDiscussion(Long discussionId, Long userId) {
-        if (discussionId == null) {
-            throw new IllegalArgumentException("讨论ID不能为空");
-        }
-        if (userId == null) {
-            throw new IllegalArgumentException("用户ID不能为空");
-        }
-        
-        int deleted = discussionLikeMapper.deleteByDiscussionAndUser(discussionId, userId);
-        if (deleted == 0) {
-            throw new IllegalArgumentException("您还没有点赞过这个讨论");
-        }
+    public void unlikeDiscussion(Long discussionId, String userId) {
+        // TODO: 实现取消点赞的逻辑
+    }
+    
+    @Override
+    public boolean hasLiked(Long discussionId, String userId) {
+        // TODO: 实现检查是否已点赞的逻辑
+        return false;
+    }
+    
+    @Override
+    public List<DiscussionLike> getDiscussionLikes(Long discussionId) {
+        // TODO: 实现获取讨论点赞列表的逻辑
+        return new ArrayList<>();
+    }
+    
+    @Override
+    public List<DiscussionLike> getUserLikes(String userId) {
+        // TODO: 实现获取用户点赞列表的逻辑
+        return new ArrayList<>();
+    }
+    
+    @Override
+    public int getLikeCount(Long discussionId) {
+        // TODO: 实现获取讨论点赞数量的逻辑
+        return 0;
     }
     
     @Override
     public List<DiscussionLike> getLikesByDiscussion(Long discussionId) {
-        if (discussionId == null) {
-            throw new IllegalArgumentException("讨论ID不能为空");
-        }
-        
-        return discussionLikeMapper.selectByDiscussionId(discussionId);
+        return getDiscussionLikes(discussionId);
     }
     
     @Override
-    public List<DiscussionLike> getLikesByUser(Long userId) {
-        if (userId == null) {
-            throw new IllegalArgumentException("用户ID不能为空");
-        }
-        
-        return discussionLikeMapper.selectByUserId(userId);
+    public List<DiscussionLike> getLikesByUser(String userId) {
+        return getUserLikes(userId);
     }
     
     @Override
-    public Integer countLikesByDiscussion(Long discussionId) {
-        if (discussionId == null) {
-            throw new IllegalArgumentException("讨论ID不能为空");
-        }
-        
-        return discussionLikeMapper.countByDiscussionId(discussionId);
+    public int countLikesByDiscussion(Long discussionId) {
+        return getLikeCount(discussionId);
     }
     
     @Override
-    public Integer countLikesByUser(Long userId) {
-        if (userId == null) {
-            throw new IllegalArgumentException("用户ID不能为空");
-        }
-        
-        return discussionLikeMapper.countByUserId(userId);
-    }
-    
-    @Override
-    public Boolean hasLiked(Long discussionId, Long userId) {
-        if (discussionId == null) {
-            throw new IllegalArgumentException("讨论ID不能为空");
-        }
-        if (userId == null) {
-            throw new IllegalArgumentException("用户ID不能为空");
-        }
-        
-        Integer count = discussionLikeMapper.countByDiscussionAndUser(discussionId, userId);
-        return count > 0;
+    public int countLikesByUser(String userId) {
+        // TODO: 实现统计用户点赞数量的逻辑
+        return 0;
     }
 }
+

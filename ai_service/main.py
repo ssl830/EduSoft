@@ -354,6 +354,9 @@ async def analyze_exercise(request: ExerciseAnalysisRequest):
     分析练习整体情况
     """
     try:
+        #先打印request里面是否有题目
+        logger.info(f"Analyzing exercise with {len(request.exercise_questions)} questions")
+        logger.info(f"Exercise questions: {request.exercise_questions}")
         result = rag_service.analyze_exercise(exercise_questions=request.exercise_questions)
         logger.info(f"Successfully analyzed exercise")
         return result

@@ -8,10 +8,19 @@ spring:
     include: oss
   
   datasource:
-    url: jdbc:mysql://localhost:3306/content-db?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
+    url: jdbc:mysql://localhost:3306/content_db?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
     username: root
-    password: fkq200566
+    password: lyt999999
     driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: true
 
   servlet:
     multipart:
@@ -28,13 +37,37 @@ file:
 logging:
   level:
     '[org.example.edusoft.content]': DEBUG
+    '[org.mybatis]': DEBUG
+    '[org.apache.ibatis]': DEBUG
+    '[org.springframework.cloud.openfeign]': DEBUG
+    org.example.edusoft.content.config.TokenInterceptor: DEBUG
+    org.example.edusoft.content.mapper: DEBUG
+    org.example.edusoft.content.service: DEBUG
 
 # MyBatis 配置
 mybatis:
-  mapper-locations: classpath:mapper/*.xml
+  mapper-locations: classpath:mapper/**/*.xml
+  type-aliases-package: org.example.edusoft.content.entity
   configuration:
     map-underscore-to-camel-case: true
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    cache-enabled: false
+    lazy-loading-enabled: false
+    aggressive-lazy-loading: false
+
+# Feign配置
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 5000
+        loggerLevel: full
+  compression:
+    request:
+      enabled: true
+    response:
+      enabled: true
 
 # 微服务配置
 user:
@@ -54,3 +87,4 @@ management:
   endpoint:
     health:
       show-details: when-authorized
+

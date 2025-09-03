@@ -80,6 +80,15 @@ export interface ApiResponse<T = any> {
   total?: number; // 分页查询时的总数
 }
 
+// 通知查询参数类型
+export interface NotificationParams {
+  type?: string;
+  read?: boolean;
+  courseId?: string;
+  limit?: number;
+  offset?: number;
+}
+
 const notificationApi = {
   // 获取通知列表
   getNotifications: async (params?: {
@@ -91,7 +100,7 @@ const notificationApi = {
   }) => {
     console.log('[getNotifications] Called with params:', params);
     try {
-      const response: ApiResponse<BackendNotification[]> = await axiosInstance.get('/api/notifications', { params });
+      const response: ApiResponse<BackendNotification[]> = await axiosInstance.get('/api/content/notifications', { params });
       console.log('[getNotifications] Raw API response:', response);
       
       if (response && response.code === 200) {
@@ -166,7 +175,8 @@ const notificationApi = {
         errorMessage = error.response.data?.message || 
                       `服务器错误 (${error.response.status})`;
       } else if (error.request) { // Network error or no response from server
-        errorMessage = '无法连接到服务器';
+        errorMessage = error.response.data?.message || 
+                      `网络错误`;
       } else if (error.message && !error.response && !error.request) { // Errors thrown by our code before request or non-Axios errors
         errorMessage = error.message;
       } else if (error.message) { // Other JavaScript errors
@@ -181,7 +191,7 @@ const notificationApi = {
   getUnreadCount: async () => {
     console.log('[getUnreadCount] Called.');
     try {
-      const resultFromAxios: any = await axiosInstance.get('/api/notifications/unread');
+      const resultFromAxios: any = await axiosInstance.get('/api/content/notifications/unread');
       console.log('[getUnreadCount] Raw response from axiosInstance.get:', resultFromAxios, '(Type:', typeof resultFromAxios + ')');
 
       // 情况1: 后端直接返回空字符串表示数量为0 
@@ -246,7 +256,7 @@ const notificationApi = {
   markAsRead: async (id: number) => {
     try {
       // response 类型是 ApiResponse
-      const response: ApiResponse = await axiosInstance.put(`/api/notifications/${id}/read`);
+      const response: ApiResponse = await axiosInstance.put(`/api/content/notifications/${id}/read`);
       if (response && response.code === 200) {
         return true;
       } else {
@@ -272,7 +282,7 @@ const notificationApi = {
   markAllAsRead: async () => {
     try {
       // response 类型是 ApiResponse
-      const response: ApiResponse = await axiosInstance.put('/api/notifications/read-all');
+      const response: ApiResponse = await axiosInstance.put('/api/content/notifications/read-all');
       if (response && response.code === 200) {
         return true;
       } else {

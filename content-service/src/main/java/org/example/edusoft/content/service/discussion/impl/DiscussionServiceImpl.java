@@ -1,177 +1,149 @@
 package org.example.edusoft.content.service.discussion.impl;
 
 import org.example.edusoft.content.entity.discussion.Discussion;
-import org.example.edusoft.content.mapper.discussion.DiscussionMapper;
 import org.example.edusoft.content.service.discussion.DiscussionService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
+import java.util.ArrayList;
+import java.time.LocalDateTime;
 
+/**
+ * 讨论服务实现类
+ */
 @Service
-@Transactional
 public class DiscussionServiceImpl implements DiscussionService {
-    
-    @Autowired
-    private DiscussionMapper discussionMapper;
     
     @Override
     public Discussion createDiscussion(Discussion discussion) {
-        if (discussion.getTitle() == null || discussion.getTitle().trim().isEmpty()) {
-            throw new IllegalArgumentException("讨论标题不能为空");
+        // TODO: 实现创建讨论的逻辑
+        if (discussion.getCreatedAt() == null) {
+            discussion.setCreatedAt(LocalDateTime.now());
         }
-        if (discussion.getContent() == null || discussion.getContent().trim().isEmpty()) {
-            throw new IllegalArgumentException("讨论内容不能为空");
+        if (discussion.getUpdatedAt() == null) {
+            discussion.setUpdatedAt(LocalDateTime.now());
         }
-        if (discussion.getCourseId() == null) {
-            throw new IllegalArgumentException("课程ID不能为空");
+        if (discussion.getIsDeleted() == null) {
+            discussion.setIsDeleted(false);
         }
-        if (discussion.getClassId() == null) {
-            throw new IllegalArgumentException("班级ID不能为空");
+        if (discussion.getViewCount() == null) {
+            discussion.setViewCount(0);
         }
-        if (discussion.getCreatorId() == null) {
-            throw new IllegalArgumentException("创建者ID不能为空");
+        if (discussion.getReplyCount() == null) {
+            discussion.setReplyCount(0);
         }
-        
-        discussionMapper.insert(discussion);
+        if (discussion.getLikeCount() == null) {
+            discussion.setLikeCount(0);
+        }
+        if (discussion.getIsPinned() == null) {
+            discussion.setIsPinned(false);
+        }
+        if (discussion.getIsClosed() == null) {
+            discussion.setIsClosed(false);
+        }
         return discussion;
     }
     
     @Override
+    public List<Discussion> getDiscussions(Long courseId, Long classId, String type, int page, int size) {
+        // TODO: 实现获取讨论列表的逻辑
+        return new ArrayList<>();
+    }
+    
+    @Override
+    public Discussion getDiscussionById(Long id) {
+        // TODO: 实现根据ID获取讨论的逻辑
+        return null;
+    }
+    
+    @Override
     public Discussion updateDiscussion(Discussion discussion) {
-        if (discussion.getId() == null) {
-            throw new IllegalArgumentException("讨论ID不能为空");
-        }
-        if (discussion.getTitle() == null || discussion.getTitle().trim().isEmpty()) {
-            throw new IllegalArgumentException("讨论标题不能为空");
-        }
-        if (discussion.getContent() == null || discussion.getContent().trim().isEmpty()) {
-            throw new IllegalArgumentException("讨论内容不能为空");
-        }
-        
-        int updated = discussionMapper.update(discussion);
-        if (updated == 0) {
-            throw new IllegalArgumentException("讨论不存在");
+        // TODO: 实现更新讨论的逻辑
+        if (discussion.getUpdatedAt() == null) {
+            discussion.setUpdatedAt(LocalDateTime.now());
         }
         return discussion;
     }
     
     @Override
     public void deleteDiscussion(Long id) {
-        if (id == null) {
-            throw new IllegalArgumentException("讨论ID不能为空");
-        }
-        
-        int deleted = discussionMapper.deleteById(id);
-        if (deleted == 0) {
-            throw new IllegalArgumentException("讨论不存在");
-        }
+        // TODO: 实现删除讨论的逻辑
     }
     
     @Override
-    public Discussion getDiscussion(Long id) {
-        if (id == null) {
-            throw new IllegalArgumentException("讨论ID不能为空");
-        }
-        
-        return discussionMapper.selectById(id);
+    public List<Discussion> searchDiscussions(String keyword, Long courseId, Long classId) {
+        // TODO: 实现搜索讨论的逻辑
+        return new ArrayList<>();
     }
     
     @Override
     public void incrementViewCount(Long id) {
-        if (id == null) {
-            throw new IllegalArgumentException("讨论ID不能为空");
-        }
-        
-        discussionMapper.incrementViewCount(id);
+        // TODO: 实现增加浏览次数的逻辑
+    }
+    
+    @Override
+    public void incrementReplyCount(Long id) {
+        // TODO: 实现增加回复次数的逻辑
+    }
+    
+    @Override
+    public void incrementLikeCount(Long id) {
+        // TODO: 实现增加点赞次数的逻辑
+    }
+    
+    @Override
+    public void decrementLikeCount(Long id) {
+        // TODO: 实现减少点赞次数的逻辑
+    }
+    
+    @Override
+    public Discussion getDiscussion(Long id) {
+        return getDiscussionById(id);
     }
     
     @Override
     public List<Discussion> getDiscussionsByCourse(Long courseId) {
-        if (courseId == null) {
-            throw new IllegalArgumentException("课程ID不能为空");
-        }
-        
-        return discussionMapper.selectByCourseId(courseId);
+        // TODO: 实现根据课程ID获取讨论列表的逻辑
+        return new ArrayList<>();
     }
     
     @Override
     public List<Discussion> getDiscussionsByClass(Long classId) {
-        if (classId == null) {
-            throw new IllegalArgumentException("班级ID不能为空");
-        }
-        
-        return discussionMapper.selectByClassId(classId);
+        // TODO: 实现根据班级ID获取讨论列表的逻辑
+        return new ArrayList<>();
     }
     
     @Override
     public List<Discussion> getDiscussionsByCreator(Long creatorId) {
-        if (creatorId == null) {
-            throw new IllegalArgumentException("创建者ID不能为空");
-        }
-        
-        return discussionMapper.selectByCreatorId(creatorId);
+        // TODO: 实现根据创建者ID获取讨论列表的逻辑
+        return new ArrayList<>();
     }
     
     @Override
     public List<Discussion> getDiscussionsByCourseAndClass(Long courseId, Long classId) {
-        if (courseId == null) {
-            throw new IllegalArgumentException("课程ID不能为空");
-        }
-        if (classId == null) {
-            throw new IllegalArgumentException("班级ID不能为空");
-        }
-        
-        return discussionMapper.selectByCourseAndClass(courseId, classId);
+        // TODO: 实现根据课程ID和班级ID获取讨论列表的逻辑
+        return new ArrayList<>();
     }
     
     @Override
     public void updatePinnedStatus(Long id, Boolean isPinned) {
-        if (id == null) {
-            throw new IllegalArgumentException("讨论ID不能为空");
-        }
-        if (isPinned == null) {
-            throw new IllegalArgumentException("置顶状态不能为空");
-        }
-        
-        int updated = discussionMapper.updatePinnedStatus(id, isPinned);
-        if (updated == 0) {
-            throw new IllegalArgumentException("讨论不存在");
-        }
+        // TODO: 实现更新置顶状态的逻辑
     }
     
     @Override
     public void updateClosedStatus(Long id, Boolean isClosed) {
-        if (id == null) {
-            throw new IllegalArgumentException("讨论ID不能为空");
-        }
-        if (isClosed == null) {
-            throw new IllegalArgumentException("关闭状态不能为空");
-        }
-        
-        int updated = discussionMapper.updateClosedStatus(id, isClosed);
-        if (updated == 0) {
-            throw new IllegalArgumentException("讨论不存在");
-        }
+        // TODO: 实现更新关闭状态的逻辑
     }
     
     @Override
-    public Integer countDiscussionsByCourse(Long courseId) {
-        if (courseId == null) {
-            throw new IllegalArgumentException("课程ID不能为空");
-        }
-        
-        Integer count = discussionMapper.countByCourseId(courseId);
-        return count != null ? count : 0;
+    public int countDiscussionsByCourse(Long courseId) {
+        // TODO: 实现统计课程讨论数量的逻辑
+        return 0;
     }
     
     @Override
-    public Integer countDiscussionsByClass(Long classId) {
-        if (classId == null) {
-            throw new IllegalArgumentException("班级ID不能为空");
-        }
-        
-        Integer count = discussionMapper.countByClassId(classId);
-        return count != null ? count : 0;
+    public int countDiscussionsByClass(Long classId) {
+        // TODO: 实现统计班级讨论数量的逻辑
+        return 0;
     }
 }
+

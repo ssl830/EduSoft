@@ -1,33 +1,31 @@
 package org.example.edusoft.content.entity.discussion;
 
-import jakarta.persistence.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "discussion_likes")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
+/**
+ * 讨论点赞实体类
+ */
 public class DiscussionLike {
-    
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
-    @Column(name = "discussion_id", nullable = false)
     private Long discussionId;
-    
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
-    
-    @Column(name = "created_at")
+    private String userId;
     private LocalDateTime createdAt;
+    private Boolean isDeleted;
+
+    // Getters and Setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
     
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-    }
+    public Long getDiscussionId() { return discussionId; }
+    public void setDiscussionId(Long discussionId) { this.discussionId = discussionId; }
+    
+    public String getUserId() { return userId; }
+    public void setUserId(String userId) { this.userId = userId; }
+    
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    
+    public Boolean getIsDeleted() { return isDeleted; }
+    public void setIsDeleted(Boolean isDeleted) { this.isDeleted = isDeleted; }
 }
+

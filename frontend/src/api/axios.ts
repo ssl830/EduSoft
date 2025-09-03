@@ -9,7 +9,7 @@ export interface ApiResponse<T = any> {
 
 // Create an axios instance
 const instance = axios.create({
-  baseURL: '/', // 使用相对路径，交由 Vite 代理转发
+  baseURL: '', // 使用空字符串，确保相对路径能正确工作
   timeout: 1000000,
   headers: {
     'Content-Type': 'application/json'
@@ -21,10 +21,10 @@ const instance = axios.create({
 // Add a request interceptor
 instance.interceptors.request.use(
     config => {
-      // 确保所有请求路径都以/开头
-      if (config.url && !config.url.startsWith('/')) {
-        config.url = '/' + config.url;
-      }
+      // 移除强制添加/前缀的逻辑，让API请求能正确通过Vite代理
+      // if (config.url && !config.url.startsWith('/')) {
+      //   config.url = '/' + config.url;
+      // }
 
       const authStore = useAuthStore()
       if (authStore.token) {
@@ -36,11 +36,6 @@ instance.interceptors.request.use(
       } else if (!config.url?.includes('/login') && !config.url?.includes('/register')) {
         // 对于非登录和注册请求，如果没有token，记录日志
         console.log('未找到token，请求:', config.url)
-      }
-
-      // 添加用户ID请求头（如果用户已登录）
-      if (authStore.user?.id) {
-        config.headers['X-User-Id'] = authStore.user.id.toString()
       }
 
       return config
