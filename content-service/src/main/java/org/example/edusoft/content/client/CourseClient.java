@@ -54,6 +54,79 @@ public class CourseClient extends BaseServiceClient {
     }
 
     /**
+     * 根据班级ID获取所属课程的ID
+     */
+    public Long getCourseIdByClassId(Long classId) {
+        if (classId == null) {
+            throw new IllegalArgumentException("班级ID不能为空");
+        }
+        
+        String token = getCurrentToken();
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        if (token != null) {
+            headers.set("satoken", token);
+            headers.set("Authorization", "Bearer " + token);
+        }
+        org.springframework.http.HttpEntity<Void> entity = new org.springframework.http.HttpEntity<>(headers);
+        String url = getBaseUrl() + "/api/classes/" + classId;
+        
+        try {
+            Map<String, Object> response = restTemplate.exchange(
+                url,
+                org.springframework.http.HttpMethod.GET,
+                entity,
+                Map.class
+            ).getBody();
+
+            if (response != null) {
+                // 首先尝试从 data 字段获取
+                if (response.containsKey("data")) {
+                    Object data = response.get("data");
+                    if (data instanceof Map) {
+                        Map<?, ?> dataMap = (Map<?, ?>) data;
+                        // 尝试从不同可能的字段名获取课程ID
+                        Object courseIdObj = dataMap.get("courseId");
+                        if (courseIdObj == null) courseIdObj = dataMap.get("course_id");
+                        if (courseIdObj == null) {
+                            Object courseObj = dataMap.get("course");
+                            if (courseObj instanceof Map) {
+                                courseIdObj = ((Map<?, ?>) courseObj).get("id");
+                            }
+                        }
+                        
+                        if (courseIdObj != null) {
+                            if (courseIdObj instanceof Number) {
+                                return ((Number) courseIdObj).longValue();
+                            }
+                            try {
+                                return Long.valueOf(courseIdObj.toString());
+                            } catch (NumberFormatException e) {
+                                throw new RuntimeException("课程ID格式无效");
+                            }
+                        }
+                    }
+                }
+                // 直接从根级别尝试获取
+                Object courseIdObj = response.get("courseId");
+                if (courseIdObj == null) courseIdObj = response.get("course_id");
+                if (courseIdObj != null) {
+                    if (courseIdObj instanceof Number) {
+                        return ((Number) courseIdObj).longValue();
+                    }
+                    try {
+                        return Long.valueOf(courseIdObj.toString());
+                    } catch (NumberFormatException e) {
+                        throw new RuntimeException("课程ID格式无效");
+                    }
+                }
+            }
+            throw new RuntimeException("获取课程ID失败：响应中没有找到课程ID");
+        } catch (Exception e) {
+            throw new RuntimeException("获取课程ID失败：" + e.getMessage(), e);
+        }
+    }
+
+    /**
      * 根据课程ID获取课程信息
      */
     public Map<String, Object> getCourseById(Long courseId) {
@@ -183,20 +256,26 @@ public class CourseClient extends BaseServiceClient {
         );
         String body = response.getBody();
         if (body != null && !body.isEmpty()) {
-            // 假设返回的是 List<Map>，每个Map有id字段
-            List<Map<String, Object>> list = new com.fasterxml.jackson.databind.ObjectMapper().readValue(body, List.class);
-            List<Long> classIds = new java.util.ArrayList<>();
-            for (Map<String, Object> item : list) {
-                Object idObj = item.get("id");
-                if (idObj instanceof Number) {
-                    classIds.add(((Number) idObj).longValue());
-                } else if (idObj != null) {
-                    try {
-                        classIds.add(Long.valueOf(idObj.toString()));
-                    } catch (Exception ignore) {}
+            // 兼容返回体为 { code, message, data: [...] }
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            Map<String, Object> map = mapper.readValue(body, Map.class);
+            Object dataObj = map.get("data");
+            if (dataObj instanceof List<?> list) {
+                List<Long> classIds = new java.util.ArrayList<>();
+                for (Object item : list) {
+                    if (item instanceof Map) {
+                        Object idObj = ((Map<?, ?>) item).get("id");
+                        if (idObj instanceof Number) {
+                            classIds.add(((Number) idObj).longValue());
+                        } else if (idObj != null) {
+                            try {
+                                classIds.add(Long.valueOf(idObj.toString()));
+                            } catch (Exception ignore) {}
+                        }
+                    }
                 }
+                return classIds;
             }
-            return classIds;
         }
         return java.util.Collections.emptyList();
     }

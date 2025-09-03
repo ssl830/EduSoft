@@ -61,38 +61,47 @@ public class TeachingResourceController {
             @RequestParam("description") String description,
             @RequestParam("createdBy") Long createdBy) {
         try {
+            System.out.println("================================================");
             // 文件大小检查
             if (file.isEmpty()) {
                 return Result.error("上传文件不能为空");
             }
-            
             // 检查文件大小 (500MB)
             long maxSize = 500 * 1024 * 1024L;
             if (file.getSize() > maxSize) {
                 return Result.error("文件大小不能超过500MB");
             }
-            
-            // 检查文件类型
+            // 修正文件名无扩展名问题
+            System.out.println("================================================");
+            String originalFilename = file.getOriginalFilename();
             String contentType = file.getContentType();
-            if (contentType == null || !contentType.startsWith("video/")) {
-                return Result.error("请上传视频文件");
+            String ext = "";
+            System.out.println(originalFilename + "originalFilename");
+
+            System.out.println("================================================");
+            if (originalFilename != null && originalFilename.contains(".")) {
+                ext = originalFilename.substring(originalFilename.lastIndexOf("."));
+            } else if (contentType != null && contentType.contains("/")) {
+                ext = "." + contentType.substring(contentType.lastIndexOf("/") + 1);
             }
-            
+
+            // 保证 title 带扩展名
+            String finalTitle = title;
+            if (title != null && !title.contains(".") && !ext.isEmpty()) {
+                finalTitle = title + ext;
+            }
+            System.out.println(finalTitle + "finalTitle");
+
             log.info("开始上传文件: {}, 大小: {} bytes", file.getOriginalFilename(), file.getSize());
-            
             TeachingResource resource = resourceService.uploadResource(
-                file, courseId, chapterId, chapterName, title, description, createdBy);
-                
+                    file, courseId, chapterId, chapterName, finalTitle, description, createdBy);
             log.info("文件上传成功, 资源ID: {}", resource.getId());
-            
             // 课件上传成功后，自动同步到AI知识库
             try {
                 resourceService.syncToAIKnowledgeBase(file, resource.getId());
             } catch (Exception e) {
                 log.warn("同步到AI知识库失败: {}", e.getMessage());
-                // 不影响主流程，只记录警告
             }
-            
             return Result.success(resource, "资源上传成功");
         } catch (Exception e) {
             log.error("资源上传失败", e);
@@ -272,4 +281,17 @@ public class TeachingResourceController {
             return Result.error("更新视频时长失败：" + e.getMessage());
         }
     }
-} 
+
+    /**
+     * 获取指定课程的资源总数
+     * @param courseId 课程ID
+     * @return 资源总数
+     */
+    @GetMapping("/count/course/{courseId}")
+    public Result<Integer> getResourceCountByCourseId(@PathVariable Long courseId) {
+        log.info("Received request to count resources for courseId: {}", courseId);
+        int count = resourceService.countResourcesByCourseId(courseId);
+        log.info("Resource count for courseId {}: {}", courseId, count);
+        return Result.success(count);
+    }
+}

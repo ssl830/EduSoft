@@ -93,7 +93,7 @@ public class FileController {
      * @param type       文件类型（可选）
      * @return Result<?> 响应结果
      */
-    @PostMapping("courses/{courseId}/upload")
+    @PostMapping("resources/{courseId}/upload")
     public Result<Object> uploadFile(
         @PathVariable("courseId") Long courseId,
         @RequestParam("file") MultipartFile file,

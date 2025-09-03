@@ -34,10 +34,16 @@ public interface HomeworkMapper {
     List<Homework> selectByClassId(Long classId);
 
     /**
-     * 根据课程ID统计作业总数
+     * 根据班级ID列表统计作业总数
      */
-    @Select("SELECT COUNT(*) FROM homework WHERE course_id = #{courseId}")
-    int countByCourseId(Long courseId);
+    @Select({"<script>",
+            "SELECT COUNT(*) FROM homework h",
+            "WHERE h.class_id IN",
+            "<foreach collection='classIds' item='classId' open='(' separator=',' close=')'>",
+            "#{classId}",
+            "</foreach>",
+            "</script>"})
+    int countByClassIds(@Param("classIds") List<Long> classIds);
 
     /**
      * 更新作业信息

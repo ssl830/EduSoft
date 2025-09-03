@@ -122,8 +122,11 @@ public class FileBo implements Serializable {
         //mysql数据库中文件名，也是前端展示的文件名，不包含后缀，同一个文件夹中是不重复的
         //String name = FileUtil.getFileName(orgName);
         String name = uniqueName;   // 比如“新建(2)”
+        System.out.println("FileBo build");
+        System.out.println(orgName);
+        System.out.println(name);
         //文件后缀名
-        String fileExt = FileUtil.getFileSuffix(orgName);
+        String fileExt = FileUtil.getFileSuffix(name);
         // 判断是否是合法的文件后缀
         if (!FileUtil.isFileAllowed(fileExt)) {
             throw new BusinessException("文件类型不符合要求");

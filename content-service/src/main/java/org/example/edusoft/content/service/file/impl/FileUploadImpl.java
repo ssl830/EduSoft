@@ -193,7 +193,7 @@ public class FileUploadImpl implements FileUpload {
 
     
 
-    private FileInfo convertToInfo(FileBo bo, String uniqueName, Long parentId, Long courseId, Long classId, String visibility, Long sectionId, Long uploaderId) {
+    private FileInfo convertToInfo(FileBo bo, String uniqueName, Long parentId, Long courseId, Long classId, String visibility, Long sectionId, Long uploaderId, FileType type) {
         FileInfo info = new FileInfo();
         //BeanUtils.copyProperties(info, bo);
         
@@ -207,7 +207,7 @@ public class FileUploadImpl implements FileUpload {
         info.setCreatedAt(bo.getCreatedAt());
         info.setUpdatedAt(bo.getCreatedAt());
         info.setVersion(0);
-        info.setFileType(bo.getFileType());
+        info.setFileType(type);
         info.setSectiondirId(sectionId);  // 是班级文件夹中的章节文件夹时，这个值与它之中的文件的 sectionId 相同
         // 如果不是班级章节文件夹，sectionId为-1
         info.setSectionId(sectionId);
@@ -283,7 +283,7 @@ public class FileUploadImpl implements FileUpload {
             System.out.println("lastVersionId: " + lastVersionId);
         }
         
-        FileInfo info = convertToInfo(bo, uniqueName, parentId, courseId, classId, visibility, sectionId, uploaderId);
+        FileInfo info = convertToInfo(bo, uniqueName, parentId, courseId, classId, visibility, sectionId, uploaderId, type);
         
         // 设置版本信息
         if (flag > 0) {  // 是新版本
@@ -314,7 +314,7 @@ public class FileUploadImpl implements FileUpload {
 
     //  同文件夹中重名文件加标号，用于前端展示，OSS库中会自动生成不重复的文件名，不需要这里处理
     private NameResult recursionFindName(String originalName, String name, Long parentId, int flag) {
-        while (fileMapper.existsByNameAndParent(name, parentId)) {
+        while (fileMapper.existsByNameAndParent(name, parentId) > 0) {
             flag++;
             name = originalName + "(" + flag + ")";
         }
