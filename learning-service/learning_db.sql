@@ -164,18 +164,7 @@ CREATE TABLE `self_practice_question` (
   CONSTRAINT `self_practice_question_ibfk_1` FOREIGN KEY (`self_practice_id`) REFERENCES `self_practice` (`id`) ON DELETE CASCADE,
   CONSTRAINT `self_practice_question_ibfk_2` FOREIGN KEY (`question_id`) REFERENCES `question` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Dumping data for table `self_practice_question`
---
-
-LOCK TABLES `self_practice_question` WRITE;
-/*!40000 ALTER TABLE `self_practice_question` DISABLE KEYS */;
-INSERT INTO `self_practice_question` VALUES (11,20,1,10),(11,21,2,10),(11,22,3,10),(11,23,4,10),(12,24,1,10),(12,25,2,10),(12,26,3,10),(12,27,4,10),(12,28,5,10),(13,54,1,10),(13,55,2,10),(13,56,3,10),(14,57,1,10),(14,58,2,10),(15,59,1,10),(15,60,2,10),(16,61,1,10),(16,62,2,10),(17,63,1,10),(17,64,2,10),(18,78,1,10),(18,79,2,10),(19,82,1,10),(19,83,2,10);
-/*!40000 ALTER TABLE `self_practice_question` ENABLE KEYS */;
-UNLOCK TABLES;
--- 学习记录表
 CREATE TABLE learning_progress (
   id bigint NOT NULL AUTO_INCREMENT,
   resource_id bigint NOT NULL,  -- 引用内容服务
