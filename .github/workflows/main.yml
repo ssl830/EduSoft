@@ -1,0 +1,92 @@
+name: CI/CD for EduSoft Microservices
+
+on:
+  push:
+    branches: [docker]
+  pull_request:
+    branches: [docker]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: fkq200566
+          MYSQL_DATABASE: user-db
+        ports:
+          - 3307:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
+    steps:
+      - name: 检出代码（Checkout code）
+        uses: actions/checkout@v3
+
+      - name: 配置 JDK 21（Set up JDK 21）
+        uses: actions/setup-java@v3
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: 配置 Node.js（Set up Node.js）
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: 构建 user-service（Build user-service）
+        run: |
+          cd user-service
+          ./mvnw clean package -DskipTests
+
+      - name: 构建 course-service（Build course-service）
+        run: |
+          cd course-service
+          ./mvnw clean package -DskipTests
+
+      - name: 构建 learning-service（Build learning-service）
+        run: |
+          cd learning-service
+          ./mvnw clean package -DskipTests
+
+      - name: 构建 content-service（Build content-service）
+        run: |
+          cd content-service
+          ./mvnw clean package -DskipTests
+
+      - name: 构建前端（Build frontend）
+        run: |
+          cd frontend
+          npm install
+          npm run build
+
+      # 如需构建并推送 Docker 镜像，取消以下注释并补充仓库信息
+      - name: 配置 Docker Buildx（Set up Docker Buildx）
+        uses: docker/setup-buildx-action@v3
+
+      - name: 登录 DockerHub（Login to DockerHub）
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: 构建并推送 Docker 镜像（Build and push Docker images）
+        run: |
+          docker-compose build
+          docker-compose push
+
+      - name: 上传构建产物（Upload build artifacts）
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-artifacts
+          path: |
+            user-service/target/*.jar
+            course-service/target/*.jar
+            learning-service/target/*.jar
+            content-service/target/*.jar
+            frontend/dist
