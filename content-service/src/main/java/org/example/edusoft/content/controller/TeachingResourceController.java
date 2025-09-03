@@ -20,6 +20,7 @@ import org.springframework.http.MediaType;
 
 import java.util.List;
 import java.util.Map;
+import org.example.edusoft.content.entity.StudyRecord; // 新增导入
 
 @Data
 class ProgressUpdateRequest {
@@ -293,5 +294,20 @@ public class TeachingResourceController {
         int count = resourceService.countResourcesByCourseId(courseId);
         log.info("Resource count for courseId {}: {}", courseId, count);
         return Result.success(count);
+    }
+
+    /**
+     * 获取某个学生的所有学习记录
+     */
+    @GetMapping("/study-records/{studentId}")
+    public Result<List<StudyRecord>> getStudyRecordsByStudentId(@PathVariable Long studentId) {
+        try {
+            // 直接调用学习进度表
+            List<StudyRecord> records = resourceService.getStudyRecordsByStudentId(studentId);
+            return Result.success(records, "获取学习记录成功");
+        } catch (Exception e) {
+            log.error("获取学习记录失败", e);
+            return Result.error("获取学习记录失败：" + e.getMessage());
+        }
     }
 }

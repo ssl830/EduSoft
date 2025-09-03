@@ -188,13 +188,63 @@ public class CourseClient extends BaseServiceClient {
         }
         org.springframework.http.HttpEntity<Void> entity = new org.springframework.http.HttpEntity<>(headers);
         String url = getBaseUrl() + "/api/classes/" + userId + "/" + courseId;
-        org.springframework.http.ResponseEntity<Long> response = restTemplate.exchange(
-            url,
-            org.springframework.http.HttpMethod.GET,
-            entity,
-            Long.class
-        );
-        return response.getBody();
+        try {
+            org.springframework.http.ResponseEntity<String> response = restTemplate.exchange(
+                url,
+                org.springframework.http.HttpMethod.GET,
+                entity,
+                String.class
+            );
+            String body = response.getBody();
+            if (body != null && !body.isEmpty()) {
+                com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                Map<String, Object> map = mapper.readValue(body, Map.class);
+                // 兼容返回格式: {"6":[{"id":4,"courseId":6,...}]}
+                Object listObj = map.get(String.valueOf(courseId));
+                if (listObj instanceof List<?> list && !list.isEmpty()) {
+                    Object first = list.get(0);
+                    if (first instanceof Map<?, ?> firstMap) {
+                        Object idObj = firstMap.get("id");
+                        if (idObj instanceof Number) {
+                            return ((Number) idObj).longValue();
+                        } else if (idObj != null) {
+                            try {
+                                System.out.println("idObj:"+idObj);
+                                return Long.valueOf(idObj.toString());
+                            } catch (Exception ignore) {}
+                        }
+                    }
+                }
+                // 兼容原有格式
+                Object dataObj = map.get("data");
+                if (dataObj instanceof Map<?, ?> dataMap) {
+                    Object classIdObj = dataMap.get("id");
+                    if (classIdObj == null) classIdObj = dataMap.get("classId");
+                    if (classIdObj == null) classIdObj = dataMap.get("class_id");
+                    if (classIdObj instanceof Number) {
+                        return ((Number) classIdObj).longValue();
+                    } else if (classIdObj != null) {
+                        try {
+                            return Long.valueOf(classIdObj.toString());
+                        } catch (Exception ignore) {}
+                    }
+                }
+                // 兼容直接返回id字段
+                Object classIdObj = map.get("id");
+                if (classIdObj == null) classIdObj = map.get("classId");
+                if (classIdObj == null) classIdObj = map.get("class_id");
+                if (classIdObj instanceof Number) {
+                    return ((Number) classIdObj).longValue();
+                } else if (classIdObj != null) {
+                    try {
+                        return Long.valueOf(classIdObj.toString());
+                    } catch (Exception ignore) {}
+                }
+            }
+        } catch (Exception ex) {
+            logger.warn("获取班级ID失败: userId={}, courseId={}, {}", userId, courseId, ex.getMessage());
+        }
+        return null;
     }
 
     /**

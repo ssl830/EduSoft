@@ -147,7 +147,7 @@ public class HomeworkServiceImpl implements HomeworkService {
             log.error("作业不存在：homeworkId={}", homeworkId);
             throw new RuntimeException("作业不存在");
         }
-        log.info("找到作业：{}", homework);
+        log.info("findHomework：{}", homework);
 
         // 检查是否已过截止时间
         if (homework.getDeadline() != null && LocalDateTime.now().isAfter(homework.getDeadline())) {
@@ -158,7 +158,7 @@ public class HomeworkServiceImpl implements HomeworkService {
 
         // 获取课程ID
         Long classId = homework.getClassId();
-        log.info("开始获取课程ID：作业ID={}, 班级ID={}", homeworkId, classId);
+        log.info("Start obtain Course ID 开始获取课程ID：作业ID={}, 班级ID={}", homeworkId, classId);
         Long courseId;
         try {
             courseId = courseClient.getCourseIdByClassId(classId);
@@ -177,6 +177,8 @@ public class HomeworkServiceImpl implements HomeworkService {
         submission.setHomeworkId(homeworkId);
         submission.setStudentId(studentId);
         submission.setStudentName(studentName);
+
+        log.info("181aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
 
         // 上传文件
         String objectName = "homework/submission/" + homeworkId + "/" + studentId + "_" + file.getOriginalFilename();
@@ -212,7 +214,7 @@ public class HomeworkServiceImpl implements HomeworkService {
         submission.setSubmittedAt(LocalDateTime.now());
 
         // 保存提交记录
-        log.info("开始保存提交记录：{}", submission);
+        log.info("Start save 开始保存提交记录：{}", submission);
         submissionMapper.insert(submission);
         log.info("提交记录保存成功，ID：{}", submission.getId());
         return submission.getId();
