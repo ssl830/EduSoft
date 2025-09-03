@@ -59,7 +59,7 @@ export default defineConfig({
       '/api/discussion':{target: 'http://localhost:8083', changeOrigin: true },
       '/api/discussion-like':{target: 'http://localhost:8083', changeOrigin: true },
       '/api/discussion-reply':{target: 'http://localhost:8083', changeOrigin: true },
-
+      '/api/homework':{target: 'http://localhost:8083', changeOrigin: true },
     }
   },
   optimizeDeps: {

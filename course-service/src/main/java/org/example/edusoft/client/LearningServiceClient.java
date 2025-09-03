@@ -18,7 +18,7 @@ public interface LearningServiceClient {
                                            @RequestHeader(value = "Authorization", required = false) String authorization);
 
     // 资源数量统计（learning-service聚合）
-    @GetMapping("/api/learning/resource/count/course/{courseId}")
+    @GetMapping("/api/resource/count/course/{courseId}")
     Map<String, Object> getResourceCountByCourse(@PathVariable("courseId") Long courseId,
                                                  @RequestHeader(value = "satoken", required = false) String token,
                                                  @RequestHeader(value = "Authorization", required = false) String authorization);
