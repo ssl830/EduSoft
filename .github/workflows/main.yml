@@ -2,7 +2,7 @@
 on:
   push:
     branches:
-      - 'micro_frontend_service'
+      - 'frontend-service'
 
 jobs:
   build-frontend:
