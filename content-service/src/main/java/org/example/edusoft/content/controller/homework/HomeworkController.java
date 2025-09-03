@@ -105,7 +105,6 @@ public class HomeworkController {
      * 提交作业
      * @param homeworkId 作业ID
      * @param studentId 学生ID
-     * @param submissionType 提交类型
      * @param file 提交的文件
      * @return 提交记录ID
      */
@@ -113,10 +112,11 @@ public class HomeworkController {
     public Result<Long> submitHomework(
             @PathVariable Long homeworkId,
             @RequestParam("student_id") Long studentId,
-            @RequestPart("file") MultipartFile file) {
+            @RequestPart("file") MultipartFile file
+            , HttpServletRequest request) {
         try {
             log.info("接收到作业提交请求：homeworkId={}, studentId={}, fileName={}", homeworkId, studentId, file.getOriginalFilename());
-            Long submissionId = homeworkService.submitHomework(homeworkId, studentId, "", file);
+            Long submissionId = homeworkService.submitHomework(homeworkId, studentId, "", file, request);
             return Result.success(submissionId, "作业提交成功");
         } catch (Exception e) {
             return Result.error("作业提交失败：" + e.getMessage());
@@ -129,9 +129,9 @@ public class HomeworkController {
      * @return 提交记录列表
      */
     @GetMapping("/submissions/{homeworkId}")
-    public Result<List<HomeworkSubmissionDTO>> getSubmissionList(@PathVariable Long homeworkId) {
+    public Result<List<HomeworkSubmissionDTO>> getSubmissionList(@PathVariable Long homeworkId, HttpServletRequest request) {
         try {
-            List<HomeworkSubmissionDTO> submissions = homeworkService.getSubmissionList(homeworkId);
+            List<HomeworkSubmissionDTO> submissions = homeworkService.getSubmissionList(homeworkId, request);
             return Result.success(submissions, "获取提交列表成功");
         } catch (Exception e) {
             return Result.error("获取提交列表失败：" + e.getMessage());

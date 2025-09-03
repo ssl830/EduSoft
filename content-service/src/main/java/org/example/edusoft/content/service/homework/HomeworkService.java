@@ -1,5 +1,6 @@
 package org.example.edusoft.content.service.homework;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.example.edusoft.content.dto.homework.HomeworkDTO;
 import org.example.edusoft.content.dto.homework.HomeworkSubmissionDTO;
 import org.springframework.web.multipart.MultipartFile;
@@ -27,12 +28,12 @@ public interface HomeworkService {
     /**
      * 提交作业
      */
-    Long submitHomework(Long homeworkId, Long studentId, String studentName, MultipartFile file);
+    Long submitHomework(Long homeworkId, Long studentId, String studentName, MultipartFile file, HttpServletRequest request);
     
     /**
      * 获取作业提交列表
      */
-    List<HomeworkSubmissionDTO> getSubmissionList(Long homeworkId);
+    List<HomeworkSubmissionDTO> getSubmissionList(Long homeworkId, HttpServletRequest request);
     
     /**
      * 获取学生提交的作业
