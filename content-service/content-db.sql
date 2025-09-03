@@ -1,5 +1,3 @@
--- 内容服务数据库脚本
-
 DROP DATABASE IF EXISTS `content-db`;
 CREATE DATABASE IF NOT EXISTS `content-db` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE `content-db`;

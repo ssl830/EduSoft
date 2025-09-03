@@ -17,7 +17,7 @@ services:
       - ./user-service/user-db.sql:/docker-entrypoint-initdb.d/01-user.sql
       - ./course-service/course_db.sql:/docker-entrypoint-initdb.d/02-course.sql
       - ./learning-service/learning_db.sql:/docker-entrypoint-initdb.d/03-learning.sql
-      - ./learning-service/learning_db.sql:/docker-entrypoint-initdb.d/03-learning.sql
+      - ./content-service/content-db.sql:/docker-entrypoint-initdb.d/04-content.sql
     networks:
       - edusoft-network
     healthcheck:
@@ -102,6 +102,32 @@ services:
     networks:
       - edusoft-network
 
+  # Content Service  
+  content-service:
+    build:
+      context: ./content-service
+      dockerfile: Dockerfile
+    ports:
+      - "8083:8083"
+    environment:
+      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=com.mysql.cj.jdbc.Driver
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/content-db?useUnicode=true&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=fkq200566
+      - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.MySQL8Dialect
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_SHOW_SQL=true
+      - LOGGING_LEVEL_ROOT=INFO
+      - LOGGING_LEVEL_ORG_SPRINGFRAMEWORK=DEBUG
+      - LOGGING_LEVEL_ORG_EXAMPLE_EDUSOFT_CONTENT=DEBUG
+      - SERVICES_USER_BASE_URL=http://user-service:8081
+      - SERVICES_COURSE_URL=http://course-service:8082
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - edusoft-network
+
   # Frontend Service
   frontend:
     build:
@@ -113,6 +139,7 @@ services:
       - user-service
       - course-service
       - learning-service
+      - content-service
     networks:
       - edusoft-network
 
