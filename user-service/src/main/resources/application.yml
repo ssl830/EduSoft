@@ -17,8 +17,14 @@ spring:
       allowed-origins: "*"
       allowed-methods: "*"
       allowed-headers: "*"
-      allow-credentials: true
+      allow-credentials: false
       max-age: 3600
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+  servlet:
+    multipart:
+      enabled: true
 
 # Sa-Token配置
 sa-token:
@@ -40,7 +46,17 @@ sa-token:
 # 日志配置
 logging:
   level:
+    root: INFO
     '[org.example.edusoft.user]': DEBUG
+    '[org.springframework.web]': DEBUG
+    '[org.springframework.security]': DEBUG
+    '[org.hibernate]': DEBUG
+    '[org.springframework.web.servlet.mvc]': DEBUG
+    '[org.springframework.web.servlet.handler]': TRACE  # 添加这行来查看请求路由
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+  file:
+    name: logs/user-service.log
 
 # Actuator 健康检查配置
 management:

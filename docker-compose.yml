@@ -4,6 +4,12 @@ services:
     image: mysql:8.0
     environment:
       MYSQL_ROOT_PASSWORD: fkq200566
+      MYSQL_DATABASE: user-db
+    command: 
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-authentication-plugin=mysql_native_password
+      - --skip-name-resolve
     ports:
       - "3307:3306"
     volumes:
@@ -12,8 +18,8 @@ services:
     networks:
       - edusoft-network
     healthcheck:
-      test: mysqladmin ping -h localhost -u root --password=$$MYSQL_ROOT_PASSWORD
-      interval: 5s
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$$MYSQL_ROOT_PASSWORD"]
+      interval: 10s
       timeout: 5s
       retries: 5
 
@@ -25,9 +31,14 @@ services:
     ports:
       - "8081:8081"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/user-db?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
+      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=com.mysql.cj.jdbc.Driver
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/user-db?useUnicode=true&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=fkq200566
+      - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.MySQL8Dialect
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=none
+      - SPRING_JPA_SHOW_SQL=true
+      - LOGGING_LEVEL_ROOT=INFO
       - LOGGING_LEVEL_ORG_SPRINGFRAMEWORK=DEBUG
       - LOGGING_LEVEL_COM_EDUSOFT=DEBUG
     depends_on:
