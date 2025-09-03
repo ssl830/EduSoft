@@ -120,8 +120,12 @@ public class RecordServiceImpl implements RecordService {
     // 完成微服务化改造
     @Override
     public List<StudyRecord> getStudyRecords(Long studentId) {
-        List<StudyRecord> records = studyRecordMapper.findStudyRecords(studentId);
+        System.out.println("=============================================");
+        System.out.println(studentId);
+        // 通过内容服务获取学习记录
+        List<StudyRecord> records = contentClient.getStudyRecordsByStudentId(studentId);
         if (records == null || records.isEmpty()) return records;
+        System.out.println("records:"+records);
 
         // 批量获取resourceId 
         List<Long> resourceIds = records.stream()
@@ -131,11 +135,22 @@ public class RecordServiceImpl implements RecordService {
                 .toList();
         String resourceIdsStr = resourceIds.stream().map(String::valueOf).reduce((a, b) -> a + "," + b).orElse("");
         List<Map<String, Object>> resourceList = contentClient.getResourcesByIds(resourceIdsStr);
+
+        System.out.println("resourceList:"+resourceList);
+
         Map<Long, Map<String, Object>> resourceMap = new HashMap<>();
         for (Map<String, Object> res : resourceList) {
-            Object idObj = res.get("id");
-            if (idObj != null) resourceMap.put(Long.valueOf(idObj.toString()), res);
+            // 资源信息在data字段
+            Object dataObj = res.get("data");
+            System.out.println("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+            if (dataObj instanceof Map<?, ?> data) {
+                Object idObj = data.get("id");
+                System.out.println("HEREEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE");
+                if (idObj != null) resourceMap.put(Long.valueOf(idObj.toString()), (Map<String, Object>) data);
+            }
         }
+
+        System.out.println("resourceMap" + resourceMap);
 
         // 批量获取sectionId
         List<Long> sectionIds = resourceList.stream()
@@ -144,6 +159,8 @@ public class RecordServiceImpl implements RecordService {
                 .map(id -> Long.valueOf(id.toString()))
                 .distinct()
                 .toList();
+        System.out.println("sectionIds:"+sectionIds);
+
         Map<Long, Map<String, Object>> sectionMap = new HashMap<>();
         if (!sectionIds.isEmpty()) {
             String sectionIdsStr = sectionIds.stream().map(String::valueOf).reduce((a, b) -> a + "," + b).orElse("");
@@ -155,16 +172,19 @@ public class RecordServiceImpl implements RecordService {
         }
 
         // 批量获取courseId
-        List<Long> courseIds = sectionMap.values().stream()
+        List<Long> courseIds = resourceMap.values().stream()
                 .map(sec -> sec.get("courseId"))
                 .filter(java.util.Objects::nonNull)
                 .map(id -> Long.valueOf(id.toString()))
                 .distinct()
                 .toList();
+        System.out.println("courseIds:"+courseIds);
+
         Map<Long, Map<String, Object>> courseMap = new HashMap<>();
         if (!courseIds.isEmpty()) {
             String courseIdsStr = courseIds.stream().map(String::valueOf).reduce((a, b) -> a + "," + b).orElse("");
             List<Map<String, Object>> courseList = courseClient.getCoursesByIds(courseIdsStr);
+            System.out.println("courseList"+courseList);
             for (Map<String, Object> c : courseList) {
                 Object idObj = c.get("id");
                 if (idObj != null) courseMap.put(Long.valueOf(idObj.toString()), c);
@@ -181,95 +201,49 @@ public class RecordServiceImpl implements RecordService {
                     Map<String, Object> sec = sectionMap.get(sectionId);
                     if (sec != null) {
                         rec.setSectionTitle((String) sec.get("title"));
-                        Long courseId = sec.get("courseId") != null ? Long.valueOf(sec.get("courseId").toString()) : null;
-                        if (courseId != null) {
-                            Map<String, Object> course = courseMap.get(courseId);
-                            if (course != null) {
-                                rec.setCourseName((String) course.get("name"));
-                            }
-                        }
+                    }
+                }
+                // 只要有courseId就设置courseName
+                Long courseId = res.get("courseId") != null ? Long.valueOf(res.get("courseId").toString()) : null;
+                if (courseId != null) {
+                    Map<String, Object> course = courseMap.get(courseId);
+                    if (course != null) {
+                        rec.setCourseName((String) course.get("name"));
                     }
                 }
             }
         }
+        System.out.println("records:"+records);
+
         return records;
     }
 
-    // 已完成微服务化改造
+    // 已完成��服务化改造
     @Override
     public List<StudyRecord> getStudyRecordsByCourse(Long studentId, Long courseId) {
-        List<StudyRecord> records = studyRecordMapper.findStudyRecords(studentId);
+        List<StudyRecord> records = getStudyRecords(studentId);
         if (records == null || records.isEmpty()) return records;
 
-        // 批量获取resourceId
-        List<Long> resourceIds = records.stream()
-                .map(StudyRecord::getResourceId)
-                .filter(java.util.Objects::nonNull)
-                .distinct()
-                .toList();
-        if (resourceIds.isEmpty()) return List.of(); 
-        String resourceIdsStr = resourceIds.stream().map(String::valueOf).collect(java.util.stream.Collectors.joining(","));
-        List<Map<String, Object>> resourceList = contentClient.getResourcesByIds(resourceIdsStr);
-        Map<Long, Map<String, Object>> resourceMap = new HashMap<>();
-        for (Map<String, Object> res : resourceList) {
-            Object idObj = res.get("id");
-            if (idObj != null) resourceMap.put(Long.valueOf(idObj.toString()), res);
-        }
-
-        // 批量获取sectionId
-        List<Long> sectionIds = resourceList.stream()
-                .map(r -> r.get("chapterId"))
-                .filter(java.util.Objects::nonNull)
-                .map(id -> Long.valueOf(id.toString()))
-                .distinct()
-                .toList();
-        Map<Long, Map<String, Object>> sectionMap = new HashMap<>();
-        if (!sectionIds.isEmpty()) {
-            String sectionIdsStr = sectionIds.stream().map(String::valueOf).collect(java.util.stream.Collectors.joining(","));
-            List<Map<String, Object>> sectionList = courseClient.getSectionsByIds(sectionIdsStr);
-            for (Map<String, Object> sec : sectionList) {
-                Object idObj = sec.get("id");
-                if (idObj != null) sectionMap.put(Long.valueOf(idObj.toString()), sec);
+        // 通过courseId获取课程名
+        String courseIdsStr = String.valueOf(courseId);
+        List<Map<String, Object>> courseList = courseClient.getCoursesByIds(courseIdsStr);
+        String targetCourseName = null;
+        for (Map<String, Object> course : courseList) {
+            Object idObj = course.get("id");
+            Object nameObj = course.get("name");
+            if (idObj != null && nameObj != null && Long.valueOf(idObj.toString()).equals(courseId)) {
+                targetCourseName = nameObj.toString();
+                break;
             }
         }
+        if (targetCourseName == null) return new ArrayList<>();
 
-        // 批量获取courseId
-        List<Long> courseIds = sectionMap.values().stream()
-                .map(sec -> sec.get("courseId"))
-                .filter(java.util.Objects::nonNull)
-                .map(id -> Long.valueOf(id.toString()))
-                .distinct()
-                .toList();
-        Map<Long, Map<String, Object>> courseMap = new HashMap<>();
-        if (!courseIds.isEmpty()) {
-            String courseIdsStr = courseIds.stream().map(String::valueOf).collect(java.util.stream.Collectors.joining(","));
-            List<Map<String, Object>> courseList = courseClient.getCoursesByIds(courseIdsStr);
-            for (Map<String, Object> c : courseList) {
-                Object idObj = c.get("id");
-                if (idObj != null) courseMap.put(Long.valueOf(idObj.toString()), c);
-            }
-        }
-
-        // 过滤属于目标课程的记录，并组装信息
-        List<StudyRecord> filtered = new java.util.ArrayList<>();
+        // 筛选courseName相同的部分
+        List<StudyRecord> filtered = new ArrayList<>();
         for (StudyRecord rec : records) {
-            Map<String, Object> res = resourceMap.get(rec.getResourceId());
-            if (res == null) continue;
-            Long sectionId = res.get("chapterId") != null ? Long.valueOf(res.get("chapterId").toString()) : null;
-            if (sectionId == null) continue;
-            Map<String, Object> sec = sectionMap.get(sectionId);
-            if (sec == null) continue;
-            Long courseIdOfRecord = sec.get("courseId") != null ? Long.valueOf(sec.get("courseId").toString()) : null;
-            if (courseIdOfRecord == null || !courseIdOfRecord.equals(courseId)) continue;
-
-            // 组装标题等信息
-            rec.setResourceTitle((String) res.get("title"));
-            rec.setSectionTitle((String) sec.get("title"));
-            Map<String, Object> course = courseMap.get(courseIdOfRecord);
-            if (course != null) {
-                rec.setCourseName((String) course.get("name"));
+            if (rec.getCourseName() != null && rec.getCourseName().equals(targetCourseName)) {
+                filtered.add(rec);
             }
-            filtered.add(rec);
         }
         return filtered;
     }
@@ -301,7 +275,7 @@ public class RecordServiceImpl implements RecordService {
         // 组装Map<Long, String>，每个课程下的班级名用逗号拼接
         Map<Long, String> classNameMap = new HashMap<>();
         
-        // 处理班级信息，按课程ID分组
+        // 处理班级��息，按课程ID分组
         Map<Long, List<String>> courseClassMap = new HashMap<>();
         for (Map<String, Object> classInfo : classList) {
             Object courseIdObj = classInfo.get("courseId");
@@ -428,8 +402,9 @@ public class RecordServiceImpl implements RecordService {
     // 完成微服务化改造
     @Override
     public byte[] exportStudyRecordsByCourseToExcel(Long studentId, Long courseId) {
+        System.out.println("导出指定课程学习记录，studentId=" + studentId + ", courseId=" + courseId);
         List<StudyRecord> studyRecords = getStudyRecordsByCourse(studentId, courseId);
-        System.out.println("查询到的学习记录数量: " + (studyRecords != null ? studyRecords.size() : 0));
+        System.out.println("查询到的学习记录数量aaa: " + (studyRecords != null ? studyRecords.size() : 0));
         if (studyRecords != null && !studyRecords.isEmpty()) {
             System.out.println("第一条记录: " + studyRecords.get(0));
         }
@@ -528,7 +503,7 @@ public class RecordServiceImpl implements RecordService {
                     }
 
                     // 设置列宽和样式
-                    detailSheet.setColumnWidth(0, 256 * 50); // 题目内容列宽
+                    detailSheet.setColumnWidth(0, 256 * 50); // 题目内容列���
                     detailSheet.setColumnWidth(2, 256 * 30); // 选项列宽
                     for (int i = 1; i < 8; i++) {
                         if (i != 2) {
@@ -634,15 +609,15 @@ public class RecordServiceImpl implements RecordService {
         System.out.println("=== getSubmissionReport 开始 ===");
         System.out.println("submissionId: " + submissionId);
         System.out.println("studentId: " + studentId);
-        
+
         try {
             Map<String, Object> report = new HashMap<>();
-            
+
             // 获取提交基本信息
             System.out.println("正在调用 findSubmissionDetail...");
             PracticeRecord submission = practiceRecordMapper.findSubmissionDetail(submissionId, studentId);
             System.out.println("findSubmissionDetail 结果: " + (submission != null ? "找到" : "未找到"));
-            
+
             if (submission == null) {
                 // 记录不存在，返回null
                 System.out.println("提交记录不存在，返回null");
@@ -733,7 +708,7 @@ public class RecordServiceImpl implements RecordService {
                 System.out.println("获取题目信息失败: " + e.getMessage());
                 report.put("questions", new ArrayList<>());
             }
-            
+
             // 获取班级排名
             try {
                 System.out.println("正在获取排名信息...");
@@ -760,12 +735,12 @@ public class RecordServiceImpl implements RecordService {
                 System.out.println("获取得分分布失败: " + e.getMessage());
                 report.put("scoreDistribution", new ArrayList<>());
             }
-            
+
             System.out.println("=== getSubmissionReport 成功完成 ===");
             return report;
         } catch (Exception e) {
             // 记录错误日志但不抛出异常，返回null让上层处理
-            System.out.println("=== getSubmissionReport 出现异常 ===");
+            System.out.println("=== getSubmissionReport 出��异常 ===");
             System.out.println("异常信息: " + e.getMessage());
             e.printStackTrace();
             return null;
@@ -779,7 +754,7 @@ public class RecordServiceImpl implements RecordService {
             PdfWriter writer = new PdfWriter(out);
             PdfDocument pdf = new PdfDocument(writer);
             Document document = new Document(pdf);
-            // 使用系统字体，确保中文能显示
+            // 使用系统字体，确保中文能显���
             String fontPath = "C:/Windows/Fonts/simsun.ttc,0";
             PdfFont font = PdfFontFactory.createFont(fontPath, PdfEncodings.IDENTITY_H);
             // 标题

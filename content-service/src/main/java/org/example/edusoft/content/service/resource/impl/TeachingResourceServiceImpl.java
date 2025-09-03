@@ -24,6 +24,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.example.edusoft.content.entity.file.FileInfo;
 import org.example.edusoft.content.common.Result;
+import org.example.edusoft.content.mapper.StudyRecordMapper;
+import org.example.edusoft.content.entity.StudyRecord;
 
 import java.net.URL;
 import java.time.LocalDateTime;
@@ -58,6 +60,9 @@ public class TeachingResourceServiceImpl implements TeachingResourceService {
 
     @Autowired
     private AIServiceClient aiServiceClient;
+
+    @Autowired
+    private StudyRecordMapper studyRecordMapper;
 
     @Override
     public TeachingResource createResource(TeachingResource resource) {
@@ -371,5 +376,13 @@ public class TeachingResourceServiceImpl implements TeachingResourceService {
      */
     public int countResourcesByCourseId(Long courseId) {
         return teachingResourceMapper.countByCourseId(courseId);
+    }
+
+    @Override
+    public List<StudyRecord> getStudyRecordsByStudentId(Long studentId) {
+        if (studentId == null) {
+            throw new BusinessException("学生ID不能为空");
+        }
+        return studyRecordMapper.findStudyRecords(studentId);
     }
 }
