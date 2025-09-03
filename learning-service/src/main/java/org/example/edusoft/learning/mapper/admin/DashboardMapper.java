@@ -34,17 +34,8 @@ public interface DashboardMapper {
 //                                   @Param("end") LocalDate end,
 //                                   @Param("teacherIds") List<Long> teacherIds);
 
-    /** 创建作业数量 */
-    @Select("""
-            <script>
-            SELECT COUNT(*) FROM homework h
-            WHERE h.created_by IN
-            <foreach collection="teacherIds" item="id" open="(" separator="," close=")">
-                #{id}
-            </foreach>
-            AND DATE(h.created_at) BETWEEN #{start} AND #{end}
-            </script>
-            """)
+    /** 创建作业数量 - 已迁移到 content-service */
+    @Deprecated
     int countTeacherCreateHomework(@Param("start") LocalDate start,
                                    @Param("end") LocalDate end,
                                    @Param("teacherIds") List<Long> teacherIds);
@@ -107,17 +98,8 @@ public interface DashboardMapper {
                                      @Param("end") LocalDate end,
                                      @Param("studentIds") List<Long> studentIds);
 
-    /** 提交作业数量 */
-    @Select("""
-            <script>
-            SELECT COUNT(*) FROM homework_submission hs
-            WHERE hs.student_id IN
-            <foreach collection="studentIds" item="id" open="(" separator="," close=")">
-                #{id}
-            </foreach>
-            AND DATE(hs.submitted_at) BETWEEN #{start} AND #{end}
-            </script>
-            """)
+    /** 提交作业数量 - 已迁移到 content-service */
+    @Deprecated
     int countStudentSubmitHomework(@Param("start") LocalDate start,
                                    @Param("end") LocalDate end,
                                    @Param("studentIds") List<Long> studentIds);

@@ -2,6 +2,7 @@ package org.example.edusoft.content.mapper.homework;
 
 import org.apache.ibatis.annotations.*;
 import org.example.edusoft.content.entity.homework.Homework;
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -71,4 +72,19 @@ public interface HomeworkMapper {
      */
     @Select("SELECT COUNT(*) FROM homework WHERE id = #{homeworkId} AND class_id = #{classId}")
     int checkHomeworkBelongsToClass(@Param("homeworkId") Long homeworkId, @Param("classId") Long classId);
+
+    /**
+     * 统计教师创建的作业数量
+     */
+    @Select({"<script>",
+            "SELECT COUNT(*) FROM homework",
+            "WHERE created_by IN",
+            "<foreach collection='teacherIds' item='teacherId' open='(' separator=',' close=')'>",
+            "#{teacherId}",
+            "</foreach>",
+            "AND DATE(created_at) BETWEEN #{start} AND #{end}",
+            "</script>"})
+    int countTeacherCreateHomework(@Param("start") LocalDate start,
+                                 @Param("end") LocalDate end,
+                                 @Param("teacherIds") List<Long> teacherIds);
 } 

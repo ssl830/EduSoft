@@ -14,7 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.Map;
-
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -218,6 +218,42 @@ public class HomeworkController {
             return Result.success(null, "作业删除成功");
         } catch (Exception e) {
             return Result.error("作业删除失败：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 统计教师创建的作业数量
+     */
+    @GetMapping("/stats/teacher/count")
+    public Result<Integer> countTeacherCreateHomework(
+            @RequestParam("start") String start,
+            @RequestParam("end") String end,
+            @RequestParam("teacher_ids") List<Long> teacherIds) {
+        try {
+            LocalDate startDate = LocalDate.parse(start);
+            LocalDate endDate = LocalDate.parse(end);
+            int count = homeworkService.countTeacherCreateHomework(startDate, endDate, teacherIds);
+            return Result.success(count, "统计成功");
+        } catch (Exception e) {
+            return Result.error("统计失败：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 统计学生提交的作业数量
+     */
+    @GetMapping("/stats/student/submissions")
+    public Result<Integer> countStudentSubmitHomework(
+            @RequestParam("start") String start,
+            @RequestParam("end") String end,
+            @RequestParam("student_ids") List<Long> studentIds) {
+        try {
+            LocalDate startDate = LocalDate.parse(start);
+            LocalDate endDate = LocalDate.parse(end);
+            int count = homeworkService.countStudentSubmitHomework(startDate, endDate, studentIds);
+            return Result.success(count, "统计成功");
+        } catch (Exception e) {
+            return Result.error("统计失败：" + e.getMessage());
         }
     }
 } 

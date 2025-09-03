@@ -5,6 +5,8 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
+import java.time.LocalDate;
+import java.util.HashMap;
 
 /**
  * 内容服务客户端
@@ -12,6 +14,8 @@ import java.util.Map;
  */
 @Component
 public class ContentClient extends BaseServiceClient {
+    
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ContentClient.class);
     
     @Value("${service.content.url:http://localhost:8083}")
     private String contentServiceUrl;
@@ -166,5 +170,49 @@ public class ContentClient extends BaseServiceClient {
             throw new IllegalArgumentException("通知内容不能为空");
         }
         return post("/api/content/notification", notification, Map.class);
+    }
+
+    /**
+     * 统计教师创建的作业数量
+     */
+    public int countTeacherHomework(LocalDate start, LocalDate end, List<Long> teacherIds) {
+        try {
+            Map<String, Object> params = new HashMap<>();
+            params.put("start", start);
+            params.put("end", end);
+            params.put("teacherIds", teacherIds);
+            
+            Map<String, Object> result = post("/api/homework/stats/teacher/count", params, Map.class);
+            
+            if (result != null && result.get("count") instanceof Number) {
+                return ((Number) result.get("count")).intValue();
+            }
+            return 0;
+        } catch (Exception e) {
+            log.error("统计教师作业数量失败: {}", e.getMessage());
+            return 0;
+        }
+    }
+
+    /**
+     * 统计学生提交的作业数量
+     */
+    public int countStudentHomework(LocalDate start, LocalDate end, List<Long> studentIds) {
+        try {
+            Map<String, Object> params = new HashMap<>();
+            params.put("start", start);
+            params.put("end", end);
+            params.put("studentIds", studentIds);
+            
+            Map<String, Object> result = post("/api/homework/stats/student/submissions", params, Map.class);
+            
+            if (result != null && result.get("count") instanceof Number) {
+                return ((Number) result.get("count")).intValue();
+            }
+            return 0;
+        } catch (Exception e) {
+            log.error("统计学生作业数量失败: {}", e.getMessage());
+            return 0;
+        }
     }
 }

@@ -1,5 +1,6 @@
 package org.example.edusoft.learning.service.admin;
 
+import org.example.edusoft.learning.client.ContentClient;
 import org.example.edusoft.learning.client.CourseClient;
 import org.example.edusoft.learning.client.UserServiceClient;
 import org.example.edusoft.learning.mapper.admin.DashboardMapper;
@@ -10,6 +11,7 @@ import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -28,8 +30,17 @@ public class DashboardService {
     @Autowired
     private CourseClient courseClient;
 
-    @Value("${services.user.base-url:http://localhost:8081}")
+    @Value("${service.user.url:http://localhost:8081}")
     private String userServiceBaseUrl;
+
+    @Value("${service.course.url:http://localhost:8082}")
+    private String courseServiceUrl;
+
+    @Value("${service.content.url:http://localhost:8083}")
+    private String contentServiceUrl;
+
+    @Autowired
+    private ContentClient contentClient;
 
     // 获取请求头中的 satoken，参考 ManualJudgeServiceImpl
     private String resolveOutboundToken() {
@@ -60,28 +71,58 @@ public class DashboardService {
      * @param end   结束日期（含）
      * @return Map 结构，包含 teacherStats / studentStats
      */
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DashboardService.class);
+    
     public Map<String, Object> getBasicStatistics(LocalDate start, LocalDate end) {
-        System.out.println("Getting basic statistics from " + start + " to " + end);
+        logger.info("Getting basic statistics from {} to {}", start, end);
         Map<String, Object> result = new HashMap<>();
 
-        String token = resolveOutboundToken();
-        List<Map<String, Object>> teachers = userServiceClient.fetchAllTeachers(userServiceBaseUrl, token);
-        List<Map<String, Object>> students = userServiceClient.fetchAllStudents(userServiceBaseUrl, token);
-        System.out.println("teachers & students=====================================================");
-        System.out.println(teachers);
-        System.out.println(students);
+        List<Long> teacherIds = new ArrayList<>();
+        List<Long> studentIds = new ArrayList<>();
 
-        List<Long> teacherIds = teachers.stream()
-                .map(t -> Long.valueOf(t.get("id").toString()))
-                .collect(Collectors.toList());
-        List<Long> studentIds = students.stream()
-                .map(s -> Long.valueOf(s.get("id").toString()))
-                .collect(Collectors.toList());
+        String token = resolveOutboundToken();
+        if (token == null) {
+            logger.warn("未能获取到有效的认证Token");
+            token = ""; // 提供一个空token，让服务端决定是否接受
+        }
+
+        try {
+            List<Map<String, Object>> teachers = userServiceClient.fetchAllTeachers(userServiceBaseUrl, token);
+            List<Map<String, Object>> students = userServiceClient.fetchAllStudents(userServiceBaseUrl, token);
+            logger.debug("获取到教师数: {}, 学生数: {}", teachers.size(), students.size());
+
+            if (teachers != null) {
+                teacherIds = teachers.stream()
+                        .map(t -> {
+                            Object id = t.get("id");
+                            if (id instanceof Number) {
+                                return ((Number) id).longValue();
+                            }
+                            return Long.valueOf(id.toString());
+                        })
+                        .collect(Collectors.toList());
+            }
+
+            if (students != null) {
+                studentIds = students.stream()
+                        .map(s -> {
+                            Object id = s.get("id");
+                            if (id instanceof Number) {
+                                return ((Number) id).longValue();
+                            }
+                            return Long.valueOf(s.get("id").toString());
+                        })
+                        .collect(Collectors.toList());
+            }
+        } catch (Exception e) {
+            logger.error("获取用户列表失败: {}", e.getMessage());
+            // 使用空列表继续执行，而不是抛出异常中断整个流程
+        }
 
         Map<String, Integer> teacherStats = new HashMap<>();
 //        TODO
 //        teacherStats.put("uploadResource", dashboardMapper.countTeacherUploadResource(start, end, teacherIds));
-        teacherStats.put("createHomework", dashboardMapper.countTeacherCreateHomework(start, end, teacherIds));
+        teacherStats.put("createHomework", contentClient.countTeacherHomework(start, end, teacherIds));
         teacherStats.put("createPractice", dashboardMapper.countTeacherCreatePractice(start, end, teacherIds));
         teacherStats.put("correctPractice", dashboardMapper.countTeacherCorrectPractice(start, end));
         teacherStats.put("createQuestion", dashboardMapper.countTeacherCreateQuestion(start, end, teacherIds));
@@ -89,7 +130,7 @@ public class DashboardService {
 
         Map<String, Integer> studentStats = new HashMap<>();
         studentStats.put("downloadResource", dashboardMapper.countStudentDownloadResource(start, end, studentIds));
-        studentStats.put("submitHomework", dashboardMapper.countStudentSubmitHomework(start, end, studentIds));
+        studentStats.put("submitHomework", contentClient.countStudentHomework(start, end, studentIds));
         studentStats.put("submitPractice", dashboardMapper.countStudentSubmitPractice(start, end, studentIds));
         studentStats.put("assistantQuestions", dashboardMapper.countStudentAssistantQuestions(start, end, studentIds));
         studentStats.put("studentCount", studentIds.size());
@@ -250,17 +291,30 @@ public class DashboardService {
         Map<String, Object> overview = new HashMap<>();
 
         LocalDate today = LocalDate.now();
-        System.out.println("Dashboard overview for date: " + today);
-        // 今天
-        overview.put("today", getBasicStatistics(today, today));
-        overview.put("todayEfficiency", getTeachingEfficiencyMetrics(today, today));
-        overview.put("todayLearningEffect", getStudentLearningEffect(today, today));
+        logger.info("获取仪表盘概览数据，日期: {}", today);
 
-        // 本周（过去 7 天含今日）
-        LocalDate weekStart = today.minusDays(6);
-        overview.put("week", getBasicStatistics(weekStart, today));
-        overview.put("weekEfficiency", getTeachingEfficiencyMetrics(weekStart, today));
-        overview.put("weekLearningEffect", getStudentLearningEffect(weekStart, today));
+        try {
+            // 今天的数据
+            Map<String, Object> todayStats = getBasicStatistics(today, today);
+            Map<String, Object> todayEfficiency = getTeachingEfficiencyMetrics(today, today);
+            Map<String, Object> todayLearning = getStudentLearningEffect(today, today);
+            overview.put("today", todayStats);
+            overview.put("todayEfficiency", todayEfficiency);
+            overview.put("todayLearningEffect", todayLearning);
+
+            // 本周（过去 7 天含今日）
+            LocalDate weekStart = today.minusDays(6);
+            Map<String, Object> weekStats = getBasicStatistics(weekStart, today);
+            Map<String, Object> weekEfficiency = getTeachingEfficiencyMetrics(weekStart, today);
+            Map<String, Object> weekLearning = getStudentLearningEffect(weekStart, today);
+            overview.put("week", weekStats);
+            overview.put("weekEfficiency", weekEfficiency);
+            overview.put("weekLearningEffect", weekLearning);
+        } catch (Exception e) {
+            logger.error("获取仪表盘数据失败: {}", e.getMessage());
+            // 在出错时，返回空数据而不是抛出异常
+            overview.put("error", "获取仪表盘数据失败: " + e.getMessage());
+        }
 
         return overview;
     }

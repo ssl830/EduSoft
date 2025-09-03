@@ -22,6 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 import jakarta.servlet.http.HttpServletResponse;
 import org.example.edusoft.content.client.CourseClient;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -303,5 +304,24 @@ public class HomeworkServiceImpl implements HomeworkService {
         homeworkMapper.deleteById(homeworkId);
     }
 
+    @Override
+    public int countTeacherCreateHomework(LocalDate start, LocalDate end, List<Long> teacherIds) {
+        try {
+            return homeworkMapper.countTeacherCreateHomework(start, end, teacherIds);
+        } catch (Exception e) {
+            log.error("统计教师创建作业数量失败: error={}", e.getMessage());
+            return 0;
+        }
+    }
+
+    @Override
+    public int countStudentSubmitHomework(LocalDate start, LocalDate end, List<Long> studentIds) {
+        try {
+            return submissionMapper.countStudentSubmitHomework(start, end, studentIds);
+        } catch (Exception e) {
+            log.error("统计学生提交作业数量失败: error={}", e.getMessage());
+            return 0;
+        }
+    }
 
 }

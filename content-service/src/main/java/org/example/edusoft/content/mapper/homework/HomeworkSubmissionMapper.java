@@ -4,6 +4,7 @@ import org.apache.ibatis.annotations.*;
 import org.example.edusoft.content.entity.homework.HomeworkSubmission;
 // import org.example.edusoft.entity.homework.HomeworkSubmissionWithName;
 
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -63,5 +64,18 @@ public interface HomeworkSubmissionMapper {
     @Update("UPDATE homework_submission SET feedback = #{feedback}, score = #{score}, updated_at = #{updatedAt} WHERE id = #{id}")
     int updateById(HomeworkSubmission submission);
 
-
+    /**
+     * 统计学生提交的作业数量
+     */
+    @Select({"<script>",
+            "SELECT COUNT(*) FROM homework_submission",
+            "WHERE student_id IN",
+            "<foreach collection='studentIds' item='studentId' open='(' separator=',' close=')'>",
+            "#{studentId}",
+            "</foreach>",
+            "AND DATE(submitted_at) BETWEEN #{start} AND #{end}",
+            "</script>"})
+    int countStudentSubmitHomework(@Param("start") LocalDate start,
+                                 @Param("end") LocalDate end,
+                                 @Param("studentIds") List<Long> studentIds);
 }
