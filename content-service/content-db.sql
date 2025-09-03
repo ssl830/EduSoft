@@ -174,11 +174,9 @@ CREATE TABLE `learning_progress` (
 --
 
 
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `notification` (
   `id` bigint NOT NULL AUTO_INCREMENT,
-  `user_id` bigint NOT NULL,
+  `user_id` varchar(15) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '用户ID（字符串格式，如T001, S001）',
   `title` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `message` text COLLATE utf8mb4_unicode_ci,
   `type` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -186,11 +184,28 @@ CREATE TABLE `notification` (
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `related_id` bigint DEFAULT NULL,
   `related_type` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `priority` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT 'normal' COMMENT '优先级',
+  `status` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT 'active' COMMENT '状态',
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `sender_name` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '发送者姓名',
+  `sender_id` bigint DEFAULT NULL COMMENT '发送者ID',
+  `course_name` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '课程名称',
+  `course_id` bigint DEFAULT NULL COMMENT '课程ID',
+  `class_name` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '班级名称',
+  `class_id` bigint DEFAULT NULL COMMENT '班级ID',
   PRIMARY KEY (`id`),
-  KEY `user_id` (`user_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
+  KEY `user_id` (`user_id`),
+  KEY `type` (`type`),
+  KEY `read_flag` (`read_flag`),
+  KEY `related_type` (`related_type`),
+  KEY `related_id` (`related_id`),
+  KEY `status` (`status`),
+  KEY `priority` (`priority`),
+  KEY `course_id` (`course_id`),
+  KEY `class_id` (`class_id`),
+  KEY `sender_id` (`sender_id`),
+  KEY `created_at` (`created_at`)
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='通知表';
 
 --
 -- Table structure for table `progress`
