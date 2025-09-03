@@ -39,3 +39,4 @@ SELECT * FROM user WHERE user_id = '20200207';
 2. **字段名不匹配** - 确认字段名是 `user_id` 还是 `userId`
 3. **数据类型不匹配** - 确认 `user_id` 字段是 `varchar(15)` 类型
 4. **数据为空** - 确认表中确实有数据
+

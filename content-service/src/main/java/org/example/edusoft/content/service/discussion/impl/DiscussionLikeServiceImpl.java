@@ -74,3 +74,4 @@ public class DiscussionLikeServiceImpl implements DiscussionLikeService {
         return 0;
     }
 }
+

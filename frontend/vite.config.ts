@@ -48,6 +48,8 @@ export default defineConfig({
       // content-service 代理配置
       '/api/content/notifications': { target: 'http://localhost:8083', changeOrigin: true },
       '/api/content/task-reminders': { target: 'http://localhost:8083', changeOrigin: true },
+      // 添加通用的content-service代理规则，确保所有/api/content/*路径都能正确转发
+      '/api/content': { target: 'http://localhost:8083', changeOrigin: true },
       // learning-service 代理配置
       '/api/judge': { target: 'http://localhost:8084', changeOrigin: true },
       '/api/record': { target: 'http://localhost:8084', changeOrigin: true },
