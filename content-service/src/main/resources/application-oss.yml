@@ -1,9 +1,0 @@
-# 阿里云OSS配置（兼容原有 properties key 命名）
-fs:
-  files-server:
-    type: aliyunOSS
-    aliyun-oss:
-      access-key: LTAI5tKoS5Ch6jKi5H1eCkEm
-      secret-key: Kf8RBOmMxLHDxnndbCF1r1ydQ8TQD7
-      end-point: oss-cn-beijing.aliyuncs.com
-      bucket: edusoft-file
