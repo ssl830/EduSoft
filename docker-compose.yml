@@ -128,6 +128,22 @@ services:
     networks:
       - edusoft-network
 
+  # AI Service
+  ai-service:
+    build:
+      context: ./ai_service
+      dockerfile: Dockerfile
+    ports:
+      - "8085:8000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-your_openai_api_key_here}
+      - OPENAI_BASE_URL=${OPENAI_BASE_URL:-https://api.openai.com/v1}
+    volumes:
+      - ./ai_service/storage:/app/storage
+      - ./ai_service/logs:/app/logs
+    networks:
+      - edusoft-network
+
   # Frontend Service
   frontend:
     build:
@@ -140,6 +156,7 @@ services:
       - course-service
       - learning-service
       - content-service
+      - ai-service
     networks:
       - edusoft-network
 

@@ -17,12 +17,6 @@ tenacity==8.2.3
 scikit-learn
 faiss-cpu
 openai
-moviepy==1.0.3
-openai-whisper
-pytesseract
-Pillow
-ffmpeg-python
-torch
 pydantic
 typing-extensions
 python-json-logger

@@ -11,7 +11,6 @@ from services.doc_parser import DocumentParser
 from services.embedding import EmbeddingService
 from services.rag import RAGService
 from services.storage import StorageService
-from services.video_summary import VideoSummaryService
 from utils.logger import api_logger as logger
 from functools import lru_cache
 from services.faiss_db import FAISSDatabase
@@ -31,7 +30,6 @@ app.add_middleware(
 storage_service = StorageService()
 doc_parser = DocumentParser()
 embedding_service = EmbeddingService()
-video_summary_service = VideoSummaryService()
 
 # 创建一个FAISSDatabase实例并传递给RAGService
 rag_service = RAGService(storage_service)
@@ -139,16 +137,6 @@ class StepDetailRequest(BaseModel):
     stepName: str
     currentContent: Optional[str] = ""
     knowledgePoints: Optional[List[str]] = None
-
-# 视频摘要生成请求模型
-class VideoSummaryRequest(BaseModel):
-    video_title: Optional[str] = ""
-    course_name: Optional[str] = ""
-
-class VideoSummaryTextRequest(BaseModel):
-    text_content: str
-    video_title: Optional[str] = ""
-    course_name: Optional[str] = ""
 
 # ---------------------- 存储路径动态配置 ----------------------
 
@@ -518,55 +506,6 @@ async def generate_selected_student_exercise(request: SelectedStudentExerciseReq
         return result
     except Exception as e:
         logger.error(f"Error generating selected student exercise: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-# =================== 视频摘要生成API ===================
-
-@app.post("/video/summary")
-async def generate_video_summary(
-    file: UploadFile = File(...),
-    video_title: str = Form(""),
-    course_name: str = Form("")
-):
-    """生成视频摘要"""
-    try:
-        # 保存上传的视频文件到临时目录
-        import tempfile
-        with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(file.filename)[1]) as tmp_file:
-            tmp_file.write(await file.read())
-            tmp_path = tmp_file.name
-        
-        try:
-            # 生成视频摘要
-            result = video_summary_service.generate_video_summary(
-                video_path=tmp_path,
-                video_title=video_title,
-                course_name=course_name
-            )
-            logger.info(f"Successfully generated video summary for: {video_title}")
-            return result
-        finally:
-            # 清理临时文件
-            if os.path.exists(tmp_path):
-                os.remove(tmp_path)
-                
-    except Exception as e:
-        logger.error(f"Error generating video summary: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.post("/video/summary/text")
-async def generate_video_summary_from_text(request: VideoSummaryTextRequest):
-    """基于文本生成视频摘要（用于测试或已有转写文本的情况）"""
-    try:
-        result = video_summary_service.generate_summary_from_text(
-            text_content=request.text_content,
-            video_title=request.video_title,
-            course_name=request.course_name
-        )
-        logger.info("Successfully generated video summary from text")
-        return result
-    except Exception as e:
-        logger.error(f"Error generating video summary from text: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 # =================== 联合知识库管理API ===================
