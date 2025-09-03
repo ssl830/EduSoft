@@ -72,11 +72,11 @@ feign:
 # 微服务配置
 user:
   service:
-    url: http://localhost:8081
+    url: http://user-service:8081
 
 course:
   service:
-    url: http://localhost:8082
+    url: http://course-service:8082
 
 # Actuator 健康检查配置
 management:

@@ -19,7 +19,7 @@ public class ContentClient extends BaseServiceClient {
     
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ContentClient.class);
     
-    @Value("${service.content.url:http://localhost:8083}")
+    @Value("${services.content.url:http://content-service:8083}")
     private String contentServiceUrl;
     
     @Override

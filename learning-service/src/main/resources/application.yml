@@ -1,17 +1,20 @@
 server:
   port: 8084
+
 spring:
   application:
     name: learning-service
   datasource:
     url: jdbc:mysql://localhost:3306/learning_db?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
     username: root
-    password: Fuchen20050420
+    password: fkq200566
     driver-class-name: com.mysql.cj.jdbc.Driver
+
 mybatis:
   mapper-locations: classpath:mapper/*.xml
   configuration:
     map-underscore-to-camel-case: true
+
 logging:
   level:
     '[org.example.edusoft.learning.mapper]': debug
@@ -20,18 +23,30 @@ logging:
     '[org.example.edusoft.learning.controller]': debug
 
 # 微服务地址配置
+services:
+  user:
+    url: http://user-service:8081 # user-service的地址
+    base-url: http://user-service:8081
+  course:
+    url: http://course-service:8082 # course-service的地址
+    base-url: http://course-service:8082
+  content:
+    url: http://content-service:8083 # content-service的地址
+    base-url: http://content-service:8083
+
+# 微服务地址配置 (兼容旧配置)
 service:
   user:
-    url: http://localhost:8081 # user-service的地址
+    url: http://user-service:8081 # user-service的地址
   course:
-    url: http://localhost:8082 # course-service的地址
+    url: http://course-service:8082 # course-service的地址
   content:
-    url: http://localhost:8083 # content-service的地址
+    url: http://content-service:8083 # content-service的地址
 
 # AI服务配置
 ai:
   service:
-    url: http://localhost:8000 # Python AI服务地址
+    url: http://ai-service:8000 # Python AI服务地址
 
 # HTTP客户端配置
 http:

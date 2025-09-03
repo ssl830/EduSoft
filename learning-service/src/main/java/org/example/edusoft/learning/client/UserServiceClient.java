@@ -179,7 +179,7 @@ public class UserServiceClient {
 	public Map<String, Object> getUserById(Long userId) {
 		try {
 			// 使用默认的用户服务地址
-			String defaultBaseUrl = "http://localhost:8081";
+			String defaultBaseUrl = "http://user-service:8081";
 			return fetchUserById(defaultBaseUrl, "test_token", String.valueOf(userId));
 		} catch (Exception ex) {
 			logger.debug("获取用户信息失败: {}", ex.getMessage());

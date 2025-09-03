@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import java.util.List;
 import java.util.Map;
 
-@FeignClient(name = "learning-service", url = "${learning.service.url:http://localhost:8084}")
+@FeignClient(name = "learning-service", url = "${learning.service.url:http://learning-service:8084}")
 public interface LearningServiceClient {
 
     // learning-service 返回的是 Result 包裹

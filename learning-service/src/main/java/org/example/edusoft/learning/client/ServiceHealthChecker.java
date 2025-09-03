@@ -53,7 +53,7 @@ public class ServiceHealthChecker {
         try {
             // 使用token验证接口进行健康检查
             String testToken = "test_token";
-            boolean isValid = userServiceClient.validateToken("http://localhost:8081", testToken);
+            boolean isValid = userServiceClient.validateToken("http://user-service:8081", testToken);
             // 即使token无效，如果服务响应说明服务正常运行
             return true;
         } catch (Exception ex) {

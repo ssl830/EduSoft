@@ -55,9 +55,19 @@ logging:
 
 services:
   user:
-    base-url: http://localhost:8081
+    base-url: http://user-service:8081
   content:
-    url: http://localhost:8083
+    url: http://content-service:8083
+
+# Learning Service 配置
+learning:
+  service:
+    url: http://learning-service:8084
+
+# Content Service 配置
+content:
+  service:
+    url: http://content-service:8083
 
 auth:
   required: true

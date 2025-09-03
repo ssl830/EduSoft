@@ -12,7 +12,7 @@ import java.util.List;
  * Content Service客户端接口
  * 用于与content-service进行通信
  */
-@FeignClient(name = "content-service", url = "${content.service.url:http://localhost:8083}")
+@FeignClient(name = "content-service", url = "${content.service.url:http://content-service:8083}")
 public interface ContentServiceClient {
 
     /**
