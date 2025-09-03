@@ -19,7 +19,7 @@ import java.util.Map;
 @Component
 public class AIServiceClient {
 
-    @Value("${ai.service.url:http://localhost:8000}")
+    @Value("${ai.service.url:http://ai-service:8000}")
     private String aiServiceUrl;
 
     private final RestTemplate restTemplate = new RestTemplate();

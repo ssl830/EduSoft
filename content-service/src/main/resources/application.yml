@@ -78,6 +78,11 @@ course:
   service:
     url: http://course-service:8082
 
+# AI 服务配置
+ai:
+  service:
+    url: http://ai-service:8000
+
 # Actuator 健康检查配置
 management:
   endpoints:
