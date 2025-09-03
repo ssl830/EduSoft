@@ -45,7 +45,7 @@ public class FolderServiceImpl implements FolderService {
 
     @Override
     public boolean createFolder(String name, Long sectiondirid, Long parentId, Long courseId, Long classId, Long uploaderId) {
-        if (fileMapper.existsByNameAndParent(name, parentId)) {
+        if (fileMapper.existsByNameAndParent(name, parentId) > 0) {
             throw new RuntimeException("名称已存在");
         }
 

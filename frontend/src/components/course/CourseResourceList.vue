@@ -157,7 +157,11 @@ const fetchResources = async () => {
       title: searchQuery.value || undefined,
       isTeacher: props.isTeacher
     })
-    resources.value = response.data
+    // 将每个资源的 title 替换为 file_name
+    resources.value = response.data.map((item: any) => ({
+      ...item,
+      title: item.file_name
+    }))
     console.log("resources: " + resources.value)
     // Extract unique types
     const typesSet = new Set(resources.value.map(r => r.type).filter(Boolean))

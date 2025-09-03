@@ -242,20 +242,26 @@ public class CourseClient extends BaseServiceClient {
         );
         String body = response.getBody();
         if (body != null && !body.isEmpty()) {
-            // 假设返回的是 List<Map>，每个Map有id字段
-            List<Map<String, Object>> list = new com.fasterxml.jackson.databind.ObjectMapper().readValue(body, List.class);
-            List<Long> classIds = new java.util.ArrayList<>();
-            for (Map<String, Object> item : list) {
-                Object idObj = item.get("id");
-                if (idObj instanceof Number) {
-                    classIds.add(((Number) idObj).longValue());
-                } else if (idObj != null) {
-                    try {
-                        classIds.add(Long.valueOf(idObj.toString()));
-                    } catch (Exception ignore) {}
+            // 兼容返回体为 { code, message, data: [...] }
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            Map<String, Object> map = mapper.readValue(body, Map.class);
+            Object dataObj = map.get("data");
+            if (dataObj instanceof List<?> list) {
+                List<Long> classIds = new java.util.ArrayList<>();
+                for (Object item : list) {
+                    if (item instanceof Map) {
+                        Object idObj = ((Map<?, ?>) item).get("id");
+                        if (idObj instanceof Number) {
+                            classIds.add(((Number) idObj).longValue());
+                        } else if (idObj != null) {
+                            try {
+                                classIds.add(Long.valueOf(idObj.toString()));
+                            } catch (Exception ignore) {}
+                        }
+                    }
                 }
+                return classIds;
             }
-            return classIds;
         }
         return java.util.Collections.emptyList();
     }

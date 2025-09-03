@@ -314,7 +314,7 @@ public class FileUploadImpl implements FileUpload {
 
     //  同文件夹中重名文件加标号，用于前端展示，OSS库中会自动生成不重复的文件名，不需要这里处理
     private NameResult recursionFindName(String originalName, String name, Long parentId, int flag) {
-        while (fileMapper.existsByNameAndParent(name, parentId)) {
+        while (fileMapper.existsByNameAndParent(name, parentId) > 0) {
             flag++;
             name = originalName + "(" + flag + ")";
         }

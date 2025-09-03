@@ -108,11 +108,14 @@ const fetchVideos = async () => {
         formData.append('chapterId', selectedChapter.value?.toString() || '-1')
         
         const response = await ResourceApi.getChapterResources(props.courseId, formData)
-        console.log("response:", response);
+        console.log("responseaaaaaaa:", response);
         videos.value = response.data.map((video: any) => {
             // 直接使用后端返回的 progress 和 lastWatch/lastPosition
             const progress = video.progress || 0
             const lastWatch = video.lastPosition || 0
+            console.log("==================")
+            console.log(video.duration)
+            console.log(formatDuration(video.duration))
             
             return {
                 id: video.resourceId || video.id,
@@ -342,15 +345,13 @@ const uploadVideo = async () => {
 
     const formData = new FormData()
     formData.append('file', uploadForm.value.file)
-    formData.append('courseId', props.courseId) // 注意字段名
-    formData.append('chapterId', uploadForm.value.chapterId.toString()) // 注意字段名
+    formData.append('courseId', props.courseId)
+    formData.append('chapterId', uploadForm.value.chapterId.toString())
     formData.append('chapterName', props.course?.sections.find(section => parseInt(section.id) === uploadForm.value.chapterId)?.title || '')
-    formData.append('createdBy', uploadForm.value.createdBy.toString()) // 注意字段名
+    formData.append('createdBy', uploadForm.value.createdBy.toString())
     formData.append('title', uploadForm.value.title)
-
-    if (uploadForm.value.description) {
-        formData.append('description', uploadForm.value.description)
-    }
+    // description 必须有字段，即使为空
+    formData.append('description', uploadForm.value.description || '')
 
     let retryCount = 0
     const maxRetries = 2
@@ -624,7 +625,7 @@ onMounted(() => {
                 <tr>
                     <th>视频名称</th>
                     <th>所属章节</th>
-                    <th>总时长</th>
+                    <th>视频时长</th>
                     <th>完成进度</th>
                     <th>操作</th>
                 </tr>

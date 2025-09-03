@@ -74,9 +74,27 @@ public class TeachingResourceServiceImpl implements TeachingResourceService {
     
     @Override
     public TeachingResource uploadResource(MultipartFile file, Long courseId, Long chapterId, String chapterName, String title, String description, Long createdBy) {
-        // 生成唯一文件名
-        String uniqueName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
+        // 保证 title 带扩展名
+        String ext = "";
+        String originalFilename = file.getOriginalFilename();
+        String contentType = file.getContentType();
+        if (title != null && !title.contains(".")) {
+            if (originalFilename != null && originalFilename.contains(".")) {
+                ext = originalFilename.substring(originalFilename.lastIndexOf("."));
+            } else if (contentType != null && contentType.contains("/")) {
+                ext = "." + contentType.substring(contentType.lastIndexOf("/") + 1);
+            }
+            title = title + ext;
+        }
+        // 生成唯一文件名，使用 title（带扩展名）
+        String uniqueName = UUID.randomUUID().toString() + "_" + title;
+        // 如果 uniqueName 没有扩展名，补上
+        if (!uniqueName.contains(".") && !ext.isEmpty()) {
+            uniqueName = uniqueName + ext;
+        }
         fileStorage = storageProvider.getStorage();
+        System.out.println("uniqueName:");
+        System.out.println(uniqueName);
         // 上传文件到存储系统
         FileBo fileBo = fileStorage.upload(file, uniqueName, FileType.VIDEO);
 
