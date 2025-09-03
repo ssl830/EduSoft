@@ -53,7 +53,7 @@ public class FileController {
      * @param request 包含过滤条件的请求体 
      * @return Result<List<FileResponseDTO>>
      */
-    @PostMapping("/courses/{courseId}/filelist")
+    @PostMapping("/resources/{courseId}/filelist")
     public Result<List<FileResponseDTO>> getFilesByUserAndCourse(@PathVariable("courseId") Long courseId,
     @RequestBody FileQueryRequest request) {
          // 参数校验

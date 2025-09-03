@@ -3,10 +3,10 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="org.example.edusoft.mapper.file.FileMapper">
+<mapper namespace="org.example.edusoft.content.mapper.FileMapper">
 
      <!-- 结果映射 --> 
-    <resultMap id="FileNodeResultMap" type="org.example.edusoft.entity.file.FileInfo">
+    <resultMap id="FileNodeResultMap" type="org.example.edusoft.content.entity.file.FileInfo">
         <id property="id" column="id"/>
         <result property="name" column="file_name"/>
         <result property="isDir" column="is_dir"/>
@@ -244,7 +244,7 @@
         FROM file_node
         WHERE class_id = #{classId}
         AND is_dir = false
-        <if test="title == null or title == ''">
+        <if test="title = null or title = ''">
             AND is_current_version = true
         </if>
         <if test="title != null and title != ''">
@@ -264,7 +264,7 @@
         FROM file_node
         WHERE class_id = #{classId}
         AND is_dir = false
-        <if test="title == null or title == ''">
+        <if test="title = null or title = ''">
             AND is_current_version = true
         </if>
         <if test="title != null and title != ''">
@@ -276,4 +276,3 @@
     </select>
 
 </mapper>
-

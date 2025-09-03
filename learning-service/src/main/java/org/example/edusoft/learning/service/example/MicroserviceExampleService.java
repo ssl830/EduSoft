@@ -82,7 +82,7 @@ public class MicroserviceExampleService {
         var sections = courseClient.getSectionsByCourseId(courseId);
         
         // 4. 获取课程下的所有资源
-        var resources = contentClient.getResourcesByCourseId(courseId);
+        var resources = contentClient.getResourcesByCourseId(courseId, userId);
         
         // 5. 组装返回结果
         return Map.of(
