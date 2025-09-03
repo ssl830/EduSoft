@@ -20,7 +20,7 @@ public class ResourceController {
      */
     @GetMapping("/count/course/{courseId}")
     public Result<Integer> getResourceCountByCourse(@PathVariable("courseId") Long courseId) {
-        List<Map<String, Object>> list = contentClient.getResourcesByCourseId(courseId);
+        List<Map<String, Object>> list = contentClient.getResourcesByCourseId2(courseId);
         int count = (list == null) ? 0 : list.size();
         return Result.success(count);
     }

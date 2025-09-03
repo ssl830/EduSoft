@@ -1,5 +1,6 @@
 package org.example.edusoft.content.dto.resource;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
@@ -9,22 +10,98 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ResourceProgressDTO {
-    
-    private Long id;
+
+    /**
+     * 学习记录ID
+     */
+    private Long learningrecordId;
+
+    /**
+     * 资源ID
+     */
+    private Long resourceId;
+
+    /**
+     * 学生ID
+     */
+    private Long studentId;
+
+    /**
+     * 资源标题
+     */
     private String title;
+
+    /**
+     * 资源描述
+     */
     private String description;
-    private String type;
-    private String url;
-    private Long fileSize;
-    private Integer duration;
+
+    /**
+     * 所属课程ID
+     */
     private Long courseId;
+
+    /**
+     * 所属章节ID
+     */
     private Long chapterId;
-    private Long creatorId;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-    
-    // 学习进度相关字段
-    private Double progress;
-    private Integer position;
-    private LocalDateTime lastAccessedAt;
+
+    /**
+     * 章节名称
+     */
+    private String chapterName;
+
+    /**
+     * 带签名的文件访问URL
+     */
+    private String fileUrl;
+
+    /**
+     * 视频时长（秒）
+     */
+    private Integer duration;
+
+    /**
+     * 最后观看时间字符串
+     */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private String lastWatch;
+
+    /**
+     * 学习进度（秒）
+     */
+    private Integer progress;
+
+    /**
+     * 最后观看位置（秒）
+     */
+    private Integer lastPosition;
+
+    /**
+     * 观看次数
+     */
+    private Integer watchCount;
+
+    /**
+     * 最后观看时间
+     */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private String lastWatchTime;
+
+    /**
+     * 创建时间
+     */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private String createdAt;
+
+    /**
+     * 更新时间
+     */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private String updatedAt;
+
+    /**
+     * 版本号
+     */
+    private Integer version;
 }

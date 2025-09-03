@@ -14,40 +14,66 @@ import java.time.LocalDateTime;
 public class LearningProgress {
     
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    /**
+     * 进度记录ID
+     */
     private Long id;
-    
-    @Column(name = "resource_id", nullable = false)
+
+    /**
+     * 教学资源ID
+     */
     private Long resourceId;
-    
-    @Column(name = "student_id", nullable = false)
+
+    /**
+     * 学生ID
+     */
     private Long studentId;
-    
-    @Column(name = "progress", nullable = false)
-    private Double progress = 0.0;
-    
-    @Column(name = "position")
-    private Integer position = 0;
-    
-    @Column(name = "last_accessed_at")
-    private LocalDateTime lastAccessedAt;
-    
-    @Column(name = "created_at")
+
+    /**
+     * 学习进度（秒）
+     */
+    private Integer progress;
+
+    /**
+     * 最后观看位置（秒）
+     */
+    private Integer lastPosition;
+
+    /**
+     * 观看次数
+     */
+    private Integer watchCount;
+
+    /**
+     * 最后观看时间
+     */
+    private LocalDateTime lastWatchTime;
+
+    /**
+     * 创建时间
+     */
     private LocalDateTime createdAt;
-    
-    @Column(name = "updated_at")
+
+    /**
+     * 更新时间
+     */
     private LocalDateTime updatedAt;
+
+    /**
+     * 版本号（用于乐观锁）
+     */
+    private Integer version;
     
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
-        lastAccessedAt = LocalDateTime.now();
+        lastWatchTime = LocalDateTime.now();
     }
     
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
-        lastAccessedAt = LocalDateTime.now();
+        lastWatchTime = LocalDateTime.now();
     }
 } 

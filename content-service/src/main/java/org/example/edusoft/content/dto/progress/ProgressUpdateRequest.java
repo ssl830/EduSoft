@@ -17,7 +17,7 @@ public class ProgressUpdateRequest {
     private Long studentId;
     
     @NotNull(message = "进度不能为空")
-    private Double progress;
+    private Integer progress;
     
     @NotNull(message = "播放位置不能为空")
     private Integer position;

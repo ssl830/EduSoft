@@ -18,7 +18,7 @@ import java.util.Map;
 public class CourseClient extends BaseServiceClient {
     private static final Logger logger = LoggerFactory.getLogger(CourseClient.class);
 
-    @Value("${course.service.url}")
+    @Value("${service.course.url}")
     private String courseServiceUrl;
 
     @Override

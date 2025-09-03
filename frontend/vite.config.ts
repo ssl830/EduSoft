@@ -43,7 +43,7 @@ export default defineConfig({
       '/api/classes': { target: 'http://localhost:8082', changeOrigin: true },
       // TODO: 按实际路径调整 service3 前缀
       '/service3': { target: 'http://localhost:8083', changeOrigin: true },
-      
+      '/api/resources': { target: 'http://localhost:8083', changeOrigin: true },
       // learning-service 相关接口 (8084端口)
       '/api/judge': { target: 'http://localhost:8084', changeOrigin: true },
       '/api/record': { target: 'http://localhost:8084', changeOrigin: true },

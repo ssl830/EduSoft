@@ -8,12 +8,13 @@ import java.util.List;
 import java.util.Map;
 
 public interface TeachingResourceService {
-    
+
     /**
-     * 创建教学资源
+     * 上传教学资源
      */
-    TeachingResource createResource(TeachingResource resource);
-    
+    TeachingResource uploadResource(MultipartFile file, Long courseId, Long chapterId,
+                                    String chapterName, String title, String description, Long createdBy);
+
     /**
      * 获取教学资源详情
      */
@@ -37,7 +38,7 @@ public interface TeachingResourceService {
     /**
      * 更新学习进度
      */
-    LearningProgress updateProgress(Long resourceId, Long studentId, Double progress, Integer position);
+    LearningProgress updateProgress(Long resourceId, Long studentId, Integer progress, Integer position);
     
     /**
      * 获取学习进度
@@ -59,13 +60,14 @@ public interface TeachingResourceService {
      */
     TeachingResource updateResourceDuration(Long resourceId, Integer duration);
     
-    /**
-     * 上传教学资源
-     */
-    TeachingResource uploadResource(MultipartFile file, Long courseId, Long chapterId, String chapterName, String title, String description, Long createdBy);
-    
+
     /**
      * 同步到AI知识库
      */
     void syncToAIKnowledgeBase(MultipartFile file, Long resourceId);
-} 
+
+    /**
+     * 创建教学资源
+     */
+    TeachingResource createResource(TeachingResource resource);
+}
