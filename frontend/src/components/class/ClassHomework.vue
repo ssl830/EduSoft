@@ -525,6 +525,9 @@ const submitHomework = async () => {
         formData.append('file', submitForm.value.file)
 
         const response : any = await ClassApi.uploadSubmissionFile(currentHomework.value?.homeworkId, formData)
+        console.log("HEREEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE")
+        console.log(response)
+
         if(response.code != 200){
             submitError.value = response.msg || '提交作业失败，请稍后再试'
             return

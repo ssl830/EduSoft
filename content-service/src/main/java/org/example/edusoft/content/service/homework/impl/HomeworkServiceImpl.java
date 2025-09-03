@@ -1,7 +1,11 @@
 package org.example.edusoft.content.service.homework.impl;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
+import org.example.edusoft.content.common.domain.FileBo;
+import org.example.edusoft.content.common.storage.IFileStorage;
+import org.example.edusoft.content.common.storage.IFileStorageProvider;
 import org.example.edusoft.content.dto.homework.HomeworkDTO;
 import org.example.edusoft.content.dto.homework.HomeworkSubmissionDTO;
 import org.example.edusoft.content.entity.homework.Homework;
@@ -15,7 +19,10 @@ import org.example.edusoft.content.entity.file.FileType;
 import org.example.edusoft.content.service.file.FileUpload;
 import org.example.edusoft.content.service.file.FileAccessService;
 import org.example.edusoft.content.entity.file.FileAccessDTO;
+import org.example.edusoft.content.exception.BusinessException;
+import org.example.edusoft.content.client.UserClient;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -25,8 +32,12 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
+
+import static org.example.edusoft.content.entity.file.FileType.PDF;
 
 /**
  * 作业服务实现类
@@ -40,7 +51,10 @@ public class HomeworkServiceImpl implements HomeworkService {
     private final HomeworkSubmissionMapper submissionMapper;
     private final FileUpload fileUpload;
     private final FileAccessService fileAccessService;
+    private final IFileStorageProvider storageProvider;
     private final CourseClient courseClient;
+    @Autowired
+    private UserClient userClient;
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
@@ -131,108 +145,185 @@ public class HomeworkServiceImpl implements HomeworkService {
 
     @Override
     @Transactional
-    public Long submitHomework(Long homeworkId, Long studentId, String studentName, MultipartFile file) {
-        log.info("开始处理作业提交：homeworkId={}, studentId={}, studentName={}, fileName={}, fileSize={}", 
-            homeworkId, studentId, studentName, file.getOriginalFilename(), file.getSize());
-        
+    public Long submitHomework(Long homeworkId, Long studentId, String studentName, MultipartFile file, HttpServletRequest request) {
+//        log.info("开始处理作业提交：homeworkId={}, studentId={}, studentName={}, fileName={}, fileSize={}",
+//            homeworkId, studentId, studentName, file.getOriginalFilename(), file.getSize());
+//
+//        // 参数校验
+//        if (file == null || file.isEmpty()) {
+//            log.error("提交的文件为空");
+//            throw new RuntimeException("提交的文件不能为空");
+//        }
+//
+//        // 检查作业是否存在
+//        Homework homework = homeworkMapper.selectById(homeworkId);
+//        if (homework == null) {
+//            log.error("作业不存在：homeworkId={}", homeworkId);
+//            throw new RuntimeException("作业不存在");
+//        }
+//        log.info("findHomework：{}", homework);
+//
+//        // 检查是否已过截止时间
+//        if (homework.getDeadline() != null && LocalDateTime.now().isAfter(homework.getDeadline())) {
+//            log.error("作业已过截止时间：deadline={}, current={}",
+//                homework.getDeadline(), LocalDateTime.now());
+//            throw new RuntimeException("作业已过截止时间");
+//        }
+//
+//        // 获取课程ID
+//        Long classId = homework.getClassId();
+//        log.info("Start obtain Course ID 开始获取课程ID：作业ID={}, 班级ID={}", homeworkId, classId);
+//        Long courseId;
+//        try {
+//            courseId = courseClient.getCourseIdByClassId(classId);
+//            if (courseId == null) {
+//                log.error("获取课程ID失败：班级不存在或未关联到课程：classId={}", classId);
+//                throw new RuntimeException("获取课程ID失败：班级不存在或未关联到课程");
+//            }
+//            log.info("成功获取到课程ID：courseId={}, classId={}", courseId, classId);
+//        } catch (Exception e) {
+//            log.error("调用课程服务获取课程ID时发生错误：classId={}, error={}", classId, e.getMessage());
+//            throw new RuntimeException("获取课程ID失败：" + e.getMessage());
+//        }
+//
+//        // 创建或更新提交记录
+//        HomeworkSubmission submission = new HomeworkSubmission();
+//        submission.setHomeworkId(homeworkId);
+//        submission.setStudentId(studentId);
+//        submission.setStudentName(studentName);
+//
+//        log.info("181aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+//
+//        // 上传文件
+//        String objectName = "homework/submission/" + homeworkId + "/" + studentId + "_" + file.getOriginalFilename();
+//        try {
+//            String title = file.getOriginalFilename();
+//            String type = FileType.HOMEWORK_SUBMISSION.name();
+//            log.info("开始上传提交文件：objectName={}, fileSize={}, fileName={}, courseId={}, classId={}, type={}",
+//                    objectName, file.getSize(), title, courseId, homework.getClassId(), type);
+//
+//            // 重要：提交的作业文件设置为班级可见
+//            Result<?> uploadResult = fileUpload.uploadFile(
+//                file,          // 文件
+//                title,         // 文件名
+//                courseId,      // 课程ID
+//                null,          // 章节ID，作业提交不需要
+//                "CLASS_ONLY",  // 可见性：仅班级可见
+//                studentId,     // 上传者ID
+//                type          // 文件类型
+//            );
+//            log.info("文件上传服务返回结果：{}", uploadResult);
+//            log.info("文件上传结果：{}", uploadResult);
+//            if (uploadResult.isSuccess()) {
+//                submission.setObjectName(objectName);
+//                FileAccessDTO accessDTO = fileAccessService.getDownloadUrlByObjectName(objectName);
+//                submission.setFileUrl(accessDTO.getUrl());
+//                log.info("获取到文件访问地址：{}", accessDTO.getUrl());
+//            } else {
+//                throw new RuntimeException("上传提交文件失败");
+//            }
+//        } catch (JsonProcessingException e) {
+//            throw new RuntimeException("上传提交文件失败", e);
+//        }
+//        submission.setSubmittedAt(LocalDateTime.now());
+//
+//        // 保存提交记录
+//        log.info("Start save 开始保存提交记录：{}", submission);
+//        submissionMapper.insert(submission);
+//        log.info("提交记录保存成功，ID：{}", submission.getId());
+//        return submission.getId();
         // 参数校验
+        String token = request.getHeader("satoken");
+        System.out.println("tokennnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn: " + token);
+        if (token == null || token.isEmpty()) {
+            Map<String, String> response = new HashMap<>();
+            response.put("error", "请先登录");
+            return 401L;
+        }
+
         if (file == null || file.isEmpty()) {
-            log.error("提交的文件为空");
-            throw new RuntimeException("提交的文件不能为空");
+            throw new BusinessException("提交的文件不能为空");
         }
 
         // 检查作业是否存在
         Homework homework = homeworkMapper.selectById(homeworkId);
         if (homework == null) {
-            log.error("作业不存在：homeworkId={}", homeworkId);
-            throw new RuntimeException("作业不存在");
+            throw new BusinessException("作业不存在");
         }
-        log.info("findHomework：{}", homework);
 
         // 检查是否已过截止时间
         if (homework.getDeadline() != null && LocalDateTime.now().isAfter(homework.getDeadline())) {
-            log.error("作业已过截止时间：deadline={}, current={}", 
-                homework.getDeadline(), LocalDateTime.now());
-            throw new RuntimeException("作业已过截止时间");
+            throw new BusinessException("作业已过截止时间");
         }
-
-        // 获取课程ID
-        Long classId = homework.getClassId();
-        log.info("Start obtain Course ID 开始获取课程ID：作业ID={}, 班级ID={}", homeworkId, classId);
-        Long courseId;
-        try {
-            courseId = courseClient.getCourseIdByClassId(classId);
-            if (courseId == null) {
-                log.error("获取课程ID失败：班级不存在或未关联到课程：classId={}", classId);
-                throw new RuntimeException("获取课程ID失败：班级不存在或未关联到课程");
-            }
-            log.info("成功获取到课程ID：courseId={}, classId={}", courseId, classId);
-        } catch (Exception e) {
-            log.error("调用课程服务获取课程ID时发生错误：classId={}, error={}", classId, e.getMessage());
-            throw new RuntimeException("获取课程ID失败：" + e.getMessage());
-        }
-
-        // 创建或更新提交记录
-        HomeworkSubmission submission = new HomeworkSubmission();
-        submission.setHomeworkId(homeworkId);
-        submission.setStudentId(studentId);
-        submission.setStudentName(studentName);
-
-        log.info("181aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
 
         // 上传文件
-        String objectName = "homework/submission/" + homeworkId + "/" + studentId + "_" + file.getOriginalFilename();
-        try {
-            String title = file.getOriginalFilename();
-            String type = FileType.HOMEWORK_SUBMISSION.name();
-            log.info("开始上传提交文件：objectName={}, fileSize={}, fileName={}, courseId={}, classId={}, type={}", 
-                    objectName, file.getSize(), title, courseId, homework.getClassId(), type);
-            
-            // 重要：提交的作业文件设置为班级可见
-            Result<?> uploadResult = fileUpload.uploadFile(
-                file,          // 文件
-                title,         // 文件名
-                courseId,      // 课程ID
-                null,          // 章节ID，作业提交不需要
-                "CLASS_ONLY",  // 可见性：仅班级可见
-                studentId,     // 上传者ID
-                type          // 文件类型
-            );
-            log.info("文件上传服务返回结果：{}", uploadResult);
-            log.info("文件上传结果：{}", uploadResult);
-            if (uploadResult.isSuccess()) {
-                submission.setObjectName(objectName);
-                FileAccessDTO accessDTO = fileAccessService.getDownloadUrlByObjectName(objectName);
-                submission.setFileUrl(accessDTO.getUrl());
-                log.info("获取到文件访问地址：{}", accessDTO.getUrl());
-            } else {
-                throw new RuntimeException("上传提交文件失败");
-            }
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("上传提交文件失败", e);
-        }
+        String uniqueName = String.format("homework/submission/%d/%d_%s",
+                homeworkId, studentId, file.getOriginalFilename());
+
+        IFileStorage storage = storageProvider.getStorage();
+        FileBo fileBo = storage.upload(file, uniqueName, PDF);
+
+        Map<String, Object> userInfo = userClient.fetchUserById("http://localhost:8081", token, String.valueOf(studentId));
+        System.out.println("userInfo:" + userInfo);
+
+        // 创建提交记录
+        HomeworkSubmission submission = new HomeworkSubmission();
+        submission.setStudentName((String) userInfo.get("username"));
+        submission.setHomeworkId(homeworkId);
+        submission.setStudentId(studentId);
+        submission.setObjectName(fileBo.getFileName());
+        submission.setFileUrl(fileBo.getUrl());
         submission.setSubmittedAt(LocalDateTime.now());
+        submission.setFileUrl(fileBo.getUrl());
+        System.out.println("fileBo.getFileName(): " + fileBo.getFileName());
+
 
         // 保存提交记录
-        log.info("Start save 开始保存提交记录：{}", submission);
         submissionMapper.insert(submission);
-        log.info("提交记录保存成功，ID：{}", submission.getId());
         return submission.getId();
     }
 
     @Override
-    public List<HomeworkSubmissionDTO> getSubmissionList(Long homeworkId) {
+    public List<HomeworkSubmissionDTO> getSubmissionList(Long homeworkId, HttpServletRequest request) {
+        // 1. 获取所有提交记录
         List<HomeworkSubmission> submissions = submissionMapper.selectByHomeworkId(homeworkId);
+
+        // 2. 获取 token（用于调用用户服务）
+        String token = request.getHeader("satoken");
+        if (token == null || token.isEmpty()) {
+            throw new BusinessException("请先登录");
+        }
+
+        // 3. 遍历提交记录，补全 studentName
+        for (HomeworkSubmission submission : submissions) {
+            if (submission.getStudentName() == null || submission.getStudentName().isEmpty()) {
+                // 调用用户服务获取用户信息
+                Map<String, Object> userInfo = userClient.fetchUserById(
+                        "http://localhost:8081",
+                        token,
+                        String.valueOf(submission.getStudentId())
+                );
+
+                // 提取 username 并设置到 submission
+                if (userInfo != null && userInfo.get("username") != null) {
+                    submission.setStudentName((String) userInfo.get("username"));
+                }
+            }
+        }
+
+        // 4. 转换为 DTO 并返回
         return submissions.stream().map(submission -> HomeworkSubmissionDTO.builder()
                 .submissionId(submission.getId())
                 .studentId(submission.getStudentId().toString())
                 .studentName(submission.getStudentName())
                 .fileUrl(submission.getFileUrl())
-                .fileName(submission.getObjectName() != null ? submission.getObjectName().substring(submission.getObjectName().lastIndexOf('/') + 1) : null)
+                .fileName(submission.getObjectName() != null ?
+                        submission.getObjectName().substring(submission.getObjectName().lastIndexOf('/') + 1) : null)
                 .submitTime(submission.getSubmittedAt().format(DATE_TIME_FORMATTER))
                 .build()
         ).collect(Collectors.toList());
     }
+
 
     @Override
     public HomeworkSubmissionDTO getStudentSubmission(Long homeworkId, Long studentId) {

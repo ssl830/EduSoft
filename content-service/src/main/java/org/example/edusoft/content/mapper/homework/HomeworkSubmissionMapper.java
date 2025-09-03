@@ -16,8 +16,8 @@ public interface HomeworkSubmissionMapper {
      * 创建提交记录
      */
     @Insert({
-        "INSERT INTO homework_submission(homework_id, student_id, student_name, file_url, object_name, submitted_at)",
-        "VALUES(#{homeworkId}, #{studentId}, #{studentName}, #{fileUrl}, #{objectName}, #{submittedAt})"
+        "INSERT INTO homework_submission(homework_id, student_id, file_url, object_name, submitted_at)",
+        "VALUES(#{homeworkId}, #{studentId}, #{fileUrl}, #{objectName}, #{submittedAt})"
     })
     @Options(useGeneratedKeys = true, keyProperty = "id")
     void insert(HomeworkSubmission submission);
