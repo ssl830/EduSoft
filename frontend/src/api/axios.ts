@@ -33,6 +33,8 @@ instance.interceptors.request.use(
         config.headers['Authorization'] = authStore.token
         // 兼容历史自定义头
         config.headers['free-fs-token'] = authStore.token
+        
+
       } else if (!config.url?.includes('/login') && !config.url?.includes('/register')) {
         // 对于非登录和注册请求，如果没有token，记录日志
         console.log('未找到token，请求:', config.url)

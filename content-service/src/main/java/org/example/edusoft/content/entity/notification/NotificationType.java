@@ -1,4 +1,4 @@
-package org.example.edusoft.entity.notification;
+package org.example.edusoft.content.entity.notification;
 
 /**
  * 通知类型枚举
@@ -13,6 +13,12 @@ package org.example.edusoft.entity.notification;
  * - SYSTEM: 系统通知，用于系统级别的通知
  * - ASSIGNMENT: 作业分配，用于作业分配相关的通知
  * - DISCUSSION_REPLY: 讨论回复，当有人回复讨论时
+ * - RESOURCE_UPLOAD: 资源上传通知
+ * - COURSE_ENROLLMENT: 课程报名通知 
+ * - GRADE_PUBLISH: 成绩发布通知
+ * - DEADLINE_WARNING: 截止时间警告
+ * - COURSE_SCHEDULE: 课程安排变更
+ * - ANNOUNCEMENT: 公告通知
  */
 public enum NotificationType {
     COURSE_NOTICE("课程通知"),
@@ -24,7 +30,13 @@ public enum NotificationType {
     PRACTICE("在线练习"),
     SYSTEM("系统通知"),
     ASSIGNMENT("作业分配"),
-    DISCUSSION_REPLY("讨论回复"); // 添加 DISCUSSION_REPLY 枚举
+    DISCUSSION_REPLY("讨论回复"),
+    RESOURCE_UPLOAD("资源上传"),
+    COURSE_ENROLLMENT("课程报名"),
+    GRADE_PUBLISH("成绩发布"),
+    DEADLINE_WARNING("截止时间警告"),
+    COURSE_SCHEDULE("课程安排变更"),
+    ANNOUNCEMENT("公告通知");
 
     private final String description;
 

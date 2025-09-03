@@ -91,7 +91,7 @@ const notificationApi = {
   }) => {
     console.log('[getNotifications] Called with params:', params);
     try {
-      const response: ApiResponse<BackendNotification[]> = await axiosInstance.get('/api/notifications', { params });
+      const response: ApiResponse<BackendNotification[]> = await axiosInstance.get('/api/content/notifications', { params });
       console.log('[getNotifications] Raw API response:', response);
       
       if (response && response.code === 200) {
@@ -181,7 +181,7 @@ const notificationApi = {
   getUnreadCount: async () => {
     console.log('[getUnreadCount] Called.');
     try {
-      const resultFromAxios: any = await axiosInstance.get('/api/notifications/unread');
+      const resultFromAxios: any = await axiosInstance.get('/api/content/notifications/unread');
       console.log('[getUnreadCount] Raw response from axiosInstance.get:', resultFromAxios, '(Type:', typeof resultFromAxios + ')');
 
       // 情况1: 后端直接返回空字符串表示数量为0 
@@ -246,7 +246,7 @@ const notificationApi = {
   markAsRead: async (id: number) => {
     try {
       // response 类型是 ApiResponse
-      const response: ApiResponse = await axiosInstance.put(`/api/notifications/${id}/read`);
+      const response: ApiResponse = await axiosInstance.put(`/api/content/notifications/${id}/read`);
       if (response && response.code === 200) {
         return true;
       } else {
@@ -272,7 +272,7 @@ const notificationApi = {
   markAllAsRead: async () => {
     try {
       // response 类型是 ApiResponse
-      const response: ApiResponse = await axiosInstance.put('/api/notifications/read-all');
+      const response: ApiResponse = await axiosInstance.put('/api/content/notifications/read-all');
       if (response && response.code === 200) {
         return true;
       } else {
@@ -311,7 +311,7 @@ const notificationApi = {
   deleteNotification: async (id: number) => {
     try {
       // response 类型是 ApiResponse
-      const response: ApiResponse = await axiosInstance.delete(`/api/notifications/${id}`);
+      const response: ApiResponse = await axiosInstance.delete(`/api/content/notifications/${id}`);
       if (response && response.code === 200) {
         return true;
       } else {
@@ -427,7 +427,7 @@ const notificationApi = {
   checkDeadlinesAndGenerateReminders: async () => {
     try {
       // 注意：此函数仍在使用全局 axios。
-      const response = await axios.post('/api/notifications/check-deadlines');
+      const response = await axios.post('/api/content/notifications/check-deadlines');
       return {
         success: response.data?.code === 200,
         message: response.data?.message || '提醒生成成功'

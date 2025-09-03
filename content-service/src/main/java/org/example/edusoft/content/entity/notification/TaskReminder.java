@@ -1,54 +1,52 @@
 package org.example.edusoft.content.entity.notification;
 
-import jakarta.persistence.*;
 import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "task_reminders")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class TaskReminder {
-    
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
+    private String userId; // 改为String类型，匹配数据库的varchar(15)
     
-    @Column(name = "title", nullable = false, length = 255)
     private String title;
     
-    @Column(name = "content", columnDefinition = "TEXT")
     private String content;
     
-    @Column(name = "deadline")
+    private LocalDateTime createTime;
+    
     private LocalDateTime deadline;
     
-    @Column(name = "priority", length = 20)
-    private String priority;
+    private String priority; // HIGH, MEDIUM, LOW
     
-    @Column(name = "is_completed", nullable = false)
-    private Boolean isCompleted = false;
+    private Boolean completed;
     
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    private LocalDateTime completedTime;
+
+    // Getters and Setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
     
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    public String getUserId() { return userId; }
+    public void setUserId(String userId) { this.userId = userId; }
     
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
-    }
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
     
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
-}
+    public String getContent() { return content; }
+    public void setContent(String content) { this.content = content; }
+    
+    public LocalDateTime getCreateTime() { return createTime; }
+    public void setCreateTime(LocalDateTime createTime) { this.createTime = createTime; }
+    
+    public LocalDateTime getDeadline() { return deadline; }
+    public void setDeadline(LocalDateTime deadline) { this.deadline = deadline; }
+    
+    public String getPriority() { return priority; }
+    public void setPriority(String priority) { this.priority = priority; }
+    
+    public Boolean getCompleted() { return completed; }
+    public void setCompleted(Boolean completed) { this.completed = completed; }
+    
+    public LocalDateTime getCompletedTime() { return completedTime; }
+    public void setCompletedTime(LocalDateTime completedTime) { this.completedTime = completedTime; }
+} 
