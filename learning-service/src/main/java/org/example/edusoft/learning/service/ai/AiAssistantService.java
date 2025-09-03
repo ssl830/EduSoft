@@ -8,8 +8,10 @@ import org.example.edusoft.learning.entity.Practice;
 import org.example.edusoft.learning.entity.ai.AiServiceCallLog;
 import org.example.edusoft.learning.mapper.ai.AiServiceCallLogMapper;
 import org.example.edusoft.learning.mapper.PracticeMapper;
+import org.example.edusoft.learning.mapper.PracticeQuestionStatMapper;
 import org.example.edusoft.learning.mapper.QuestionMapper;
 import org.example.edusoft.learning.mapper.SubmissionMapper;
+import org.example.edusoft.learning.service.SelfPracticeService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,10 +62,16 @@ public class AiAssistantService implements AiServiceCaller {
     private PracticeMapper practiceMapper;
 
     @Autowired
+    private PracticeQuestionStatMapper practiceQuestionStatMapper;
+
+    @Autowired
     private QuestionMapper questionMapper;
 
     @Autowired
     private SubmissionMapper submissionMapper;
+
+    @Autowired
+    private SelfPracticeService selfPracticeService;
 
     // Helper method to log AI service calls
     private void logAiServiceCall(Long userId, String endpoint, long durationMs, String status, String errorMessage) {
@@ -269,8 +277,60 @@ public class AiAssistantService implements AiServiceCaller {
         return callAiServiceMethod("/rag/regenerate", req);
     }
 
-    public Map<String, Object> generateStudentExercise(Map<String, Object> req) {
-        return callAiServiceMethod("/rag/generate_student_exercise", req);
+    public Map<String, Object> generateStudentExercise(Map<String, Object> req, Long userId) {
+        if (userId == null) {
+            return Map.of("status", "fail", "message", "用户未登录");
+        }
+
+        try {
+            // 1. 调用AI服务生成练习题
+            Map<String, Object> aiResult = callAiServiceMethod("/rag/generate_student_exercise", req);
+            
+            logger.info("AI服务返回结果: {}", aiResult);
+            
+            // 检查AI服务是否成功调用
+            if (aiResult == null) {
+                logger.error("AI服务返回null结果");
+                return Map.of("status", "fail", "message", "AI生成练习失败");
+            }
+            
+            // 检查是否包含习题数据 - 根据实际返回格式调整
+            // AI服务可能返回 {exercises: [...]} 或 {data: {exercises: [...]}} 格式
+            boolean hasExercises = false;
+            if (aiResult.containsKey("exercises") && aiResult.get("exercises") instanceof List) {
+                hasExercises = !((List<?>) aiResult.get("exercises")).isEmpty();
+            } else if (aiResult.containsKey("data") && aiResult.get("data") instanceof Map) {
+                Map<?, ?> data = (Map<?, ?>) aiResult.get("data");
+                if (data.containsKey("exercises") && data.get("exercises") instanceof List) {
+                    hasExercises = !((List<?>) data.get("exercises")).isEmpty();
+                }
+            }
+            
+            if (!hasExercises) {
+                logger.error("AI服务返回结果中没有有效的习题数据: {}", aiResult);
+                return Map.of("status", "fail", "message", "AI生成练习失败");
+            }
+
+            // 2. 保存生成的练习到数据库（直接传递AI结果）
+            Long practiceId = selfPracticeService.saveGeneratedPractice(userId, aiResult);
+
+            if (practiceId == null) {
+                return Map.of("status", "fail", "message", "保存练习到数据库失败");
+            }
+
+            // 3. 构造返回结果，包含practiceId
+            Map<String, Object> result = new HashMap<>(aiResult);
+            result.put("practiceId", practiceId);
+            result.put("status", "success");
+            result.put("message", "练习生成并保存成功");
+            
+            logger.info("AI自测练习生成成功 - 用户ID: {}, 练习ID: {}", userId, practiceId);
+            return result;
+            
+        } catch (Exception e) {
+            logger.error("生成学生自测练习失败", e);
+            return Map.of("status", "fail", "message", "生成练习失败: " + e.getMessage());
+        }
     }
 
     public Map<String, Object> optimizeCourse(Map<String, Object> req) {
@@ -336,81 +396,50 @@ public class AiAssistantService implements AiServiceCaller {
         Long userId = getCurrentUserId();
         
         try {
-            // 从数据库查询练习题目的真实统计信息
-            logger.debug("Analyzing exercise for practice_id: {}", practiceId);
-            
-            // 查询练习基本信息
-            Practice practice = practiceMapper.getPracticeById(practiceId);
-            if (practice == null) {
-                return Map.of(
-                    "status", "fail",
-                    "message", "找不到指定的练习: " + practiceId
-                );
+            // 1. 查询所有题目统计信息
+            List<Map<String, Object>> statList = practiceQuestionStatMapper.getPracticeQuestionStats(practiceId);
+            if (statList == null || statList.isEmpty()) {
+                return Map.of("status", "fail", "message", "未找到练习题目");
             }
             
-            // 查询练习中的题目及其统计信息
-            // TODO: 需要实现查询题目统计的具体方法，这里先用基础查询
+            // 2. 组装参数
             List<Map<String, Object>> exerciseQuestions = new ArrayList<>();
-            
-            // 查询该练习的题目（需要根据实际的数据库表结构调整）
-            try {
-                // 这里需要根据实际的练习-题目关联表来查询
-                // 暂时构造一些基于练习ID的示例数据，实际应该查询 practice_question 关联表
-                exerciseQuestions = List.of(
-                    Map.of(
-                        "content", "练习" + practiceId + "中的第一题",
-                        "error_rate", 0.25,
-                        "type", "选择题",
-                        "score", 5.0,
-                        "student_count", 20,
-                        "correct_count", 15
-                    ),
-                    Map.of(
-                        "content", "练习" + practiceId + "中的第二题", 
-                        "error_rate", 0.35,
-                        "type", "填空题",
-                        "score", 3.0,
-                        "student_count", 20,
-                        "correct_count", 13
-                    )
-                );
-                
-                logger.debug("Found {} questions for practice {}", exerciseQuestions.size(), practiceId);
-                
-            } catch (Exception e) {
-                logger.error("Failed to query questions for practice {}: {}", practiceId, e.getMessage());
-                return Map.of(
-                    "status", "fail",
-                    "message", "查询练习题目失败: " + e.getMessage()
-                );
+            for (Map<String, Object> stat : statList) {
+                Map<String, Object> q = new HashMap<>();
+                q.put("content", stat.getOrDefault("content", ""));
+                Double scoreRate = stat.get("score_rate") instanceof Number ? ((Number)stat.get("score_rate")).doubleValue() : null;
+                double errorRate = 1.0;
+                if (scoreRate != null) {
+                    errorRate = 1 - scoreRate;
+                }
+                q.put("error_rate", errorRate);
+                q.put("type", stat.getOrDefault("type", ""));
+                q.put("score", stat.get("score"));
+                q.put("student_count", stat.get("student_count"));
+                q.put("correct_count", stat.get("correct_count"));
+                q.put("additional_info", null);
+                exerciseQuestions.add(q);
             }
-            
-            if (exerciseQuestions.isEmpty()) {
-                return Map.of(
-                    "status", "fail",
-                    "message", "该练习中没有找到题目"
-                );
-            }
-            
-            Map<String, Object> request = Map.of("exercise_questions", exerciseQuestions);
-            
+            Map<String, Object> req = new HashMap<>();
+            req.put("exercise_questions", exerciseQuestions);
+
+            // 调试输出：打印传给AI微服务的请求体
+            logger.debug("[AI调试] analyzeExercise 请求体: {}", req);
+
+            // 3. 调用微服务分析
             String url = buildUrl(endpoint);
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
-
-            HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(request, headers);
+            HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(req, headers);
             ResponseEntity<Map> response = restTemplate.postForEntity(url, requestEntity, Map.class);
-
+            
             long duration = System.currentTimeMillis() - startTime;
             logAiServiceCall(userId, endpoint, duration, "success", null);
             return response.getBody();
         } catch (Exception e) {
             long duration = System.currentTimeMillis() - startTime;
             logAiServiceCall(userId, endpoint, duration, "fail", e.getMessage());
-            return Map.of(
-                "status", "fail",
-                "message", "AI学情分析服务调用失败: " + e.getMessage()
-            );
+            return Map.of("status", "fail", "message", "AI学情分析服务调用失败: " + e.getMessage());
         }
     }
 

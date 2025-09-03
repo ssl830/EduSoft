@@ -4,7 +4,7 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 node_modules/
-
+.history
 ### Application Properties ###
 #src/main/resources/application.properties
 src/main/resources/application-*.properties

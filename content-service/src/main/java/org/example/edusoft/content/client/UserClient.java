@@ -77,4 +77,14 @@ public interface UserClient {
      */
     @PostMapping("/api/user/verify-token")
     Map<String, Object> verifyUserToken(@RequestParam Long userId, @RequestParam String token);
+
+    /**
+     * Validate token and get current user info (for microservice-to-microservice)
+     * Corresponds to user-service endpoint: GET /api/user/validate
+     * Requires header: satoken
+     * @param token Sa-Token value from request header "satoken"
+     * @return SaResult-like map, expect data contains user fields
+     */
+    @GetMapping("/api/user/validate")
+    Map<String, Object> validateToken(@RequestHeader("satoken") String token);
 }

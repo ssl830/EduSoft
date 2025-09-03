@@ -41,6 +41,10 @@ export default defineConfig({
       '/api/imports': { target: 'http://localhost:8082', changeOrigin: true },
       '/api/courses': { target: 'http://localhost:8082', changeOrigin: true },
       '/api/classes': { target: 'http://localhost:8082', changeOrigin: true },
+      // TODO: 按实际路径调整 service3 前缀
+      '/service3': { target: 'http://localhost:8083', changeOrigin: true },
+      
+      // learning-service 相关接口 (8084端口)
       // content-service 代理配置
       '/api/content/notifications': { target: 'http://localhost:8083', changeOrigin: true },
       '/api/content/task-reminders': { target: 'http://localhost:8083', changeOrigin: true },
@@ -50,8 +54,12 @@ export default defineConfig({
       '/api/practice': { target: 'http://localhost:8084', changeOrigin: true },
       '/api/selfpractice': { target: 'http://localhost:8084', changeOrigin: true },
       '/api/submission': { target: 'http://localhost:8084', changeOrigin: true },
-      '/api/learning': { target: 'localhost:8084', changeOrigin: true },
+      '/api/learning': { target: 'http://localhost:8084', changeOrigin: true },
       '/api/admin': { target: 'http://localhost:8084', changeOrigin: true },
+      '/api/discussion':{target: 'http://localhost:8083', changeOrigin: true },
+      '/api/discussion-like':{target: 'http://localhost:8083', changeOrigin: true },
+      '/api/discussion-reply':{target: 'http://localhost:8083', changeOrigin: true },
+
     }
   },
   optimizeDeps: {

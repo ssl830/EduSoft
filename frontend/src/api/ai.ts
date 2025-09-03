@@ -76,6 +76,16 @@ export interface StudentExerciseResponse {
   }
 }
 
+// ========== 自测练习相关 ==========
+export interface SelfPracticeGenerateRequest {
+  prompt: string
+}
+
+// 生成自测练习（保存到数据库）
+export function generateSelfPracticeExercise(data: SelfPracticeGenerateRequest) {
+  return http.post('/api/selfpractice/generate', data)
+}
+
 export interface SelfPracticeProgressRequest {
   practiceId: number
   answers: any[]
@@ -143,7 +153,7 @@ export function getSelfPracticeHistory() {
 }
 
 export function getSelfPracticeDetail(pid: number | string) {
-  return http.get(`/api/selfpractice/history/${pid}`)
+  return http.get(`/api/selfpractice/detail/${pid}`)
 }
 
 // AI学情分析（练习得分率分析）
