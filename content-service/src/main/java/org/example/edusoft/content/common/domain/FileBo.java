@@ -128,9 +128,9 @@ public class FileBo implements Serializable {
         //文件后缀名
         String fileExt = FileUtil.getFileSuffix(name);
         // 判断是否是合法的文件后缀
-        if (!FileUtil.isFileAllowed(fileExt)) {
-            throw new BusinessException("文件类型不符合要求");
-        }
+//        if (!FileUtil.isFileAllowed(fileExt)) {
+//            throw new BusinessException("文件类型不符合要求");
+//        }
         // 文件类型
         /* 
         String type;

@@ -42,8 +42,8 @@ public class FileQueryServiceImpl implements FileQueryService {
         dto.setId(fileInfo.getId());
         dto.setCourseId(fileInfo.getCourseId());
         dto.setSectionId(fileInfo.getSectionId());
-        System.out.println("HEREEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE");
-        System.out.println(fileInfo);
+        System.out.println("FileQueryServiceImpl: convertToResponseDTO");
+        System.out.println("fileInfo" + fileInfo);
         System.out.println("Converting file: " + fileInfo.getFile_name() + ", sectionId: " + fileInfo.getSectionId());
         dto.setUploaderId(fileInfo.getUploaderId()); 
         dto.setTitle(fileInfo.getFile_name());
@@ -112,7 +112,7 @@ public class FileQueryServiceImpl implements FileQueryService {
         if (isTeacher) {
             // 如果是老师，直接获取课程下的所有文件,done
             children = fileMapper.getFilesByCourseId(courseId, baseName, type, chapter, regexTitle);
-            System.out.println("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+            System.out.println("Teacher access - files fetched:");
             System.out.println(fileMapper.getFilesByCourseId(courseId, baseName, type, chapter, regexTitle));
         } else {
             // 如果是学生，只获取自己所在班级的文件，done

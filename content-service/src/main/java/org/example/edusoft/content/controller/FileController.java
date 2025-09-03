@@ -78,6 +78,8 @@ public class FileController {
             chapter,
             isTeacher
         );
+        System.out.println("FileController: getFilesByUserAndCourse");
+        System.out.println(files);
         return Result.success(files, "获取用户课程文件成功");
     }
 
