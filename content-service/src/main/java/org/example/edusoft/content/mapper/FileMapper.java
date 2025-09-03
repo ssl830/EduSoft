@@ -19,6 +19,27 @@ public interface FileMapper {
      * @return 子节点列表
      */
     @Select("SELECT * FROM file_node WHERE parent_id = #{parentId}")
+    @Results(id = "FileInfoMap", value = {
+        @Result(column = "id", property = "id"),
+        @Result(column = "file_name", property = "file_name"),
+        @Result(column = "is_dir", property = "isDir"),
+        @Result(column = "parent_id", property = "parentId"),
+        @Result(column = "course_id", property = "courseId"),
+        @Result(column = "class_id", property = "classId"),
+        @Result(column = "uploader_id", property = "uploaderId"),
+        @Result(column = "sectiondir_id", property = "sectiondirId"),
+        @Result(column = "file_type", property = "fileType"),
+        @Result(column = "section_id", property = "sectionId"),
+        @Result(column = "last_file_version", property = "lastVersionId"),
+        @Result(column = "is_current_version", property = "isCurrentVersion"),
+        @Result(column = "file_size", property = "fileSize"),
+        @Result(column = "visibility", property = "visibility"),
+        @Result(column = "created_at", property = "createdAt"),
+        @Result(column = "updated_at", property = "updatedAt"),
+        @Result(column = "file_url", property = "url"),
+        @Result(column = "file_version", property = "version"),
+        @Result(column = "object_name", property = "objectName")
+    })
     List<FileInfo> getChildren(@Param("parentId") Long parentId);
 
     List<FileInfo> getChildrenWithFilter(
@@ -41,6 +62,7 @@ public interface FileMapper {
      * @return 根文件夹列表
      */
     @Select("SELECT * FROM file_node WHERE class_id IN (SELECT class_id FROM class_user WHERE user_id = #{userId}) AND parent_id IS NULL AND is_dir = true")
+    @ResultMap("FileInfoMap")
     List<FileInfo> getRootFoldersByUserId(@Param("userId") Long userId);
 
     /**
@@ -70,6 +92,7 @@ public interface FileMapper {
             "'\\\\([0-9]+\\\\)$'",
             ")",
             ")"})
+    @ResultMap("FileInfoMap")
     List<FileInfo> getVersionsByBaseName(
         @Param("baseName") String baseName,
         @Param("parentId") Long parentId
@@ -81,6 +104,7 @@ public interface FileMapper {
      * SELECT * FROM file_node WHERE class_id = #{classId} AND parent_id IS NULL AND is_dir = true
      */
     @Select("SELECT * FROM file_node WHERE class_id = #{classId} AND parent_id IS NULL AND is_dir = true")
+    @ResultMap("FileInfoMap")
     FileInfo getRootFolderByClassId(@Param("classId") Long classId);
 
     FileInfo getFolderBySection(
@@ -107,6 +131,7 @@ public interface FileMapper {
             "INNER JOIN node_tree t ON f.parent_id = t.id",
             ")",
             "SELECT * FROM node_tree"})
+    @ResultMap("FileInfoMap")
     List<FileInfo> getAllNodesUnder(@Param("folderId") Long folderId);
 
 
@@ -130,6 +155,7 @@ public interface FileMapper {
     void insertNode(FileInfo node);
 
     @Select("SELECT * FROM file_node WHERE id = #{id}")
+    @ResultMap("FileInfoMap")
     FileInfo selectById(Long id);
 
     /**
@@ -242,7 +268,7 @@ public interface FileMapper {
     /**
      * 获取某课程下的所有文件（支持过滤）
      */
-    @org.apache.ibatis.annotations.Select({
+    @Select({
         "<script>",
         "SELECT * FROM file_node",
         "WHERE course_id = #{courseId}",
@@ -261,6 +287,7 @@ public interface FileMapper {
         "</if>",
         "</script>"
     })
+    @ResultMap("FileInfoMap")
     List<FileInfo> getFilesByCourseId(
         @Param("courseId") Long courseId,
         @Param("title") String title,
@@ -313,6 +340,7 @@ public interface FileMapper {
         "</if>",
         "</script>"
     })
+    @ResultMap("FileInfoMap")
     List<FileInfo> getFilesByClassIdandChapter(
         @Param("classId") Long classId,
         @Param("title") String title,
@@ -358,6 +386,7 @@ public interface FileMapper {
             "</if>",
             "</script>"
     })
+    @ResultMap("FileInfoMap")
     List<FileInfo> getFilesByClassId(
         @Param("classId") Long classId,
         @Param("title") String title,
