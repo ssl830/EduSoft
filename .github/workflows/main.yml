@@ -37,7 +37,7 @@ jobs:
           distribution: 'temurin'
 
       - name: 配置 Node.js（Set up Node.js）
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
 
@@ -83,7 +83,7 @@ jobs:
           docker-compose push
 
       - name: 上传构建产物（Upload build artifacts）
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: build-artifacts
           path: |
