@@ -3,10 +3,12 @@ package org.example.edusoft.learning.client;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.time.LocalDate;
 import java.util.HashMap;
+import org.example.edusoft.learning.entity.StudyRecord;
 
 /**
  * 内容服务客户端
@@ -37,7 +39,7 @@ public class ContentClient extends BaseServiceClient {
         if (resourceId == null) {
             throw new IllegalArgumentException("资源ID不能为空");
         }
-        return getForMap("/api/resource/" + resourceId);
+        return getForMap("/api/resources/" + resourceId);
     }
 
     /**
@@ -144,7 +146,23 @@ public class ContentClient extends BaseServiceClient {
         if (resourceIds == null || resourceIds.trim().isEmpty()) {
             throw new IllegalArgumentException("资源ID列表不能为空");
         }
-        return get("/api/content/resource/batch?ids=" + resourceIds, List.class);
+        // 修改为循环调用 getResourceById
+        String[] idsArr = resourceIds.split(",");
+        List<Map<String, Object>> result = new java.util.ArrayList<>();
+        for (String idStr : idsArr) {
+            String trimmed = idStr.trim();
+            if (!trimmed.isEmpty()) {
+                try {
+                    Long id = Long.valueOf(trimmed);
+                    Map<String, Object> res = getResourceById(id);
+                    if (res != null) result.add(res);
+                } catch (Exception e) {
+                    // 可选：记录错误日志
+                    log.warn("获取资源失败: {}", trimmed, e);
+                }
+            }
+        }
+        return result;
     }
     
     /**
@@ -214,5 +232,45 @@ public class ContentClient extends BaseServiceClient {
             log.error("统计学生作业数量失败: {}", e.getMessage());
             return 0;
         }
+    }
+
+    /**
+     * 获取某个学生的所有学习记录
+     */
+    public List<StudyRecord> getStudyRecordsByStudentId(Long studentId) {
+        if (studentId == null) {
+            throw new IllegalArgumentException("学生ID不能为空");
+        }
+        // 调用内容服务接口
+        Map<String, Object> result = getForMap("/api/resources/study-records/" + studentId);
+        Object data = result != null ? result.get("data") : null;
+        if (data instanceof List<?>) {
+            List<?> list = (List<?>) data;
+            List<StudyRecord> records = new java.util.ArrayList<>();
+            for (Object obj : list) {
+                if (obj instanceof Map) {
+                    Map<?, ?> map = (Map<?, ?>) obj;
+                    StudyRecord record = new StudyRecord();
+                    // 映射字段
+                    if (map.get("id") != null) record.setId(Long.valueOf(map.get("id").toString()));
+                    if (map.get("resourceId") != null) record.setResourceId(Long.valueOf(map.get("resourceId").toString()));
+                    if (map.get("studentId") != null) record.setStudentId(Long.valueOf(map.get("studentId").toString()));
+                    // 1. 先将值转为 Double
+                    Double progressDouble = Double.valueOf(map.get("progress").toString());
+
+                    // 2. 再将 Double 转为 int (这会自动截断小数部分)
+                    int progressInt = progressDouble.intValue();
+                    if (map.get("progress") != null) record.setProgress(Double.valueOf(progressInt));
+                    if (map.get("lastPosition") != null) record.setLastPosition(Integer.valueOf(map.get("lastPosition").toString()));
+                    if (map.get("watchCount") != null) record.setWatchCount(Integer.valueOf(map.get("watchCount").toString()));
+                    if (map.get("lastWatchTime") != null) record.setLastWatchTime(LocalDateTime.parse(map.get("lastWatchTime").toString()));
+                    if (map.get("createdAt") != null) record.setCreatedAt(LocalDateTime.parse(map.get("createdAt").toString()));
+                    if (map.get("updatedAt") != null) record.setUpdatedAt(LocalDateTime.parse(map.get("updatedAt").toString()));
+                    records.add(record);
+                }
+            }
+            return records;
+        }
+        return java.util.Collections.emptyList();
     }
 }

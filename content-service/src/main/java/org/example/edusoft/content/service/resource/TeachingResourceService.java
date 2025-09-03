@@ -77,4 +77,9 @@ public interface TeachingResourceService {
      * @return 资源总数
      */
     int countResourcesByCourseId(Long courseId);
+
+    /**
+     * 获取某个学生的所有学习记录
+     */
+    List<org.example.edusoft.content.entity.StudyRecord> getStudyRecordsByStudentId(Long studentId);
 }

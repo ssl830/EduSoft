@@ -117,6 +117,7 @@ public class FileQueryServiceImpl implements FileQueryService {
         } else {
             // 如果是学生，只获取自己所在班级的文件，done
             Long classId = courseClient.getClassIdByUserIdAndCourseId(userId, courseId);
+            System.out.println("Student access - classId: " + classId);
             FileInfo root = fileMapper.getRootFolderByClassId(classId);
             if (root == null) return Collections.emptyList();
             
