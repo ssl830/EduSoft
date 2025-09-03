@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: edusoft-frontend
-        image: ${{ secrets.DOCKERHUB_USERNAME }}/edusoft-frontend:latest
+        image: sunny330/edusoft-frontend:latest
         ports:
         - containerPort: 80
 ---
