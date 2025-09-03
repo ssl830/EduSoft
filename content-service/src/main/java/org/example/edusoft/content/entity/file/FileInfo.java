@@ -22,6 +22,7 @@ public class FileInfo implements Serializable {
 
     private Long id;
     private String name;
+    private String file_name;
     private Boolean isDir;         // 是否为文件夹
     private Long parentId;         // 父节点ID
     private Long courseId;

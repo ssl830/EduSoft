@@ -42,9 +42,9 @@ public class FileUtil {
 
     // 修正：判断文件名后缀是否允许
     public static boolean isFileAllowed(String fileName) {
-        String suffix = getFileSuffix(fileName);
+//        String suffix = getFileSuffix(fileName);
         for (String ext : ALLOWED_FILE_SUFFIX) {
-            if (ext.equalsIgnoreCase(suffix)) {
+            if (ext.equalsIgnoreCase(fileName)) {
                 return true;
             }
         }
@@ -133,7 +133,9 @@ public class FileUtil {
      * 获取文件后缀名
      */
     public static String getFileSuffix(String fileName) {
+        System.out.println("aaaaaa参数1: " + fileName);
         int idx = fileName.lastIndexOf(CommonConstant.SUFFIX_SPLIT);
+        System.out.println("aaaaaa参数2: " + idx);
         if (idx == -1) throw new StringIndexOutOfBoundsException("No extension found in fileName: " + fileName);
         return fileName.substring(idx + 1).toLowerCase();
     }
