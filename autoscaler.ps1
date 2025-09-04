@@ -37,7 +37,7 @@ function Stop-AIServiceIfNeeded {
         }
     }
     if ($shouldStopAI) {
-        Write-Host "资源占用过高，自动停止 ai-service 及其扩容实例"
+        Write-Host "too high,stop ai-service"
         $aiContainers = docker ps --filter "name=ai-service" -q
         foreach ($id in $aiContainers) {
             docker rm -f $id
