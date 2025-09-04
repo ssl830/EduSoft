@@ -39,7 +39,7 @@ public class UserClient {
 		String[] candidates = {
 			baseUrl + "/api/user/id/" + userId,  // 通过数据库ID查询
 			baseUrl + "/api/user/" + userId,     // 通过userId查询
-			baseUrl + "/api/user/validate"       // 如果是current，用validate接口
+			baseUrl + "/api/user/token/validate"       // 如果是current，用validate接口
 		};
 
 		HttpStatusCodeException lastEx = null;
@@ -113,7 +113,7 @@ public class UserClient {
 			// 只使用satoken头
 			headers.set("satoken", pureToken);
 			
-			String validateUrl = baseUrl + "/api/user/validate";
+			String validateUrl = baseUrl + "/api/user/token/validate";
 			logger.debug("尝试获取当前用户信息，URL: {}, Token: {}", validateUrl, pureToken);
 
 			HttpEntity<Void> entity = new HttpEntity<>(headers);

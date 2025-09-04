@@ -114,11 +114,11 @@ public class UserServiceClient {
 			// 只使用satoken头
 			headers.set("satoken", pureToken);
 			
-			logger.debug("尝试获取当前用户信息，URL: {}, Token: {}", baseUrl + "/api/user/validate", pureToken);
+			logger.debug("尝试获取当前用户信息，URL: {}, Token: {}", baseUrl + "/api/user/token/validate", pureToken);
 
 			HttpEntity<Void> entity = new HttpEntity<>(headers);
 			ResponseEntity<Map> response = restTemplate.exchange(
-				baseUrl + "/api/user/validate", 
+				baseUrl + "/api/user/token/validate",
 				HttpMethod.GET, 
 				entity, 
 				Map.class

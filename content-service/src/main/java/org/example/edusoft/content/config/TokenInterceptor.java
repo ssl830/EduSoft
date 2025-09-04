@@ -26,7 +26,7 @@ public class TokenInterceptor implements HandlerInterceptor {
     private static final ObjectMapper objectMapper = new ObjectMapper();
     
     // 用户服务URL，用于验证token和获取用户ID
-    private static final String USER_SERVICE_URL = "http://localhost:8081/api/user/validate";
+    private static final String USER_SERVICE_URL = "http://localhost:8081/api/user/token/validate";
     
     // 使用静态方法创建RestTemplate，避免循环依赖
     private RestTemplate getRestTemplate() {

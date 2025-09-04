@@ -184,27 +184,30 @@ public class UserController {
 
     // 微服务间token验证接口 - 专门为其他微服务提供 
     @SaIgnore
-    @GetMapping("/validate")
+    @GetMapping("/token/validate")
     public SaResult validateToken(@RequestHeader("satoken") String token) {
         try {
             // 手动设置token到当前会话
             StpUtil.setTokenValue(token);
-            
+
             // 检查是否登录
             if (!StpUtil.isLogin()) {
                 return SaResult.error("token无效");
             }
-            
+
+            System.out.println("Token验证通过，当前登录ID: " + StpUtil.getLoginId());
+
             // 获取用户ID并转换为Long类型
             String loginIdStr = StpUtil.getLoginId().toString();
             Long userId = Long.parseLong(loginIdStr);
-            
+            System.out.println("userId: " + userId);
+
             // 获取用户信息
             User user = userService.findById(userId);
             if (user == null) {
                 return SaResult.error("用户不存在");
             }
-            
+
             // 返回用户信息，但不返回密码
             user.setPasswordHash(null);
             return SaResult.ok("验证成功").setData(user);

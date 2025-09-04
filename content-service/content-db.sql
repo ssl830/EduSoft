@@ -175,7 +175,7 @@ CREATE TABLE `learning_progress` (
 
 CREATE TABLE `notification` (
   `id` bigint NOT NULL AUTO_INCREMENT,
-  `user_id` varchar(15) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '用户ID（字符串格式，如T001, S001）',
+  `user_id` varchar(15) COLLATE utf8mb4_unicode_ci NOT NULL,
   `title` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `message` text COLLATE utf8mb4_unicode_ci,
   `type` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -183,15 +183,15 @@ CREATE TABLE `notification` (
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `related_id` bigint DEFAULT NULL,
   `related_type` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `priority` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT 'normal' COMMENT '优先级',
-  `status` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT 'active' COMMENT '状态',
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  `sender_name` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '发送者姓名',
-  `sender_id` bigint DEFAULT NULL COMMENT '发送者ID',
-  `course_name` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '课程名称',
-  `course_id` bigint DEFAULT NULL COMMENT '课程ID',
-  `class_name` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '班级名称',
-  `class_id` bigint DEFAULT NULL COMMENT '班级ID',
+  `priority` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT 'normal',
+  `status` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT 'active',
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `sender_name` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `sender_id` bigint DEFAULT NULL,
+  `course_name` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `course_id` bigint DEFAULT NULL,
+  `class_name` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `class_id` bigint DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `user_id` (`user_id`),
   KEY `type` (`type`),
@@ -204,7 +204,7 @@ CREATE TABLE `notification` (
   KEY `class_id` (`class_id`),
   KEY `sender_id` (`sender_id`),
   KEY `created_at` (`created_at`)
-) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='通知表';
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Table structure for table `progress`
@@ -255,14 +255,6 @@ CREATE TABLE `discussion` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 
-LOCK TABLES `discussion` WRITE;
-/*!40000 ALTER TABLE `discussion` DISABLE KEYS */;
-INSERT INTO `discussion` VALUES (1,1,1,4,'T002','dqhdiqhdip','uqhdiwudoqwhdfowd',0,0,0,0,'2025-07-17 08:31:43','2025-07-17 08:31:43'),(2,1,1,4,'T002','djwpiqjfdijwpf','diwphfwipqfhipqwhieqpfhiqepfie',0,0,0,0,'2025-07-17 08:32:02','2025-07-17 08:32:02'),(3,1,1,4,'T002','hello','hedoh😎\n````\n\ndihqwid\n\n````\n',0,0,0,0,'2025-08-11 03:39:10','2025-08-11 03:39:10'),(4,1,1,4,'T002','fwfqr21','wqew1e1ee2😅\n````\n\n代码内容\n\n````\n',0,0,4,1,'2025-08-11 03:53:57','2025-08-16 11:46:57'),(5,1,1,4,'T002','fqwfqefgqegqeqq','qqqqqqqqqqqq😊',0,0,10,2,'2025-08-11 04:12:23','2025-08-16 11:47:37'),(6,2,1,4,'T002','求助，这个问题啊巴拉巴拉','这里是求助的内容啊巴拉巴拉\n支持**md格式渲染**和表情包😁\n>真是太酷啦！！',0,0,16,2,'2025-08-16 12:41:03','2025-08-26 00:47:11'),(7,3,1,4,'T002','11111111111','🤣**粗体**\n*斜体*\n~~hello~~\n\n````C\n\nprintf(\"hello,world\");\n\n````\n',0,0,3,1,'2025-08-23 04:54:53','2025-08-23 04:55:25'),(8,2,1,4,'T002','1111111111111','😁··**11111111111111**',0,0,2,0,'2025-08-25 08:02:55','2025-08-25 08:03:09');
-/*!40000 ALTER TABLE `discussion` ENABLE KEYS */;
-UNLOCK TABLES;
-
-
-
 DROP TABLE IF EXISTS `discussionreply`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -285,13 +277,6 @@ CREATE TABLE `discussionreply` (
   CONSTRAINT `discussionreply_ibfk_4` FOREIGN KEY (`parent_reply_id`) REFERENCES `discussionreply` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
-
-LOCK TABLES `discussionreply` WRITE;
-/*!40000 ALTER TABLE `discussionreply` DISABLE KEYS */;
-INSERT INTO `discussionreply` VALUES (1,4,4,'T002','byiguhi',NULL,1,'2025-08-11 04:11:52','2025-08-11 04:11:52'),(2,5,4,'T002','f2ygurhou32',NULL,1,'2025-08-11 04:19:28','2025-08-11 04:19:28'),(3,5,4,'T002','回复test1',NULL,1,'2025-08-11 04:19:58','2025-08-11 04:19:58'),(4,6,4,'T002','哇哇好厉害',NULL,1,'2025-08-16 12:41:29','2025-08-16 12:41:29'),(5,6,5,'S003','好棒好棒！！\n',NULL,0,'2025-08-16 12:51:14','2025-08-16 12:51:14'),(6,7,4,'T002','2222222',NULL,1,'2025-08-23 04:55:18','2025-08-23 04:55:18');
-/*!40000 ALTER TABLE `discussionreply` ENABLE KEYS */;
-UNLOCK TABLES;
 
 
 

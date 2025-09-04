@@ -115,11 +115,11 @@ public class UserServiceClient {
 			// 使用satoken头调用验证接口
 			headers.set("satoken", pureToken);
 			
-			logger.debug("尝试获取当前用户信息，URL: {}, Token: {}", baseUrl + "/api/user/validate", pureToken);
+			logger.debug("尝试获取当前用户信息，URL: {}, Token: {}", baseUrl + "/api/user/token/validate", pureToken);
 
 			HttpEntity<Void> entity = new HttpEntity<>(headers);
 			ResponseEntity<Map> response = restTemplate.exchange(
-				baseUrl + "/api/user/validate", 
+				baseUrl + "/api/user/token/validate",
 				HttpMethod.GET, 
 				entity, 
 				Map.class
@@ -163,8 +163,8 @@ public class UserServiceClient {
 	 */
 	public boolean validateToken(String baseUrl, String token) {
 		try {
-			// 尝试获取当前用户信息来验证token
-			Map<String, Object> userInfo = fetchUserById(baseUrl, token, "current");
+			// 正确做法：通过 fetchCurrentUser 验证 token
+			Map<String, Object> userInfo = fetchCurrentUser(baseUrl, token);
 			return userInfo != null && !userInfo.isEmpty();
 		} catch (Exception ex) {
 			logger.debug("Token验证失败: {}", ex.getMessage());
