@@ -141,6 +141,16 @@ sleep 20
 docker run -d --name frontend --network edusoft-network -p 3000:80 --restart unless-stopped fankeqing/edusoft:frontend
 ```
 
+
+### 自动扩缩容脚本运行
+
+实现自动扩缩容和降级机制的脚本，如需自动扩缩容，请在 Windows PowerShell 中运行：
+```powershell
+powershell -ExecutionPolicy Bypass -File .\autoscaler.ps1
+```
+脚本会定时检测各服务 CPU 使用率并自动扩缩容。
+
+
 ---
 
 ## 方法三：从源码编译并容器化部署（进阶开发者方案）
@@ -203,6 +213,16 @@ docker run -d --name frontend --network edusoft-network -p 3000:80 --restart unl
   docker tag fankeqing/edusoft-user-service:dev fankeqing/edusoft-user-service:latest
   docker push fankeqing/edusoft-user-service:latest
   ```
+
+---
+
+### 自动扩缩容脚本运行
+
+实现自动扩缩容和降级机制的脚本，如需自动扩缩容，请在 Windows PowerShell 中运行：
+```powershell
+powershell -ExecutionPolicy Bypass -File .\autoscaler.ps1
+```
+脚本会定时检测各服务 CPU 使用率并自动扩缩容。
 
 ---
 
