@@ -3,10 +3,10 @@ name: CI/CD for EduSoft Microservices
 on:
   push:
     branches:
-      - 'docker-workflow'
+      - 'docker'
   pull_request:
     branches:
-      - 'docker-workflow'
+      - 'docker'
 
 jobs:
   build:

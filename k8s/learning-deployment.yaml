@@ -1,19 +1,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: edusoft-learning-service
+  name: learning-service
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: edusoft-learning-service
+      app: learning-service
   template:
     metadata:
       labels:
-        app: edusoft-learning-service
+        app: learning-service
     spec:
       containers:
-        - name: edusoft-learning-service
+        - name: learning-service
           image: fankeqing/edusoft:edusoft-learning-service
           ports:
             - containerPort: 8084
@@ -25,18 +25,18 @@ spec:
             - name: SPRING_DATASOURCE_PASSWORD
               value: "fkq200566"
             - name: SERVICES_USER_BASE_URL
-              value: "http://edusoft-user-service:8081"
+              value: "http://user-service:8081"
             - name: SERVICES_COURSE_URL
-              value: "http://edusoft-course-service:8082"
+              value: "http://course-service:8082"
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: edusoft-learning-service
+  name: learning-service
 spec:
   type: NodePort
   selector:
-    app: edusoft-learning-service
+    app: learning-service
   ports:
     - protocol: TCP
       port: 8084
