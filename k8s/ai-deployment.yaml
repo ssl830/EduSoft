@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: edusoft-ai-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: edusoft-ai-service
+  template:
+    metadata:
+      labels:
+        app: edusoft-ai-service
+    spec:
+      containers:
+        - name: edusoft-ai-service
+          image: fankeqing/edusoft:edusoft-ai-service
+          ports:
+            - containerPort: 8000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: edusoft-ai-service
+spec:
+  type: NodePort
+  selector:
+    app: edusoft-ai-service
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
+      nodePort: 30800
