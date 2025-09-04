@@ -10,10 +10,45 @@ $scaleDownThreshold = 1   # 缩容（可按需调整）
 $checkInterval = 30         # 每 30 秒检测一次
 
 # Compose 网络名（你本地实际网络名）
-$networkName = "edusoft_edusoft-network"
+$networkName = "edusoft-network"
 Write-Host "Using network: $networkName"
 
+# 新增：AI服务停用逻辑
+function Stop-AIServiceIfNeeded {
+    param (
+        [array]$serviceNames,
+        [int]$cpuThreshold = 2
+    )
+    $shouldStopAI = $false
+    foreach ($svc in $serviceNames) {
+        $containerIds = docker ps --filter "name=$svc" -q
+        if (-not $containerIds) { continue }
+        $cpuList = @()
+        $memList = @()
+        foreach ($id in $containerIds) {
+            $cpuStr = docker stats --no-stream --format "{{.CPUPerc}}" $id
+            $memStr = docker stats --no-stream --format "{{.MemPerc}}" $id
+            if ($cpuStr) { $cpuList += [int]($cpuStr.Trim().TrimEnd('%')) }
+            if ($memStr) { $memList += [int]($memStr.Trim().TrimEnd('%')) }
+        }
+        if ($cpuList.Count -gt 0 -and ($cpuList | Measure-Object -Average).Average -ge $cpuThreshold) {
+            $shouldStopAI = $true
+            break
+        }
+    }
+    if ($shouldStopAI) {
+        Write-Host "资源占用过高，自动停止 ai-service 及其扩容实例"
+        $aiContainers = docker ps --filter "name=ai-service" -q
+        foreach ($id in $aiContainers) {
+            docker rm -f $id
+        }
+    }
+}
+
 while ($true) {
+    # 检查是否需要停掉 ai-service
+    Stop-AIServiceIfNeeded -serviceNames @("user-service", "course-service", "learning-service", "content-service") -cpuThreshold 2
+
     foreach ($service in $services) {
         try {
             # 获取所有容器 ID
